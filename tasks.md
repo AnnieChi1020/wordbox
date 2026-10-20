@@ -20,7 +20,7 @@
   - RPC：`create_word`、`update_word_content`、`replace_word_content`（design §4.3）
   - 完成條件：RLS 測試證明 A 使用者查不到 B 使用者的 words、senses；`update_word_content` 測試證明未變動的義項保留原 id
 
-- [ ] **T1.3 Google 登入** — R1.1–R1.3、R1.5、R1.6
+- [x] **T1.3 Google 登入** — R1.1–R1.3、R1.5、R1.6
   - Supabase Google provider、`/login`、`/auth/callback`、`proxy.ts`（Next.js 15 以下為 `middleware.ts`）
   - `initProfileTimezone()` 只在 `timezone is null` 時寫入，並驗證是有效的 IANA 時區
   - 登出按鈕
@@ -70,6 +70,7 @@
 
 - [ ] **T1.15 部署**
   - Vercel + Supabase Cloud、Google OAuth 正式網域設定、環境變數
+  - 正式環境關閉 Email provider（本地為了 E2E 測試保持開啟），符合 R1.2
   - 完成條件：正式網址可登入並新增單字
 
 ---

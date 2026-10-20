@@ -1,7 +1,6 @@
+import { redirect } from "next/navigation"
+
+// proxy.ts 會先依登入狀態導向；這裡只是保險
 export default function Home() {
-  return (
-    <main className="flex flex-1 items-center justify-center p-4">
-      <h1 className="text-2xl font-semibold">Wordbox</h1>
-    </main>
-  )
+  redirect("/words")
 }
