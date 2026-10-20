@@ -13,7 +13,7 @@
   - Vitest、Playwright 設定；`.env.example`（design §2）
   - 完成條件：`npm run dev`、`npm test`、`npm run test:e2e` 都可執行
 
-- [ ] **T1.2 Supabase 與資料庫（Phase 1 部分）** — R1.4
+- [x] **T1.2 Supabase 與資料庫（Phase 1 部分）** — R1.4
   - Supabase CLI 本地環境
   - Migration：`profiles`、`part_of_speech`、`words`、`senses`、`ai_generation_logs`、索引、RLS（design §4.1、§4.2）
   - Profile 建立 trigger（design §4.4，timezone 預設為 null）
@@ -77,6 +77,7 @@
 ## Phase 2 — 複習（初稿，進入時細化）
 
 - [ ] **T2.1** Migration：`review_logs`、`ai_distractors`、RLS、`apply_review` RPC — R7.3
+  - `senses` 的 after update trigger：內容欄位有變動時刪除該義項的 ai_distractors（實作 design §4.3 `update_word_content` 的快取失效）
 - [ ] **T2.2** `leitner.ts` + 單元測試（R7.4 的 5 個 AC）— R7.4
 - [ ] **T2.3** `selection.ts` + 單元測試 — R5.1
 - [ ] **T2.4** `questions.ts`：題型選擇、候選過濾、同詞性優先 + 單元測試 — R6.1–R6.4
