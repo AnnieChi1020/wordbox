@@ -29,7 +29,7 @@
 - [x] **T1.4 App layout 與導覽** — NFR1、NFR2
   - 手機底部分頁列、桌面頂部導覽（單字 / 複習 / 統計），複習與統計先放空頁
 
-- [ ] **T1.5 Domain 基礎函式** — R2.2、R2.3、R2.11、R3.1
+- [x] **T1.5 Domain 基礎函式** — R2.2、R2.3、R2.11、R3.1
   - `normalize.ts`、`pos.ts`、`stars.ts`、`dates.ts` 及單元測試
 
 - [ ] **T1.6 AI 生成單字** — R2.5–R2.7、R2.10、R2.12、NFR3、NFR6
