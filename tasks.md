@@ -8,7 +8,7 @@
 
 ## Phase 1 — 帳號與單字管理
 
-- [ ] **T1.1 專案骨架**
+- [x] **T1.1 專案骨架**
   - Next.js App Router + TypeScript strict、Tailwind、shadcn/ui、ESLint、Prettier
   - Vitest、Playwright 設定；`.env.example`（design §2）
   - 完成條件：`npm run dev`、`npm test`、`npm run test:e2e` 都可執行
