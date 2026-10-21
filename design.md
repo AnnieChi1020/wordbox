@@ -453,8 +453,15 @@ type QuestionType = 'word_to_zh' | 'word_to_synonym' | 'zh_to_word';
 
 availableTypes(sense): QuestionType[]     // 同義詞為空時排除 word_to_synonym
 
-buildQuestion(target: WordWithSenses, pool: WordWithSenses[], rng):
-  { question: Question } | { needsAi: { senseId, type, missing: number, partial: string[] } }
+buildQuestion(target, sense, type, pool, rng):
+  { question: Question } | { needsAi: QuestionDraft }
+  // 義項與題型由呼叫端決定，R6.6 換題型時重新呼叫
+  // QuestionDraft：題目、正確答案、字庫找到的部分候選、missing、排除清單
+
+completeQuestion(draft, extra: string[], rng): Question | null
+  // 以快取或 AI 的選項補足；套用同一份排除清單，仍不足時回傳 null（R6.6）
+
+findCorrectOption(type, word, sense, options): string | null   // submitAnswer 判定用（§6）
 ```
 
 候選來源與排除規則：

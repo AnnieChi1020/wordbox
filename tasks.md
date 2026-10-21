@@ -106,7 +106,7 @@
   - `orderSessionCandidates` 回傳完整序列（design §7.4）
   - 完成條件：到期的字在前且依 next_due_on 舊→新；同日期順序由 rng 決定，固定 seed 可重現；未到期依 box 低→高、next_due_on 近→遠；不重複
 
-- [ ] **T2.4 `questions.ts`** — R6.1–R6.4
+- [x] **T2.4 `questions.ts`** — R6.1–R6.4
   - `availableTypes`、`buildQuestion`、`filterDistractors`（design §7.5）
   - 完成條件：
     - 沒有同義詞的義項不出 `word_to_synonym`（R7 AC）
