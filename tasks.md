@@ -1,6 +1,6 @@
 # 英文單字記憶 App — Tasks
 
-> 版本：v0.4（2026-10-21）・對應 `requirements.md` v0.2、`design.md` v0.4
+> 版本：v0.5（2026-10-21）・對應 `requirements.md` v0.2、`design.md` v0.5
 > 每個任務都標註對應需求；完成條件以該需求的 AC 為準。
 > 依序實作；一個任務完成（含測試通過）後才開始下一個。
 
@@ -83,19 +83,87 @@
 
 ---
 
-## Phase 2 — 複習（初稿，進入時細化）
+## Phase 2 — 複習
 
-- [ ] **T2.1** Migration：`review_logs`、`ai_distractors`、RLS、`apply_review` RPC — R7.3
-  - `senses` 的 after update trigger：內容欄位有變動時刪除該義項的 ai_distractors（實作 design §4.3 `update_word_content` 的快取失效）
-- [ ] **T2.2** `leitner.ts` + 單元測試（R7.4 的 5 個 AC）— R7.4
-- [ ] **T2.3** `selection.ts` + 單元測試 — R5.1
-- [ ] **T2.4** `questions.ts`：題型選擇、候選過濾、同詞性優先 + 單元測試 — R6.1–R6.4
-- [ ] **T2.5** `generateDistractors.ts` + 快取讀寫；編輯只讓有變動的義項快取失效，重新生成全部失效 — R6.5、R6.6
-- [ ] **T2.6** `startReviewSession` action（含 R6.6 遞補；每題由伺服器產生 `questionId`）— R5、R6
-- [ ] **T2.7** `submitAnswer` action（伺服器端判定、冪等）— R7.3
-- [ ] **T2.8** 複習 UI：題目卡、進度、作答回饋 — R7.1、R7.2
-- [ ] **T2.9** 結算畫面 — R7.5
-- [ ] **T2.10** 空狀態與 Phase 2 E2E 測試 — R5.2、R7 AC
+- [ ] **T2.1 資料庫：複習紀錄與干擾快取** — R6.5、R7.3、R8.6
+  - Migration：`review_logs`、`ai_distractors`、索引、RLS（design §4.1、§4.2）
+  - `senses` 的 after update trigger：內容欄位變動時刪除該義項的 ai_distractors，只改 position 時保留（design §4.1）
+  - `apply_review` RPC：鎖定 word、`question_id` 冪等、box / next_due_on 樂觀鎖（design §4.3、D13）
+  - `npm run db:types` 更新型別
+  - 完成條件（`tests/db`）：
+    - RLS：A 使用者查不到 B 使用者的 review_logs、ai_distractors
+    - 同一個 `question_id` 送兩次只有一筆紀錄、words 只更新一次，第二次回傳 `duplicate = true`
+    - `p_box_before` 與目前不符 → `40001`，沒有寫入
+    - 編輯只改順序 → 快取保留；改 def_zh → 該義項快取刪除；重新生成 → 全部刪除
+    - 刪除單字後 review_logs 保留，`word_id` 為 null（R4.7）
+
+- [ ] **T2.2 `leitner.ts`** — R7.4
+  - `intervalDays`、`applyAnswer`（design §7.3）
+  - 完成條件：R7.4 的 5 個 AC 各一個測試；另測 box 0 答對、一般與 important 間隔表的 10 格
+
+- [ ] **T2.3 `random.ts` + `selection.ts`** — R5.1
+  - `random.ts`：可設定 seed 的 rng、`shuffle`、`pick`，Phase 2 所有隨機行為共用
+  - `orderSessionCandidates` 回傳完整序列（design §7.4）
+  - 完成條件：到期的字在前且依 next_due_on 舊→新；同日期順序由 rng 決定，固定 seed 可重現；未到期依 box 低→高、next_due_on 近→遠；不重複
+
+- [ ] **T2.4 `questions.ts`** — R6.1–R6.4
+  - `availableTypes`、`buildQuestion`、`filterDistractors`（design §7.5）
+  - 完成條件：
+    - 沒有同義詞的義項不出 `word_to_synonym`（R7 AC）
+    - design §7.5 表格的每條排除規則各一個測試；比較時 trim 加不分大小寫
+    - 同詞性候選優先
+    - 候選不足時回傳 `needsAi`，含缺幾個與已找到的部分候選
+    - 4 個選項的順序由 rng 決定
+
+- [ ] **T2.5 AI 干擾選項** — R6.5、R6.6、R2.12
+  - `DistractorsSchema`、prompt、`generateDistractors.ts`（20 秒逾時、log kind = `distractors`）（design §5.3、§5.4）
+  - `lib/review/distractors.ts`：快取 → AI → R6.4 過濾 → 寫入快取（design §5.3）
+  - mock 依 request name 分派；`mock distractor fail` 觸發失敗
+  - 完成條件：
+    - unit：成功、逾時、格式錯誤、過濾後不足 3 個（皆視為失敗）
+    - db：快取命中時不呼叫 AI；快取過濾後不足時重新呼叫並覆寫；失敗不寫入快取
+
+- [ ] **T2.6 `startReviewSession`** — R5、R6
+  - `lib/review/startSession.ts` + action（design §6 流程）
+  - 需要 AI 的題目平行處理（D14）；R6.6 換題型、略過並遞補
+  - 題目不含正確答案（D15）
+  - 完成條件（db 測試，mock AI）：
+    - 沒有單字 → 空陣列
+    - 2 個字 → 2 題，干擾選項由 AI 補足（R7 AC）
+    - `mock distractor fail` 的字被略過並由下一個字遞補
+    - 每題 4 個不重複選項，`questionId` 皆不同
+    - 2,000 字、不需 AI 時 1 秒內完成
+
+- [ ] **T2.7 `submitAnswer` 與 `countDueWords`** — R7.3、R7.4、R8.6
+  - `lib/review/submitAnswer.ts` + action（design §6 流程）
+  - 完成條件（db 測試）：
+    - R7.4 的 5 個 AC 經由 action 驗證
+    - 重複送出只計一次，回傳相同結果（R7.3）
+    - `local_date` 依 profile 時區計算
+    - 選項不含正確答案、`selected` 不在選項中、他人的字 → `ok: false`，不寫入
+    - 作答期間義項被重新生成 → `ok: false`，不寫入
+
+- [ ] **T2.8 複習 UI** — R7.1、R7.2、NFR1、NFR5
+  - `ReviewIntro`：今天到期數、開始按鈕；出題中顯示載入狀態，失敗時 toast 加重試
+  - `QuestionCard`：進度（3 / 8）、題目與詞性、4 個選項；作答後鎖定、綠 / 紅標示、「下一題」
+  - 等待判定時鎖定選項；submitAnswer 失敗時 toast，並可重送同一個 `questionId`
+  - 鍵盤：Tab 加 Enter 或數字鍵 1–4 作答；結果以 `aria-live` 宣告，不只靠顏色區分
+
+- [ ] **T2.9 結算畫面** — R7.5
+  - 答對題數、每個字的對錯與星數變化（boxBefore → boxAfter）
+  - 「再來一輪」、「回單字列表」；`countDueWords() = 0` 時顯示「今天到期的字都複習完了」
+
+- [ ] **T2.10 空狀態與 Phase 2 E2E** — R5.2、R7 AC
+  - 沒有單字時顯示空狀態與「去新增單字」
+  - E2E（`AI_MOCK=1`）：
+    - 只有 2 個字也能完成一輪
+    - 答對與答錯後，列表的星數正確變化
+    - 作答 3 題後離開頁面，資料庫有 3 筆 review_logs（R7 AC）
+    - 結算畫面的題數與星數變化正確；「再來一輪」可開始新的一輪
+
+- [ ] **T2.11 Phase 2 部署**
+  - `supabase db push` 推送 T2.1 的 migration，Vercel 重新部署
+  - 完成條件：正式網址可完成一輪複習
 
 ---
 

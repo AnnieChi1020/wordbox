@@ -1,8 +1,9 @@
 # 英文單字記憶 App — Design
 
-> 版本：v0.4（2026-10-21）・對應 `requirements.md` v0.2
-> Phase 2、3 的設計為初稿，進入該階段時再修訂。
+> 版本：v0.5（2026-10-21）・對應 `requirements.md` v0.2
+> Phase 3 的設計為初稿，進入該階段時再修訂。
 >
+> v0.5 變更：細化 Phase 2——目錄（§3）、`apply_review` 介面與併發處理（§4.3、D13）、干擾選項快取的使用方式（§5.3）、出題與作答的介面（§6、D14、D15）、選字回傳完整序列（§7.4）。
 > v0.4 變更：AI 回傳 `headword`，單字以字典標準寫法儲存（§5.1、§5.2、§6、§7.1、D12）。
 > v0.3 變更：`words.text_key`（§4.1）；單字列表改為分頁載入（§6、D11）。
 > v0.2 變更：`profiles.timezone` 改為 nullable（§4.1、§4.4）；編輯改為原地更新義項（§4.1、§4.3、D9）；`middleware.ts` → `proxy.ts`（§3）；`questionId` 由伺服器產生（§6）。
@@ -79,6 +80,7 @@ lib/
     normalize.ts                  # R2.2、R2.3
     pos.ts                        # 詞性 enum 與縮寫（R2.11）
     stars.ts                      # box → 星數
+    random.ts                     # 可設定 seed 的 rng、shuffle、pick（Phase 2）
     leitner.ts                    # R7.4（Phase 2）
     selection.ts                  # R5.1（Phase 2）
     questions.ts                  # R6.1–R6.4（Phase 2）
@@ -93,9 +95,14 @@ lib/
   db/
     server.ts                     # Supabase server client
     words.ts / reviews.ts / stats.ts
-  actions/
+  words/                          # 單字流程（依賴以參數注入，供 db 測試）
+  review/                         # 複習流程（Phase 2）
+    distractors.ts                # 快取 → AI → 過濾（R6.5）
+    startSession.ts               # R5、R6
+    submitAnswer.ts               # R7.3、R7.4
+  actions/                        # "use server" 薄包裝：建立 client 後呼叫 words/、review/
     words.ts                      # addWord、updateWord、regenerateWord、deleteWord、setImportant
-    review.ts                     # startReviewSession、submitAnswer（Phase 2）
+    review.ts                     # startReviewSession、submitAnswer、countDueWords（Phase 2）
 components/
   words/  review/  dashboard/  ui/
 supabase/migrations/
@@ -180,11 +187,15 @@ create index review_logs_user_date_idx on review_logs (user_id, local_date);
 
 create table ai_distractors (                                             -- R6.5
   sense_id uuid not null references senses on delete cascade,
-  question_type text not null,
-  options text[] not null,
+  question_type text not null
+    check (question_type in ('word_to_zh','word_to_synonym','zh_to_word')),
+  options text[] not null check (cardinality(options) = 3),
   created_at timestamptz not null default now(),
   primary key (sense_id, question_type)
 );
+
+-- senses 的 after update trigger：pos、def_en、def_zh、synonyms、antonyms、examples
+-- 任一變動時刪除該義項的 ai_distractors；只有 position 變動時保留（R6.5、D9）
 ```
 
 ### 4.2 RLS
@@ -214,7 +225,15 @@ Supabase JS client 不支援多語句交易，因此以 Postgres function（`sec
 | `create_word(p_text, p_ipa, p_senses jsonb, p_today date)` | R2.7、R2.8 | 新增 word 與 senses；若觸發唯一索引衝突則回傳既有 word id 與 `exists = true` |
 | `update_word_content(p_word_id, p_ipa, p_senses jsonb)` | R4.3、R6.5 | 編輯用，原地更新：`p_senses` 依顯示順序排列，帶 `id` 的更新該義項、沒有 `id` 的新增，不在清單中的刪除；position 依陣列順序重排。內容有變動的義項刪除其 ai_distractors；未變動的保留快取與 sense id。更新 `updated_at` |
 | `replace_word_content(p_word_id, p_ipa, p_senses jsonb)` | R4.5 | 重新生成用：刪除所有舊 senses、新增新 senses、更新 `updated_at`；舊義項的 ai_distractors 隨之 cascade 刪除（R6.5） |
-| `apply_review(...)` | R7.3、R7.4（Phase 2） | 寫入 review_logs 並更新 words；`question_id` 重複時不做任何事並回傳既有結果 |
+| `apply_review(p_question_id, p_word_id, p_sense_id, p_question_type, p_is_correct, p_was_due, p_box_before, p_due_before, p_box_after, p_due_after, p_local_date)` | R7.3、R7.4（Phase 2） | 見下方 |
+
+`apply_review` 依序：
+1. 鎖定 word（`for update`）；找不到 → `P0002`。
+2. `question_id` 已存在 → 不做任何事，回傳既有紀錄（`duplicate = true`）。
+3. word 目前的 `box`、`next_due_on` 不等於 `p_box_before`、`p_due_before` → `40001`（D13）。
+4. 寫入 review_logs、更新 words 的 `box`、`next_due_on`，回傳 `{ is_correct, box_before, box_after, duplicate: false }`。
+
+Leitner 規則只實作在 `lib/domain/leitner.ts`，RPC 不重算，只負責原子寫入與冪等。
 
 ### 4.4 Profile 建立
 
@@ -279,6 +298,12 @@ const DistractorsSchema = z.object({ options: z.array(z.string()).length(3) });
 
 輸入：題型、題目、正確答案、目標字的同義詞清單。要求：與正確答案同語言、同格式、同詞性，看起來合理但確定錯誤，且不可為同義詞。回傳後仍以 R6.4 的規則過濾；過濾後不足 3 個即視為失敗（R6.6）。
 
+快取的使用（`lib/review/distractors.ts`）：
+- AI 一律生成 3 個，快取存 3 個；出題時先用字庫候選，不足的部分從快取（或 AI 結果）依序補上。
+- 讀出快取後也以 R6.4 過濾（字庫或義項可能已改變）；過濾後不夠補足時，重新呼叫 AI 並覆寫快取。
+- AI 失敗時不寫入快取。
+- `AI_MOCK=1` 時 mock 依 request `name` 分派：干擾選項產生可辨識、符合 R6.4 的選項；目標字為 `mock distractor fail` 時回傳失敗（測試 R6.6）。
+
 ### 5.4 共同處理
 
 - 逾時 20 秒（`AbortController`），不自動重試，由使用者手動重試（R2.10）。
@@ -308,11 +333,40 @@ deleteWord(wordId): Promise<Result>                        // R4.7
 setImportant(wordId, value: boolean): Promise<Result>      // R3.5（前端 optimistic update）
 
 // lib/actions/review.ts（Phase 2）
-startReviewSession(): Promise<Question[]>
-  // 每題以 crypto.randomUUID() 產生 questionId，隨題目回傳給 client
-submitAnswer({ questionId, wordId, senseId, questionType, selected }): Promise<AnswerResult>
-  // client 原樣帶回 questionId；重送時以它判定冪等（R7.3）
+type Question = {
+  questionId: string;              // crypto.randomUUID()，伺服器產生
+  wordId: string; senseId: string;
+  type: QuestionType;
+  prompt: string;                  // 單字或中文解釋
+  pos: PartOfSpeech;               // 題目旁顯示詞性
+  options: string[];               // 4 個，已打亂；不標示哪個正確（D15）
+};
+
+type AnswerResult =
+  | { ok: true; isCorrect: boolean; correctOption: string; boxBefore: number; boxAfter: number }
+  | { ok: false; message: string };
+
+startReviewSession(): Promise<Question[]>   // 沒有單字時回傳 []（R5.2）
+submitAnswer({ questionId, wordId, senseId, questionType, options, selected }): Promise<AnswerResult>
+  // client 原樣帶回 questionId 與 options；重送時以 questionId 判定冪等（R7.3）
+countDueWords(): Promise<number>            // ReviewIntro 與結算畫面（R7.5）
 ```
+
+### startReviewSession 流程（R5、R6）
+
+1. 一次查詢讀取所有單字與義項（選字狀態 + 干擾候選），以及 profile 時區。
+2. `orderSessionCandidates`（§7.4）產生完整序列，取前 8 個。
+3. 每個字隨機選義項、隨機選題型，以 `buildQuestion` 從字庫出題。
+4. 回傳 `needsAi` 的題目**平行**呼叫 `getDistractors`（D14）。
+5. 失敗的字改用其他題型（每種最多試一次）；全部失敗則略過，從序列的下一個字遞補，回到步驟 3，直到 8 題或序列用完（R6.6）。
+
+### submitAnswer 流程（R7.3、R7.4）
+
+1. 驗證參數：uuid、題型、`options` 為 4 個不重複字串且包含 `selected`。
+2. 讀取 word、sense（RLS 限定自己的）與 profile；找不到 → `ok: false`（作答期間被刪除或重新生成，該題不計）。
+3. 在 `options` 中找出正確選項（規則見下方）；找不到恰好一個 → `ok: false`。
+4. `applyAnswer`（§7.3）→ `apply_review`；`40001` 時重新讀取並重試一次（D13）。
+5. 重送時 `apply_review` 回傳第一次的紀錄，結果相同。
 
 讀取（列表、popup、dashboard）在 Server Components 中直接查詢。列表篩選與排序以 URL search params 驅動（R3.4），查詢在資料庫端完成。
 
@@ -326,10 +380,12 @@ submitAnswer({ questionId, wordId, senseId, questionType, selected }): Promise<A
 
 ### submitAnswer 的伺服器端判定（R7.3）
 
-伺服器不保存 session 狀態；作答時依資料庫重新計算正確答案：
-- `word_to_zh`：`selected === sense.def_zh`
-- `word_to_synonym`：`selected` 屬於 `sense.synonyms`（不分大小寫）
-- `zh_to_word`：`selected` 等於 `word.text`（不分大小寫）
+伺服器不保存 session 狀態；作答時依資料庫重新計算正確選項（干擾選項已排除所有同義詞，因此 4 個選項中恰好一個符合）：
+- `word_to_zh`：等於 `sense.def_zh`
+- `word_to_synonym`：屬於 `sense.synonyms`（不分大小寫）
+- `zh_to_word`：等於 `word.text`（不分大小寫）
+
+`isCorrect = selected === correctOption`。
 
 `was_due` 也在伺服器端以作答當下的當地日期計算，然後呼叫 `apply_review` RPC。
 
@@ -380,16 +436,15 @@ export function applyAnswer(
 ### 7.4 selection.ts（R5.1）
 
 ```ts
-selectSessionWords(words: WordState[], today: string, rng: Rng, size = 8): WordState[]
+orderSessionCandidates(words: WordState[], today: string, rng: Rng): WordState[]
   due    = words.filter(w => w.nextDueOn <= today)
              .sort(by nextDueOn asc, tie → rng)
-  if due.length >= size → return due.slice(0, size)
   notDue = words.filter(w => w.nextDueOn > today)
              .sort(by box asc, then nextDueOn asc)
-  return [...due, ...notDue].slice(0, size)
+  return [...due, ...notDue]
 ```
 
-`startReviewSession` 依序嘗試出題；某個字無法出題時（R6.6）從同一個排序序列繼續往下取。
+回傳完整序列而非前 8 個：`startReviewSession` 依序取前 8 個出題，某個字無法出題時（R6.6）從同一序列繼續往下取。
 
 ### 7.5 questions.ts（R6）
 
@@ -468,3 +523,6 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | D10 | `profiles.timezone` 以 null 表示未初始化 | 可區分「未初始化」與「使用者在 UTC」，首次寫入失敗也能補寫 |
 | D11 | 單字列表每頁 100 筆，捲動載入 | 2,000 字一次渲染時 RSC 1.6MB、篩選 0.6–1 秒；分頁後約 6KB、70–160ms，符合 NFR4。也避開 PostgREST 預設 1,000 筆上限 |
 | D12 | 單字以字典標準寫法儲存，由 AI 在同一次呼叫回傳 `headword` | 一律小寫會錯寫 Monday、English、I、DNA；首字母大寫不符合字典慣例。只接受大小寫差異，避免 AI 擅自改成原形 |
+| D13 | `apply_review` 以 box、next_due_on 做樂觀鎖，衝突時 action 重讀重試一次 | Leitner 規則只保留一份 TS 實作；同一個字在兩個分頁同時作答時不會以舊狀態覆寫 |
+| D14 | 出題時需要 AI 的題目平行處理 | 字庫小時每題都可能需要 AI，依序呼叫最壞要 8 × 20 秒 |
+| D15 | 題目不帶正確答案，作答時 client 帶回 4 個選項由伺服器判定 | 無狀態且不洩漏答案；伺服器需要選項才能回傳要標綠色的那一個（R7.2） |
