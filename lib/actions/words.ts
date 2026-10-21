@@ -5,7 +5,9 @@ import { createClient } from "@/lib/db/server"
 import { listWords, setWordImportant } from "@/lib/db/words"
 import { isUuid } from "@/lib/domain/ids"
 import { addWordWith, type AddWordResult } from "@/lib/words/addWord"
+import type { EditWordInput } from "@/lib/words/editSchema"
 import { parseListParams } from "@/lib/words/listParams"
+import { updateWordWith, type UpdateWordResult } from "@/lib/words/updateWord"
 
 /** R2：新增單字。 */
 export async function addWord(input: string): Promise<AddWordResult> {
@@ -52,4 +54,12 @@ export async function setImportant(
     console.error("setImportant failed", error)
     return { ok: false, message: "更新失敗，請重試" }
   }
+}
+
+/** R4.3：儲存編輯內容。 */
+export async function updateWord(
+  wordId: string,
+  input: EditWordInput,
+): Promise<UpdateWordResult> {
+  return updateWordWith(await createClient(), wordId, input)
 }

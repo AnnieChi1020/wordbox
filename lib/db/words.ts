@@ -162,3 +162,19 @@ export async function getWordDetail(
   if (error) throw error
   return data
 }
+
+/** update_word_content RPC（R4.3、design §4.3）；找不到字時回傳 false。 */
+export async function updateWordContent(
+  db: Db,
+  wordId: string,
+  content: { ipa: string | null; senses: (Sense & { id?: string })[] },
+): Promise<boolean> {
+  const { error } = await db.rpc("update_word_content", {
+    p_word_id: wordId,
+    p_ipa: content.ipa as string, // RPC 參數接受 null；產生的型別未標示
+    p_senses: content.senses,
+  })
+  if (error?.code === "P0002") return false // word not found / sense 不屬於此字
+  if (error) throw error
+  return true
+}

@@ -28,10 +28,6 @@ test("新增單字後以 ?word=<id> 開啟（R2.1、R2.2、R2.8）", async ({
 }) => {
   await add(page, "  Give   up ")
   await expect(page).toHaveURL(new RegExp(`/words\\?word=${UUID.source}$`))
-  // R2.8：開啟新字的 popup；關閉後輸入框已清空
-  await expect(page.getByRole("dialog", { name: "give up" })).toBeVisible()
-  await page.keyboard.press("Escape")
-  await expect(addWordForm(page).input).toHaveValue("")
 
   const words = await getWords(signedIn.id)
   expect(words).toHaveLength(1)
@@ -41,6 +37,11 @@ test("新增單字後以 ?word=<id> 開啟（R2.1、R2.2、R2.8）", async ({
     is_important: false,
   })
   expect(page.url()).toContain(words[0].id)
+
+  // R2.8：開啟新字的 popup；關閉後輸入框已清空
+  await expect(page.getByRole("dialog", { name: "give up" })).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(addWordForm(page).input).toHaveValue("")
 })
 
 test("可以用 Enter 送出", async ({ page, signedIn }) => {

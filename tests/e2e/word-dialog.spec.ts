@@ -92,8 +92,13 @@ test("AC：375px 寬度下 popup 全螢幕且可捲動（R4.8）", async ({
   void signedIn
   await page.setViewportSize({ width: 375, height: 500 })
   const dialog = await addRun(page)
-  const box = (await dialog.boundingBox())!
-  expect(box).toMatchObject({ x: 0, y: 0, width: 375, height: 500 })
+  // 等開啟動畫（zoom-in）結束
+  await expect
+    .poll(async () => {
+      const box = (await dialog.boundingBox())!
+      return [box.x, box.y, box.width, box.height].map(Math.round)
+    })
+    .toEqual([0, 0, 375, 500])
 
   const scroller = dialog.getByRole("list", { name: "義項" })
   const { scrollHeight, clientHeight } = await scroller.evaluate((el) => ({
@@ -108,6 +113,10 @@ test("AC：375px 寬度下 popup 全螢幕且可捲動（R4.8）", async ({
 test("popup 開啟時焦點鎖定在其中（NFR5）", async ({ page, signedIn }) => {
   void signedIn
   const dialog = await addRun(page)
+  // popup 開啟後焦點才會移入（下一個 tick）；之後才開始按 Tab
+  await expect
+    .poll(() => dialog.evaluate((el) => el.contains(document.activeElement)))
+    .toBe(true)
   const visited = new Set<string>()
   for (let i = 0; i < 10; i++) {
     await page.keyboard.press("Tab")
