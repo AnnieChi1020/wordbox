@@ -133,17 +133,17 @@ describe("submitAnswer (R7.3, R7.4)", () => {
       })
     })
 
-    it("box 4, wrong → box 1, due tomorrow", async () => {
+    it("box 4, wrong → box 0, due tomorrow", async () => {
       const w = await setupWord({ box: 4 })
       expect(await submit(answer(w, { correct: false }))).toMatchObject({
         ok: true,
         isCorrect: false,
         correctOption: "答案",
         boxBefore: 4,
-        boxAfter: 1,
+        boxAfter: 0,
       })
       expect(await state(w.wordId)).toEqual({
-        box: 1,
+        box: 0,
         next_due_on: "2026-10-21",
       })
     })

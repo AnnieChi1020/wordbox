@@ -21,7 +21,7 @@ export type ReviewOutcome = { box: number; nextDueOn: string; wasDue: boolean }
 
 /**
  * R7.4：依作答結果更新熟悉度。today 為使用者當地的今天。
- * 答錯一律回到 box 1；答對但未到期（補位字）不變（D3）。
+ * 答錯一律歸零、明天複習（D16）；答對但未到期（補位字）不變（D3）。
  */
 export function applyAnswer(
   state: ReviewState,
@@ -29,7 +29,7 @@ export function applyAnswer(
   today: string,
 ): ReviewOutcome {
   const wasDue = state.nextDueOn <= today
-  if (!isCorrect) return { box: 1, nextDueOn: addDays(today, 1), wasDue }
+  if (!isCorrect) return { box: 0, nextDueOn: addDays(today, 1), wasDue }
   if (!wasDue) return { box: state.box, nextDueOn: state.nextDueOn, wasDue }
   const box = Math.min(state.box + 1, MAX_STARS)
   return {

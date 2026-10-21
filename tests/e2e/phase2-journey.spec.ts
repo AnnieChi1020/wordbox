@@ -76,9 +76,17 @@ test("Phase 2 使用流程", async ({ page, signedIn }) => {
   await test.step("回單字列表，星數已更新", async () => {
     await page.getByRole("link", { name: "回單字列表" }).click()
     await expect(page).toHaveURL("/words")
-    // 新字答對或答錯都變成 box 1
-    for (const text of ["apple", "pear"]) {
-      await expect(rowStars(page, text)).toHaveAccessibleName("熟悉度 1 / 5")
+    // 新字答對 → 1 顆星，答錯 → 0 顆星（D16）
+    const words = await getWords(signedIn.id)
+    const correct = (await reviewLogs(signedIn.id)).filter(
+      (l) => l.is_correct,
+    ).length
+    expect(words.filter((w) => w.box === 1)).toHaveLength(correct)
+    expect(words.filter((w) => w.box === 0)).toHaveLength(2 - correct)
+    for (const { text, box } of words) {
+      await expect(rowStars(page, text)).toHaveAccessibleName(
+        `熟悉度 ${box} / 5`,
+      )
     }
   })
 })
@@ -102,7 +110,7 @@ test("答對與答錯後列表的星數正確變化（R7.4）", async ({ page, s
   await expect(results.getByRole("img", { name: "熟悉度 4 / 5" })).toHaveCount(
     1,
   )
-  await expect(results.getByRole("img", { name: "熟悉度 1 / 5" })).toHaveCount(
+  await expect(results.getByRole("img", { name: "熟悉度 0 / 5" })).toHaveCount(
     1,
   )
 
@@ -110,7 +118,7 @@ test("答對與答錯後列表的星數正確變化（R7.4）", async ({ page, s
   const boxes = Object.fromEntries(
     (await getWords(signedIn.id)).map((w) => [w.text, w.box]),
   )
-  expect(Object.values(boxes).sort()).toEqual([1, 4])
+  expect(Object.values(boxes).sort()).toEqual([0, 4])
   for (const [text, box] of Object.entries(boxes)) {
     await expect(rowStars(page, text)).toHaveAccessibleName(`熟悉度 ${box} / 5`)
   }
@@ -137,8 +145,8 @@ test("作答 3 題後離開頁面，前 3 題已寫入紀錄（R7 AC）", async 
   expect(await reviewLogs(signedIn.id)).toHaveLength(3)
   const { data } = await adminClient()
     .from("words")
-    .select("text, box")
+    .select("text, next_due_on")
     .eq("user_id", signedIn.id)
-  expect(data!.filter((w) => w.box === 1)).toHaveLength(3)
-  expect(data!.filter((w) => w.box === 0)).toHaveLength(2)
+  // 作答過的字都改為明天到期；未作答的維持 seedWords 的日期
+  expect(data!.filter((w) => w.next_due_on !== "2026-10-20")).toHaveLength(3)
 })

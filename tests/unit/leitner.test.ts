@@ -53,9 +53,9 @@ describe("applyAnswer (R7.4)", () => {
     })
   })
 
-  it("box 4, wrong → box 1, due tomorrow", () => {
+  it("box 4, wrong → box 0, due tomorrow (D16)", () => {
     expect(applyAnswer(due(4), false, TODAY)).toEqual({
-      box: 1,
+      box: 0,
       nextDueOn: "2026-10-21",
       wasDue: true,
     })
@@ -79,10 +79,18 @@ describe("applyAnswer (R7.4)", () => {
     })
   })
 
-  it("not-due filler word answered wrong → box 1, due tomorrow", () => {
+  it("new word (box 0) answered wrong → stays at box 0, due tomorrow", () => {
+    expect(applyAnswer(due(0), false, TODAY)).toEqual({
+      box: 0,
+      nextDueOn: "2026-10-21",
+      wasDue: true,
+    })
+  })
+
+  it("not-due filler word answered wrong → box 0, due tomorrow", () => {
     const state = { box: 4, nextDueOn: "2026-10-25", isImportant: false }
     expect(applyAnswer(state, false, TODAY)).toEqual({
-      box: 1,
+      box: 0,
       nextDueOn: "2026-10-21",
       wasDue: false,
     })

@@ -58,13 +58,13 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
     await expect(results.getByRole("listitem")).toHaveCount(2)
     await expect(results.getByText("答對")).toHaveCount(1)
     await expect(results.getByText("答錯")).toHaveCount(1)
-    // 新字 box 0 → 答對、答錯都變成 1 顆星
+    // 新字 box 0：答對 → 1 顆星，答錯 → 維持 0 顆星（D16）
     await expect(
       results.getByRole("img", { name: "熟悉度 0 / 5" }),
-    ).toHaveCount(2)
+    ).toHaveCount(3)
     await expect(
       results.getByRole("img", { name: "熟悉度 1 / 5" }),
-    ).toHaveCount(2)
+    ).toHaveCount(1)
     await expect(page.getByText("今天到期的字都複習完了")).toBeVisible()
 
     // 再來一輪：沒有到期的字時以未到期的字補足

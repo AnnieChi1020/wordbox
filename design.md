@@ -1,8 +1,9 @@
 # 英文單字記憶 App — Design
 
-> 版本：v0.5（2026-10-21）・對應 `requirements.md` v0.2
+> 版本：v0.6（2026-10-21）・對應 `requirements.md` v0.3
 > Phase 3 的設計為初稿，進入該階段時再修訂。
 >
+> v0.6 變更：答錯時 box 設為 0（§7.3、D16）。
 > v0.5 變更：細化 Phase 2——目錄（§3）、`apply_review` 介面與併發處理（§4.3、D13）、干擾選項快取的使用方式（§5.3）、出題與作答的介面（§6、D14、D15）、選字回傳完整序列（§7.4）。
 > v0.4 變更：AI 回傳 `headword`，單字以字典標準寫法儲存（§5.1、§5.2、§6、§7.1、D12）。
 > v0.3 變更：`words.text_key`（§4.1）；單字列表改為分頁載入（§6、D11）。
@@ -428,7 +429,7 @@ export function applyAnswer(
   today: string,
 ): { box: number; nextDueOn: string; wasDue: boolean } {
   const wasDue = s.nextDueOn <= today;
-  if (!isCorrect) return { box: 1, nextDueOn: addDays(today, 1), wasDue };
+  if (!isCorrect) return { box: 0, nextDueOn: addDays(today, 1), wasDue };
   if (!wasDue) return { box: s.box, nextDueOn: s.nextDueOn, wasDue };
   const box = Math.min(s.box + 1, 5);
   return { box, nextDueOn: addDays(today, intervalDays(box, s.isImportant)), wasDue };
@@ -535,3 +536,4 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | D13 | `apply_review` 以 box、next_due_on 做樂觀鎖，衝突時 action 重讀重試一次 | Leitner 規則只保留一份 TS 實作；同一個字在兩個分頁同時作答時不會以舊狀態覆寫 |
 | D14 | 出題時需要 AI 的題目平行處理 | 字庫小時每題都可能需要 AI，依序呼叫最壞要 8 × 20 秒 |
 | D15 | 題目不帶正確答案，作答時 client 帶回 4 個選項由伺服器判定 | 無狀態且不洩漏答案；伺服器需要選項才能回傳要標綠色的那一個（R7.2） |
+| D16 | 答錯時 box 設為 0，而非標準 Leitner 的 1 | 星數 = box，設為 1 會讓新字答錯反而多一顆星；排程不變，答錯的字仍是明天複習 |

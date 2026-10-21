@@ -1,6 +1,6 @@
 # 英文單字記憶 App — Tasks
 
-> 版本：v0.5（2026-10-21）・對應 `requirements.md` v0.2、`design.md` v0.5
+> 版本：v0.6（2026-10-21）・對應 `requirements.md` v0.3、`design.md` v0.6
 > 每個任務都標註對應需求；完成條件以該需求的 AC 為準。
 > 依序實作；一個任務完成（含測試通過）後才開始下一個。
 
@@ -164,6 +164,11 @@
 - [x] **T2.11 Phase 2 部署**
   - `supabase db push` 推送 T2.1 的 migration，Vercel 重新部署
   - 完成條件：正式網址可完成一輪複習
+
+- [x] **T2.12 答錯歸零**（追加需求）— R7.4、design D16
+  - `applyAnswer` 答錯時 box 設為 0（原為 1）
+  - 更新 unit、db、E2E 測試中答錯的預期結果
+  - 完成條件：R7.4 修改後的 AC 通過；新字答錯後仍為 0 星
 
 ---
 

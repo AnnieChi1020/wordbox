@@ -1,6 +1,7 @@
 # 英文單字記憶 App — Requirements
 
-> 版本：v0.2（2026-10-21）
+> 版本：v0.3（2026-10-21）
+> v0.3 變更：R7.4 答錯時 box 設為 0（原為 1），星數歸零（含 AC）。
 > v0.2 變更：R2.7 新增單字以字典標準寫法儲存（含 AC）；R4.5 註明單字本身不變。
 > 格式：需求採 EARS 語法（WHEN / IF / WHILE … THE SYSTEM SHALL …），每節附驗收條件（AC）。
 > 階段：Phase 1 單字管理 → Phase 2 複習 → Phase 3 Dashboard 與 PWA。
@@ -152,7 +153,7 @@
 
   | 情況 | box | next_due_on |
   |---|---|---|
-  | 答錯 | 設為 1 | 今天 + 1 天 |
+  | 答錯 | 設為 0 | 今天 + 1 天 |
   | 答對且該字到期 | `min(box + 1, 5)` | 今天 + 間隔(新 box) |
   | 答對但該字未到期（補位字） | 不變 | 不變 |
 
@@ -165,13 +166,15 @@
 
   （Important 間隔 = `max(1, ceil(一般間隔 / 2))`；切換 important 不會改變已排定的 `next_due_on`，在下次答題時才套用新的間隔。）
 
+  （星數 = box，答錯歸零：0 星代表新字或剛答錯，星數即為「從上次答錯後連續答對的次數」。）
+
 - **R7.5** WHEN 一輪的所有題目作答完畢，THE SYSTEM SHALL 顯示結算：答對題數、每個字的對錯與星數變化，以及「再來一輪」和「回單字列表」按鈕；IF 已沒有到期的字，THE SYSTEM SHALL 顯示「今天到期的字都複習完了」。
 
 **AC**
 - [ ] box 2、到期、一般字答對 → box 3，next_due_on = 今天 + 4。
 - [ ] box 2、到期、important 答對 → box 3，next_due_on = 今天 + 2。
 - [ ] box 5、到期答對 → box 5，next_due_on = 今天 + 16。
-- [ ] box 4 答錯 → box 1，next_due_on = 明天。
+- [ ] box 4 答錯 → box 0，next_due_on = 明天。
 - [ ] 未到期的補位字答對 → box 與 next_due_on 都不變。
 - [ ] 沒有同義詞的義項不會出現 `word_to_synonym` 題。
 - [ ] 字庫只有 2 個字時仍可完成一輪（干擾選項由 AI 補足）。
