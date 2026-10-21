@@ -2,7 +2,7 @@ import type { GenerateWordResult } from "@/lib/ai/generateWord"
 import {
   createWord,
   findWordIdByText,
-  getProfileTimezone,
+  getProfile,
   type Db,
 } from "@/lib/db/words"
 import { localToday } from "@/lib/domain/dates"
@@ -50,6 +50,12 @@ export async function addWordWith(
   }
 
   try {
+    // JWT 可能仍有效但使用者已不存在（帳號刪除、本地 db reset）；在呼叫 AI 前擋下
+    const profile = await getProfile(db)
+    if (!profile) {
+      return { status: "error", message: ADD_WORD_MESSAGES.unauthenticated }
+    }
+
     // 2. R2.4：已有相同的字就不呼叫 AI
     const existingId = await findWordIdByText(db, text)
     if (existingId) return { status: "exists", wordId: existingId }
@@ -69,7 +75,7 @@ export async function addWordWith(
     }
 
     // 4. R2.7、R2.8：box、is_important 由資料庫預設；next_due_on = 當地今天
-    const today = localToday(await getProfileTimezone(db), now)
+    const today = localToday(profile.timezone, now)
     const { id, existed } = await createWord(db, {
       text,
       ipa: generated.ipa,

@@ -166,6 +166,21 @@ describe("addWord", () => {
     expect(await countRows("banana")).toEqual({ words: 1, senses: 1 })
   })
 
+  it("error: a valid session whose user was deleted fails before calling AI", async () => {
+    const ghost = await createTestUser()
+    await deleteTestUser(ghost) // 例如本地 db reset 或帳號被刪除，但瀏覽器的 JWT 尚未過期
+    generate.mockClear()
+    const result = await addWordWith(
+      { db: ghost.client as Db, generate, now: NOW },
+      "grape",
+    )
+    expect(result).toEqual({
+      status: "error",
+      message: ADD_WORD_MESSAGES.unauthenticated,
+    })
+    expect(generate).not.toHaveBeenCalled()
+  })
+
   it("error: requires a signed-in user", async () => {
     generate.mockClear()
     const result = await addWordWith(

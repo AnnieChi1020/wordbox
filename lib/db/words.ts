@@ -22,13 +22,16 @@ export async function findWordIdByText(
   return data?.id ?? null
 }
 
-export async function getProfileTimezone(db: Db): Promise<string | null> {
+/** 目前使用者的 profile；session 有效但使用者已被刪除時為 null。 */
+export async function getProfile(
+  db: Db,
+): Promise<{ timezone: string | null } | null> {
   const { data, error } = await db
     .from("profiles")
     .select("timezone")
     .maybeSingle()
   if (error) throw error
-  return data?.timezone ?? null
+  return data
 }
 
 /** create_word RPC；唯一索引衝突時回傳既有的字（design §4.3）。 */

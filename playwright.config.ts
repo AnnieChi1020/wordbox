@@ -10,6 +10,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
+  // dev server 首次編譯路由可能超過預設的 5 秒
+  expect: { timeout: 10_000 },
   use: {
     baseURL,
     trace: "on-first-retry",
