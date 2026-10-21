@@ -346,7 +346,9 @@ type AnswerResult =
   | { ok: true; isCorrect: boolean; correctOption: string; boxBefore: number; boxAfter: number }
   | { ok: false; message: string };
 
-startReviewSession(): Promise<Question[]>   // 沒有單字時回傳 []（R5.2）
+startReviewSession(): Promise<
+  { ok: true; questions: Question[] } | { ok: false; message: string }
+>                                           // 沒有單字時 questions = []（R5.2）
 submitAnswer({ questionId, wordId, senseId, questionType, options, selected }): Promise<AnswerResult>
   // client 原樣帶回 questionId 與 options；重送時以 questionId 判定冪等（R7.3）
 countDueWords(): Promise<number>            // ReviewIntro 與結算畫面（R7.5）

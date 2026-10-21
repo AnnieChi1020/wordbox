@@ -123,7 +123,7 @@
     - unit：成功、逾時、格式錯誤、過濾後不足 3 個（皆視為失敗）
     - db：快取命中時不呼叫 AI；快取過濾後不足時重新呼叫並覆寫；失敗不寫入快取
 
-- [ ] **T2.6 `startReviewSession`** — R5、R6
+- [x] **T2.6 `startReviewSession`** — R5、R6
   - `lib/review/startSession.ts` + action（design §6 流程）
   - 需要 AI 的題目平行處理（D14）；R6.6 換題型、略過並遞補
   - 題目不含正確答案（D15）
