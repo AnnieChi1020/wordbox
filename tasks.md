@@ -97,7 +97,7 @@
     - 編輯只改順序 → 快取保留；改 def_zh → 該義項快取刪除；重新生成 → 全部刪除
     - 刪除單字後 review_logs 保留，`word_id` 為 null（R4.7）
 
-- [ ] **T2.2 `leitner.ts`** — R7.4
+- [x] **T2.2 `leitner.ts`** — R7.4
   - `intervalDays`、`applyAnswer`（design §7.3）
   - 完成條件：R7.4 的 5 個 AC 各一個測試；另測 box 0 答對、一般與 important 間隔表的 10 格
 
