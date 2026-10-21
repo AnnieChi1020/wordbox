@@ -87,8 +87,47 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
       )
       .toEqual([false, true])
 
+    // R7.5 結算
     await page.getByRole("button", { name: "看結果" }).click()
-    await expect(page.getByText("答對 1 / 2 題")).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "答對 1 / 2 題" }),
+    ).toBeVisible()
+    const results = page.getByRole("list", { name: "這一輪的結果" })
+    await expect(results.getByRole("listitem")).toHaveCount(2)
+    await expect(results.getByText("答對")).toHaveCount(1)
+    await expect(results.getByText("答錯")).toHaveCount(1)
+    // 新字 box 0 → 答對、答錯都變成 1 顆星
+    await expect(
+      results.getByRole("img", { name: "熟悉度 0 / 5" }),
+    ).toHaveCount(2)
+    await expect(
+      results.getByRole("img", { name: "熟悉度 1 / 5" }),
+    ).toHaveCount(2)
+    await expect(page.getByText("今天到期的字都複習完了")).toBeVisible()
+
+    // 再來一輪：沒有到期的字時以未到期的字補足
+    await page.getByRole("button", { name: "再來一輪" }).click()
+    await expect(page.getByText("1 / 2")).toBeVisible()
+  })
+
+  test("結算畫面可以回到單字列表或開啟單字", async ({ page }) => {
+    await page.goto("/review")
+    await page.getByRole("button", { name: "開始複習" }).click()
+    for (const n of [1, 2]) {
+      await expect(page.getByText(`${n} / 2`)).toBeVisible()
+      await page.keyboard.press("1")
+      await page
+        .getByRole("button", { name: n === 2 ? "看結果" : "下一題" })
+        .click()
+    }
+    const results = page.getByRole("list", { name: "這一輪的結果" })
+    await results.getByRole("link").filter({ hasText: "apple" }).click()
+    await expect(page).toHaveURL(/\/words\?word=/)
+    await expect(page.getByRole("dialog")).toBeVisible()
+
+    await page.goBack()
+    await page.goto("/review")
+    await expect(page.getByText("今天沒有到期的字")).toBeVisible()
   })
 
   test("可以用數字鍵作答（NFR5）", async ({ page }) => {

@@ -149,7 +149,7 @@
   - 等待判定時鎖定選項；submitAnswer 失敗時 toast，並可重送同一個 `questionId`
   - 鍵盤：Tab 加 Enter 或數字鍵 1–4 作答；結果以 `aria-live` 宣告，不只靠顏色區分
 
-- [ ] **T2.9 結算畫面** — R7.5
+- [x] **T2.9 結算畫面** — R7.5
   - 答對題數、每個字的對錯與星數變化（boxBefore → boxAfter）
   - 「再來一輪」、「回單字列表」；`countDueWords() = 0` 時顯示「今天到期的字都複習完了」
 
