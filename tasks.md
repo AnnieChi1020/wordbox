@@ -134,7 +134,7 @@
     - 每題 4 個不重複選項，`questionId` 皆不同
     - 2,000 字、不需 AI 時 1 秒內完成
 
-- [ ] **T2.7 `submitAnswer` 與 `countDueWords`** — R7.3、R7.4、R8.6
+- [x] **T2.7 `submitAnswer` 與 `countDueWords`** — R7.3、R7.4、R8.6
   - `lib/review/submitAnswer.ts` + action（design §6 流程）
   - 完成條件（db 測試）：
     - R7.4 的 5 個 AC 經由 action 驗證
