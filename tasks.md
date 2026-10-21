@@ -143,7 +143,7 @@
     - 選項不含正確答案、`selected` 不在選項中、他人的字 → `ok: false`，不寫入
     - 作答期間義項被重新生成 → `ok: false`，不寫入
 
-- [ ] **T2.8 複習 UI** — R7.1、R7.2、NFR1、NFR5
+- [x] **T2.8 複習 UI** — R7.1、R7.2、NFR1、NFR5
   - `ReviewIntro`：今天到期數、開始按鈕；出題中顯示載入狀態，失敗時 toast 加重試
   - `QuestionCard`：進度（3 / 8）、題目與詞性、4 個選項；作答後鎖定、綠 / 紅標示、「下一題」
   - 等待判定時鎖定選項；submitAnswer 失敗時 toast，並可重送同一個 `questionId`
