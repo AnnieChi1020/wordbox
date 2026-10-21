@@ -1,8 +1,9 @@
 "use client"
 
-import { Pencil } from "lucide-react"
+import { Pencil, Sparkles, Trash2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Fragment, useState } from "react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,15 +14,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
+import { deleteWord, regenerateWord } from "@/lib/actions/words"
 import type { WordDetail } from "@/lib/db/words"
 import { POS_ABBR } from "@/lib/domain/pos"
 import { starsLabel } from "@/lib/domain/stars"
 
+import { ConfirmAction } from "./confirm-action"
 import { ImportantToggle } from "./important-toggle"
 import { SpeakButton } from "./speak-button"
-import { WordEditForm } from "./word-edit-form"
 import { Stars } from "./stars"
-import { useImportant } from "./word-state"
+import { WordEditForm } from "./word-edit-form"
+import { useDeletedWords, useImportant } from "./word-state"
 
 /** R4：單字 popup（檢視）。開關完全由 URL 的 ?word=<id> 決定（R4.9）。 */
 export function WordDialog({ word }: { word: WordDetail }) {
@@ -31,6 +35,41 @@ export function WordDialog({ word }: { word: WordDetail }) {
   const open = searchParams.get("word") === word.id
   const [editing, setEditing] = useState(false)
   const [important, setImportant] = useImportant(word.id, word.is_important)
+  const { markDeleted } = useDeletedWords()
+  const [regenerating, setRegenerating] = useState(false)
+
+  /** R4.5、R4.6：失敗時保留原內容並顯示錯誤 */
+  async function regenerate() {
+    setRegenerating(true)
+    const result = await regenerateWord(word.id).catch(() => ({
+      ok: false as const,
+      message: "重新生成失敗，原內容未變更，請重試",
+    }))
+    if (result.ok) {
+      toast.success("已重新生成")
+      router.refresh()
+    } else {
+      toast.error(result.message)
+    }
+    setRegenerating(false)
+  }
+
+  /** R4.7：刪除後關閉 popup 並從列表移除 */
+  async function remove() {
+    const result = await deleteWord(word.id).catch(() => ({
+      ok: false as const,
+      message: "刪除失敗，請重試",
+    }))
+    if (!result.ok) {
+      toast.error(result.message)
+      return
+    }
+    toast.success(`已刪除「${word.text}」`)
+    markDeleted(word.id)
+    close()
+    // 更新總數與空狀態
+    router.refresh()
+  }
 
   /** R4.8：關閉按鈕、Esc、點擊背景；只改 URL，不需等待伺服器 */
   function close() {
@@ -70,17 +109,6 @@ export function WordDialog({ word }: { word: WordDetail }) {
               onChange={setImportant}
               className="ml-auto"
             />
-            {!editing && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setEditing(true)}
-              >
-                <Pencil aria-hidden />
-                編輯
-              </Button>
-            )}
           </div>
           <DialogDescription className="sr-only">
             {word.text} 的解釋、同義詞、反義詞與例句
@@ -97,6 +125,8 @@ export function WordDialog({ word }: { word: WordDetail }) {
               router.refresh()
             }}
           />
+        ) : regenerating ? (
+          <SensesSkeleton text={word.text} />
         ) : (
           <ol
             className="flex-1 space-y-5 overflow-y-auto p-4"
@@ -130,6 +160,45 @@ export function WordDialog({ word }: { word: WordDetail }) {
               </li>
             ))}
           </ol>
+        )}
+
+        {!editing && (
+          <div className="flex items-center gap-2 border-t p-3">
+            {/* R4.7 */}
+            <ConfirmAction
+              destructive
+              disabled={regenerating}
+              title={`刪除「${word.text}」？`}
+              description="單字與所有解釋都會刪除，無法復原。複習紀錄會保留在統計中。"
+              confirmLabel="刪除"
+              onConfirm={remove}
+            >
+              <Trash2 aria-hidden />
+              刪除
+            </ConfirmAction>
+            <div className="ml-auto flex gap-2">
+              {/* R4.5 */}
+              <ConfirmAction
+                disabled={regenerating}
+                title={`重新生成「${word.text}」？`}
+                description="AI 會重新生成音標與所有義項並取代目前的內容（包含你編輯過的部分）。熟悉度與重要標記不變。"
+                confirmLabel="重新生成"
+                onConfirm={regenerate}
+              >
+                <Sparkles aria-hidden />
+                重新生成
+              </ConfirmAction>
+              <Button
+                type="button"
+                size="sm"
+                disabled={regenerating}
+                onClick={() => setEditing(true)}
+              >
+                <Pencil aria-hidden />
+                編輯
+              </Button>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>
@@ -167,5 +236,20 @@ function Highlight({ text, term }: { text: string; term: string }) {
     ) : (
       <Fragment key={i}>{part}</Fragment>
     ),
+  )
+}
+
+function SensesSkeleton({ text }: { text: string }) {
+  return (
+    <div className="flex-1 space-y-3 p-4" aria-busy="true">
+      <p className="text-muted-foreground text-sm">
+        正在用 AI 重新整理「{text}」…
+      </p>
+      <Skeleton className="h-5 w-1/3" />
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-5 w-1/4" />
+      <Skeleton className="h-4 w-3/5" />
+    </div>
   )
 }

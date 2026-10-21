@@ -178,3 +178,30 @@ export async function updateWordContent(
   if (error) throw error
   return true
 }
+
+/** replace_word_content RPC（R4.5）；找不到字時回傳 false。 */
+export async function replaceWordContent(
+  db: Db,
+  wordId: string,
+  content: { ipa: string | null; senses: Sense[] },
+): Promise<boolean> {
+  const { error } = await db.rpc("replace_word_content", {
+    p_word_id: wordId,
+    p_ipa: content.ipa as string, // RPC 參數接受 null；產生的型別未標示
+    p_senses: content.senses,
+  })
+  if (error?.code === "P0002") return false
+  if (error) throw error
+  return true
+}
+
+/** R4.7：刪除單字（senses 隨之 cascade）；回傳是否有刪到。 */
+export async function deleteWordById(db: Db, wordId: string): Promise<boolean> {
+  const { data, error } = await db
+    .from("words")
+    .delete()
+    .eq("id", wordId)
+    .select("id")
+  if (error) throw error
+  return data.length > 0
+}

@@ -68,7 +68,7 @@
 - [x] **T1.12 編輯模式** — R4.3、R4.4
   - 表單（Zod 驗證）、新增或移除義項（1–3）、`updateWord` → `update_word_content`（既有義項帶 id）
 
-- [ ] **T1.13 重新生成與刪除** — R4.5–R4.7
+- [x] **T1.13 重新生成與刪除** — R4.5–R4.7
   - 確認對話框；重新生成失敗時保留原內容
   - 重新生成不改變單字本身（忽略 AI 回傳的 headword）
   - R4.7 AC「Dashboard 的歷史答題數不變」需要 review_logs 與 Dashboard，延到 T3.3 一併驗證；Phase 1 只驗證列表立即移除

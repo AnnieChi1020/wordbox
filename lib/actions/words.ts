@@ -7,6 +7,11 @@ import { isUuid } from "@/lib/domain/ids"
 import { addWordWith, type AddWordResult } from "@/lib/words/addWord"
 import type { EditWordInput } from "@/lib/words/editSchema"
 import { parseListParams } from "@/lib/words/listParams"
+import { deleteWordWith } from "@/lib/words/deleteWord"
+import {
+  regenerateWordWith,
+  type WordActionResult,
+} from "@/lib/words/regenerateWord"
 import { updateWordWith, type UpdateWordResult } from "@/lib/words/updateWord"
 
 /** R2：新增單字。 */
@@ -62,4 +67,20 @@ export async function updateWord(
   input: EditWordInput,
 ): Promise<UpdateWordResult> {
   return updateWordWith(await createClient(), wordId, input)
+}
+
+/** R4.5：重新生成（AI 呼叫記錄為 regenerate）。 */
+export async function regenerateWord(
+  wordId: string,
+): Promise<WordActionResult> {
+  return regenerateWordWith(
+    await createClient(),
+    (text) => generateWord(text, { kind: "regenerate" }),
+    wordId,
+  )
+}
+
+/** R4.7：刪除單字。 */
+export async function deleteWord(wordId: string): Promise<WordActionResult> {
+  return deleteWordWith(await createClient(), wordId)
 }

@@ -5,6 +5,9 @@ import { createContext, useCallback, useContext, useState } from "react"
 type WordState = {
   important: ReadonlyMap<string, boolean>
   setImportant: (wordId: string, value: boolean) => void
+  /** 已刪除的字；伺服器重新渲染前先從列表隱藏（R4.7） */
+  deleted: ReadonlySet<string>
+  markDeleted: (wordId: string) => void
 }
 
 const WordStateContext = createContext<WordState | null>(null)
@@ -18,11 +21,26 @@ export function WordStateProvider({ children }: { children: React.ReactNode }) {
   const setImportant = useCallback((wordId: string, value: boolean) => {
     setMap((prev) => new Map(prev).set(wordId, value))
   }, [])
+  const [deleted, setDeleted] = useState<ReadonlySet<string>>(new Set())
+  const markDeleted = useCallback((wordId: string) => {
+    setDeleted((prev) => new Set(prev).add(wordId))
+  }, [])
   return (
-    <WordStateContext value={{ important, setImportant }}>
+    <WordStateContext value={{ important, setImportant, deleted, markDeleted }}>
       {children}
     </WordStateContext>
   )
+}
+
+function useWordState() {
+  const ctx = useContext(WordStateContext)
+  if (!ctx) throw new Error("must be used within WordStateProvider")
+  return ctx
+}
+
+export function useDeletedWords() {
+  const { deleted, markDeleted } = useWordState()
+  return { deleted, markDeleted }
 }
 
 /** 回傳目前的 important 值（本地更新優先於伺服器資料）與更新函式。 */

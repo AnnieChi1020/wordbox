@@ -24,6 +24,11 @@ export default defineConfig({
     command: `npm run dev -- --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    env: { AI_MOCK: "1", AI_TIMEOUT_MS: "1000", NEXT_DIST_DIR: ".next-e2e" },
+    env: {
+      AI_MOCK: "1",
+      AI_TIMEOUT_MS: "1000",
+      NEXT_DIST_DIR: ".next-e2e",
+      E2E: "1",
+    },
   },
 })

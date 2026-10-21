@@ -12,7 +12,7 @@ import { posTags } from "@/lib/domain/pos"
 
 import { ImportantToggle } from "./important-toggle"
 import { Stars } from "./stars"
-import { useImportant } from "./word-state"
+import { useDeletedWords, useImportant } from "./word-state"
 
 type Props = {
   /** 伺服器端查詢的第一頁 */
@@ -45,6 +45,8 @@ export function WordList({ initialWords, total, listQuery }: Props) {
   }, [words])
 
   const hasMore = words.length < total
+  const { deleted } = useDeletedWords()
+  const visible = words.filter((w) => !deleted.has(w.id))
 
   async function loadMore() {
     if (inFlight.current || loaded.current.length >= total) return
@@ -84,9 +86,11 @@ export function WordList({ initialWords, total, listQuery }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-muted-foreground text-sm">{total} 個單字</p>
+      <p className="text-muted-foreground text-sm">
+        {total - (words.length - visible.length)} 個單字
+      </p>
       <ul aria-label="單字列表" className="divide-y rounded-lg border">
-        {words.map((word) => (
+        {visible.map((word) => (
           <WordRow key={word.id} word={word} listQuery={listQuery} />
         ))}
       </ul>
