@@ -1,0 +1,18 @@
+{
+  "is_valid": true,
+  "suggestions": [],
+  "ipa": "/ˈæp.əl/",
+  "senses": [
+    {
+      "pos": "noun",
+      "def_en": "a round fruit with red, green, or yellow skin and firm white flesh",
+      "def_zh": "蘋果",
+      "synonyms": [],
+      "antonyms": [],
+      "examples": [
+        "She eats an apple every morning.",
+        "This apple tastes sweet."
+      ]
+    }
+  ]
+}

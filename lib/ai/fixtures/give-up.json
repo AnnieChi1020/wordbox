@@ -1,0 +1,26 @@
+{
+  "is_valid": true,
+  "suggestions": [],
+  "ipa": "/ɡɪv ˈʌp/",
+  "senses": [
+    {
+      "pos": "phrase",
+      "def_en": "to stop trying to do something because it is too difficult",
+      "def_zh": "放棄",
+      "synonyms": ["quit", "surrender"],
+      "antonyms": ["persist", "persevere"],
+      "examples": [
+        "Don't give up on your dreams.",
+        "He gave up after three tries."
+      ]
+    },
+    {
+      "pos": "phrase",
+      "def_en": "to stop doing or having something, such as a habit",
+      "def_zh": "戒掉",
+      "synonyms": ["quit", "abandon"],
+      "antonyms": ["continue"],
+      "examples": ["She gave up smoking last year."]
+    }
+  ]
+}

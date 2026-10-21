@@ -1,0 +1,34 @@
+{
+  "is_valid": true,
+  "suggestions": [],
+  "ipa": "/rʌn/",
+  "senses": [
+    {
+      "pos": "verb",
+      "def_en": "to move quickly on your feet so that both feet leave the ground",
+      "def_zh": "跑；奔跑",
+      "synonyms": ["sprint", "jog", "dash"],
+      "antonyms": ["walk"],
+      "examples": [
+        "I run in the park every morning.",
+        "He ran to catch the bus."
+      ]
+    },
+    {
+      "pos": "verb",
+      "def_en": "to manage or be in charge of a business or activity",
+      "def_zh": "經營；管理",
+      "synonyms": ["manage", "operate"],
+      "antonyms": [],
+      "examples": ["She runs a small café downtown."]
+    },
+    {
+      "pos": "noun",
+      "def_en": "a period of running, especially for exercise",
+      "def_zh": "跑步",
+      "synonyms": ["jog"],
+      "antonyms": [],
+      "examples": ["Let's go for a run after work."]
+    }
+  ]
+}

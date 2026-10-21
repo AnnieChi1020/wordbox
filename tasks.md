@@ -32,7 +32,7 @@
 - [x] **T1.5 Domain 基礎函式** — R2.2、R2.3、R2.11、R3.1
   - `normalize.ts`、`pos.ts`、`stars.ts`、`dates.ts` 及單元測試
 
-- [ ] **T1.6 AI 生成單字** — R2.5–R2.7、R2.10、R2.12、NFR3、NFR6
+- [x] **T1.6 AI 生成單字** — R2.5–R2.7、R2.10、R2.12、NFR3、NFR6
   - `schemas.ts`、`prompts.ts`、`generateWord.ts`（20 秒逾時、寫入 log）
   - `AI_MOCK` fixtures：`apple`、`run`、`give up`、`aple`、逾時、格式錯誤
   - 完成條件：以 fixtures 測試所有分支
