@@ -1,6 +1,6 @@
 # 英文單字記憶 App — Tasks
 
-> 版本：v0.2（2026-10-20）・對應 `requirements.md` v0.1、`design.md` v0.2
+> 版本：v0.3（2026-10-21）・對應 `requirements.md` v0.1、`design.md` v0.3
 > 每個任務都標註對應需求；完成條件以該需求的 AC 為準。
 > 依序實作；一個任務完成（含測試通過）後才開始下一個。
 
@@ -45,11 +45,12 @@
   - 輸入框、格式錯誤提示、載入狀態、拼字建議（可點擊）、重試
   - `exists` 與 `created` 都以 `?word=<id>` 開啟 popup
 
-- [ ] **T1.9 單字列表** — R3.1–R3.4、R3.7、R3.8、NFR4
+- [x] **T1.9 單字列表** — R3.1–R3.4、R3.7、R3.8、NFR4
   - 由 URL search params 驅動的資料庫查詢
   - 列表列元件：單字、詞性 tag、星數（含 aria-label）、important
   - 篩選（星數複選、只看 important）、排序（6 種）、空狀態
-  - 完成條件：R3 的 AC 全數通過；2,000 字假資料下符合 NFR4
+  - 每頁 100 筆、捲動載入（design D11）
+  - 完成條件：R3 的 AC 全數通過；2,000 字假資料下符合 NFR4（`npm run test:perf`）
 
 - [ ] **T1.10 Important 切換** — R3.5
   - `setImportant` action + optimistic update；列表與 popup 共用

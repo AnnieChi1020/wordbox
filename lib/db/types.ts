@@ -110,6 +110,7 @@ export type Database = {
           is_important: boolean
           next_due_on: string
           text: string
+          text_key: string | null
           updated_at: string
           user_id: string
         }
@@ -122,6 +123,7 @@ export type Database = {
           is_important?: boolean
           next_due_on: string
           text: string
+          text_key?: never
           updated_at?: string
           user_id?: string
         }
@@ -133,6 +135,7 @@ export type Database = {
           is_important?: boolean
           next_due_on?: string
           text?: string
+          text_key?: never
           updated_at?: string
           user_id?: string
         }

@@ -91,3 +91,52 @@ export async function getWords(userId: string) {
     senses: { id: string }[]
   }[]
 }
+
+export type SeedWord = {
+  text: string
+  box?: number
+  important?: boolean
+  /** 新增時間；預設依陣列順序每個字間隔 1 分鐘 */
+  createdAt?: string
+  pos?: string[]
+}
+
+/** 直接寫入資料庫建立單字（不經過 AI），回傳依輸入順序的 id。 */
+export async function seedWords(userId: string, words: SeedWord[]) {
+  const admin = adminClient()
+  const base = Date.parse("2026-10-01T00:00:00Z")
+  const { data, error } = await admin
+    .from("words")
+    .insert(
+      words.map((w, i) => ({
+        user_id: userId,
+        text: w.text,
+        box: w.box ?? 0,
+        is_important: w.important ?? false,
+        next_due_on: "2026-10-20",
+        created_at: w.createdAt ?? new Date(base + i * 60_000).toISOString(),
+      })),
+    )
+    .select("id, text")
+  if (error) throw error
+  const idByText = new Map(data.map((d) => [d.text, d.id as string]))
+  const ids = words.map((w) => idByText.get(w.text)!)
+
+  const senses = words.flatMap((w, i) =>
+    (w.pos ?? ["noun"]).map((pos, j) => ({
+      word_id: ids[i],
+      position: j + 1,
+      pos,
+      def_en: `definition of ${w.text}`,
+      def_zh: `${w.text} 的解釋`,
+      examples: [`An example with ${w.text}.`],
+    })),
+  )
+  for (let i = 0; i < senses.length; i += 1000) {
+    const { error: senseError } = await admin
+      .from("senses")
+      .insert(senses.slice(i, i + 1000))
+    if (senseError) throw senseError
+  }
+  return ids
+}

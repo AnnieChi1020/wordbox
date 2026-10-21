@@ -1,8 +1,9 @@
 # 英文單字記憶 App — Design
 
-> 版本：v0.2（2026-10-20）・對應 `requirements.md` v0.1
+> 版本：v0.3（2026-10-21）・對應 `requirements.md` v0.1
 > Phase 2、3 的設計為初稿，進入該階段時再修訂。
 >
+> v0.3 變更：`words.text_key`（§4.1）；單字列表改為分頁載入（§6、D11）。
 > v0.2 變更：`profiles.timezone` 改為 nullable（§4.1、§4.4）；編輯改為原地更新義項（§4.1、§4.3、D9）；`middleware.ts` → `proxy.ts`（§3）；`questionId` 由伺服器產生（§6）。
 
 ---
@@ -127,10 +128,13 @@ create table words (
   box smallint not null default 0 check (box between 0 and 5),
   next_due_on date not null,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  text_key text generated always as (lower(text)) stored  -- 字母排序與查重（PostgREST 無法以運算式排序）
 );
 create unique index words_user_text_uniq on words (user_id, lower(text));   -- R2.4
 create index words_user_due_idx on words (user_id, next_due_on);
+create index words_user_text_key_idx on words (user_id, text_key);
+create index words_user_box_idx on words (user_id, box);
 
 create table senses (
   id uuid primary key default gen_random_uuid(),
@@ -308,6 +312,14 @@ submitAnswer({ questionId, wordId, senseId, questionType, selected }): Promise<A
 
 讀取（列表、popup、dashboard）在 Server Components 中直接查詢。列表篩選與排序以 URL search params 驅動（R3.4），查詢在資料庫端完成。
 
+### 單字列表分頁（NFR4、D11）
+
+- 每次查詢 100 筆（`range`），以同一個查詢取得 `count: exact` 顯示總數；排序最後以 `id` 決定，分頁不重複不遺漏。
+- 第一頁由 Server Component 查詢；捲動到底時以 `loadMoreWords(listQuery, offset)` action 載入下一頁，也提供「載入更多」按鈕供鍵盤操作。
+- 伺服器只傳精簡資料給 client 列表元件，由 client 渲染每一列，避免 RSC 傳送整棵元素樹。
+- 篩選、排序或資料變動時，伺服器重新渲染第一頁，client 列表重設；載入中的舊頁結果丟棄。
+- 效能以 `npm run test:perf` 量測（production build、2,000 字）。
+
 ### submitAnswer 的伺服器端判定（R7.3）
 
 伺服器不保存 session 狀態；作答時依資料庫重新計算正確答案：
@@ -448,3 +460,4 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | D8 | 暫不限制 AI 用量，但記錄 log | 日後可依 log 直接加上限（Q2） |
 | D9 | 編輯原地更新義項，重新生成才整批取代 | 編輯只讓有變動義項的干擾快取失效（R6.5），並保留 `review_logs.sense_id` |
 | D10 | `profiles.timezone` 以 null 表示未初始化 | 可區分「未初始化」與「使用者在 UTC」，首次寫入失敗也能補寫 |
+| D11 | 單字列表每頁 100 筆，捲動載入 | 2,000 字一次渲染時 RSC 1.6MB、篩選 0.6–1 秒；分頁後約 6KB、70–160ms，符合 NFR4。也避開 PostgREST 預設 1,000 筆上限 |
