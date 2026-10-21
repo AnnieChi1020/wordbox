@@ -120,6 +120,8 @@ test("popup 開啟時焦點鎖定在其中（NFR5）", async ({ page, signedIn }
   const visited = new Set<string>()
   for (let i = 0; i < 10; i++) {
     await page.keyboard.press("Tab")
+    // Base UI 的焦點守衛在下一個畫面才把焦點拉回 popup；以接近真人的按鍵間隔操作
+    await page.waitForTimeout(50)
     const where = await page.evaluate(() => {
       const active = document.activeElement
       const dialogEl = document.querySelector('[role="dialog"]')

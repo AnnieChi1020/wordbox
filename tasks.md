@@ -73,7 +73,7 @@
   - 重新生成不改變單字本身（忽略 AI 回傳的 headword）
   - R4.7 AC「Dashboard 的歷史答題數不變」需要 review_logs 與 Dashboard，延到 T3.3 一併驗證；Phase 1 只驗證列表立即移除
 
-- [ ] **T1.14 Phase 1 E2E 測試**
+- [x] **T1.14 Phase 1 E2E 測試**
   - 登入 → 新增（有效 / 拼錯 / 重複）→ 列表篩選排序 → popup 編輯 → 重新生成 → 刪除
 
 - [ ] **T1.15 部署**
