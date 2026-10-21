@@ -85,7 +85,7 @@
 
 ## Phase 2 — 複習
 
-- [ ] **T2.1 資料庫：複習紀錄與干擾快取** — R6.5、R7.3、R8.6
+- [x] **T2.1 資料庫：複習紀錄與干擾快取** — R6.5、R7.3、R8.6
   - Migration：`review_logs`、`ai_distractors`、索引、RLS（design §4.1、§4.2）
   - `senses` 的 after update trigger：內容欄位變動時刪除該義項的 ai_distractors，只改 position 時保留（design §4.1）
   - `apply_review` RPC：鎖定 word、`question_id` 冪等、box / next_due_on 樂觀鎖（design §4.3、D13）

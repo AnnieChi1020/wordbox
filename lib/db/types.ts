@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_distractors: {
+        Row: {
+          created_at: string
+          options: string[]
+          question_type: string
+          sense_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          created_at?: string
+          options: string[]
+          question_type: string
+          sense_id: string
+        }
+        Update: {
+          created_at?: string
+          options?: string[]
+          question_type?: string
+          sense_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_distractors_sense_id_fkey"
+            columns: ["sense_id"]
+            isOneToOne: false
+            referencedRelation: "senses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_generation_logs: {
         Row: {
           created_at: string
@@ -55,6 +85,67 @@ export type Database = {
           timezone?: string | null
         }
         Relationships: []
+      }
+      review_logs: {
+        Row: {
+          answered_at: string
+          box_after: number
+          box_before: number
+          id: number
+          is_correct: boolean
+          local_date: string
+          question_id: string
+          question_type: string
+          sense_id: string | null
+          user_id: string
+          was_due: boolean
+          word_id: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          answered_at?: string
+          box_after: number
+          box_before: number
+          id?: never
+          is_correct: boolean
+          local_date: string
+          question_id: string
+          question_type: string
+          sense_id?: string | null
+          user_id?: string
+          was_due: boolean
+          word_id?: string | null
+        }
+        Update: {
+          answered_at?: string
+          box_after?: number
+          box_before?: number
+          id?: never
+          is_correct?: boolean
+          local_date?: string
+          question_id?: string
+          question_type?: string
+          sense_id?: string | null
+          user_id?: string
+          was_due?: boolean
+          word_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_logs_sense_id_fkey"
+            columns: ["sense_id"]
+            isOneToOne: false
+            referencedRelation: "senses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_logs_word_id_fkey"
+            columns: ["word_id"]
+            isOneToOne: false
+            referencedRelation: "words"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       senses: {
         Row: {
@@ -146,6 +237,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_review: {
+        Args: {
+          p_box_after: number
+          p_box_before: number
+          p_due_after: string
+          p_due_before: string
+          p_is_correct: boolean
+          p_local_date: string
+          p_question_id: string
+          p_question_type: string
+          p_sense_id: string
+          p_was_due: boolean
+          p_word_id: string
+        }
+        Returns: Json
+      }
       create_word: {
         Args: { p_ipa: string; p_senses: Json; p_text: string; p_today: string }
         Returns: Json
