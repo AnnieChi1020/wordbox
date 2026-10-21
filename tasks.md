@@ -37,7 +37,7 @@
   - `AI_MOCK` fixtures：`apple`、`run`、`give up`、`aple`、逾時、格式錯誤
   - 完成條件：以 fixtures 測試所有分支
 
-- [ ] **T1.7 `addWord` action** — R2.2–R2.8
+- [x] **T1.7 `addWord` action** — R2.2–R2.8
   - 正規化 → 查重 → AI → `create_word` RPC；併發衝突回傳 `exists`
   - 完成條件：單元或整合測試涵蓋 4 種回傳狀態
 

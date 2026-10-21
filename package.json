@@ -16,7 +16,8 @@
     "test:db": "vitest run --project db",
     "db:start": "supabase start -x realtime,storage-api,imgproxy,edge-runtime,logflare,vector,supavisor",
     "db:stop": "supabase stop",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local --schema public > lib/db/types.ts && prettier --write lib/db/types.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
