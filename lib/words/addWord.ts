@@ -6,7 +6,11 @@ import {
   type Db,
 } from "@/lib/db/words"
 import { localToday } from "@/lib/domain/dates"
-import { isValidInput, normalizeInput } from "@/lib/domain/normalize"
+import {
+  INPUT_FORMAT_MESSAGE,
+  isValidInput,
+  normalizeInput,
+} from "@/lib/domain/normalize"
 
 export type AddWordResult =
   | { status: "exists"; wordId: string }
@@ -15,8 +19,7 @@ export type AddWordResult =
   | { status: "error"; message: string }
 
 export const ADD_WORD_MESSAGES = {
-  format:
-    "請輸入英文單字或片語：以英文字母開頭，只能包含英文字母、空白、連字號與撇號，最多 64 個字元",
+  format: INPUT_FORMAT_MESSAGE,
   unauthenticated: "登入已過期，請重新登入",
   aiTimeout: "AI 回應逾時，請重試",
   aiFormat: "AI 回傳的內容有誤，請重試",

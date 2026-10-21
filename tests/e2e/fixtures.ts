@@ -75,3 +75,19 @@ export const test = base.extend<Fixtures>({
 })
 
 export { expect } from "@playwright/test"
+
+export async function getWords(userId: string) {
+  const { data, error } = await adminClient()
+    .from("words")
+    .select("id, text, box, is_important, senses(id)")
+    .eq("user_id", userId)
+    .order("created_at")
+  if (error) throw error
+  return data as {
+    id: string
+    text: string
+    box: number
+    is_important: boolean
+    senses: { id: string }[]
+  }[]
+}

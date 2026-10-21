@@ -7,7 +7,13 @@ import { logAiCall, type AiCallLog } from "./log"
 import { GENERATE_WORD_SYSTEM_PROMPT, generateWordUserMessage } from "./prompts"
 import { GenerateWordSchema, type Sense } from "./schemas"
 
+/** R2.10：20 秒逾時；AI_TIMEOUT_MS 只供 E2E 縮短等待時間。 */
 export const AI_TIMEOUT_MS = 20_000
+
+function defaultTimeoutMs() {
+  const fromEnv = Number(process.env.AI_TIMEOUT_MS)
+  return Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : AI_TIMEOUT_MS
+}
 
 export type GenerateWordResult =
   | { status: "valid"; ipa: string | null; senses: Sense[] }
@@ -31,7 +37,7 @@ export async function generateWord(
     kind = "generate",
     client,
     log = logAiCall,
-    timeoutMs = AI_TIMEOUT_MS,
+    timeoutMs = defaultTimeoutMs(),
   }: Deps = {},
 ): Promise<GenerateWordResult> {
   const result = await callModel(input, client, timeoutMs)
