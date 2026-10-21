@@ -22,3 +22,8 @@ export const GenerateWordSchema = z.object({
 
 export type Sense = z.infer<typeof SenseSchema>
 export type GenerateWordOutput = z.infer<typeof GenerateWordSchema>
+
+/** design §5.3：干擾選項，一律 3 個。 */
+export const DistractorsSchema = z.object({
+  options: z.array(z.string().trim().min(1)).length(3),
+})

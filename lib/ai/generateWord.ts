@@ -7,23 +7,16 @@ import {
   normalizeInput,
 } from "@/lib/domain/normalize"
 
-import { getAiClient, type AiClient } from "./client"
+import type { AiClient } from "./client"
 import { logAiCall, type AiCallLog } from "./log"
 import { GENERATE_WORD_SYSTEM_PROMPT, generateWordUserMessage } from "./prompts"
+import { defaultTimeoutMs, requestJson, type AiErrorReason } from "./request"
 import { GenerateWordSchema, type Sense } from "./schemas"
-
-/** R2.10：20 秒逾時；AI_TIMEOUT_MS 只供 E2E 縮短等待時間。 */
-export const AI_TIMEOUT_MS = 20_000
-
-function defaultTimeoutMs() {
-  const fromEnv = Number(process.env.AI_TIMEOUT_MS)
-  return Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : AI_TIMEOUT_MS
-}
 
 export type GenerateWordResult =
   | { status: "valid"; text: string; ipa: string | null; senses: Sense[] }
   | { status: "invalid"; suggestions: string[] }
-  | { status: "error"; reason: "timeout" | "format" | "api" }
+  | { status: "error"; reason: AiErrorReason }
 
 type Deps = {
   kind?: "generate" | "regenerate"
@@ -60,31 +53,20 @@ async function callModel(
   client: AiClient | undefined,
   timeoutMs: number,
 ): Promise<GenerateWordResult> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
-  let raw: unknown
-  try {
-    raw = await (client ?? (await getAiClient())).completeJson({
+  const response = await requestJson(
+    {
       name: "word_entry",
       schema: GenerateWordSchema,
       system: GENERATE_WORD_SYSTEM_PROMPT,
       // 一律以小寫詢問：結果不受使用者輸入的大小寫影響（例如 Apple 被當成專有名詞）
       user: generateWordUserMessage(input.toLowerCase()),
       input,
-      signal: controller.signal,
-    })
-  } catch (error) {
-    if (controller.signal.aborted) return { status: "error", reason: "timeout" }
-    // JSON.parse 失敗代表輸出不完整（拒答、截斷）
-    if (error instanceof SyntaxError)
-      return { status: "error", reason: "format" }
-    console.error("AI request failed", error)
-    return { status: "error", reason: "api" }
-  } finally {
-    clearTimeout(timer)
-  }
+    },
+    { client, timeoutMs },
+  )
+  if (!response.ok) return { status: "error", reason: response.reason }
 
-  const parsed = GenerateWordSchema.safeParse(raw)
+  const parsed = GenerateWordSchema.safeParse(response.raw)
   if (!parsed.success) return { status: "error", reason: "format" }
 
   const output = parsed.data

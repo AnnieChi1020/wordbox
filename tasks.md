@@ -115,7 +115,7 @@
     - 候選不足時回傳 `needsAi`，含缺幾個與已找到的部分候選
     - 4 個選項的順序由 rng 決定
 
-- [ ] **T2.5 AI 干擾選項** — R6.5、R6.6、R2.12
+- [x] **T2.5 AI 干擾選項** — R6.5、R6.6、R2.12
   - `DistractorsSchema`、prompt、`generateDistractors.ts`（20 秒逾時、log kind = `distractors`）（design §5.3、§5.4）
   - `lib/review/distractors.ts`：快取 → AI → R6.4 過濾 → 寫入快取（design §5.3）
   - mock 依 request name 分派；`mock distractor fail` 觸發失敗
