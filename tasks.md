@@ -52,7 +52,7 @@
   - 每頁 100 筆、捲動載入（design D11）
   - 完成條件：R3 的 AC 全數通過；2,000 字假資料下符合 NFR4（`npm run test:perf`）
 
-- [ ] **T1.10 Important 切換** — R3.5
+- [x] **T1.10 Important 切換** — R3.5
   - `setImportant` action + optimistic update；列表與 popup 共用
 
 - [ ] **T1.11 單字 popup（檢視）** — R4.1、R4.2、R4.8、R4.9、NFR5

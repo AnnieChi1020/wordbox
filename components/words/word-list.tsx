@@ -1,6 +1,6 @@
 "use client"
 
-import { Flag, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 
@@ -10,6 +10,7 @@ import { loadMoreWords } from "@/lib/actions/words"
 import type { WordListItem } from "@/lib/db/words"
 import { posTags } from "@/lib/domain/pos"
 
+import { ImportantToggle } from "./important-toggle"
 import { Stars } from "./stars"
 
 type Props = {
@@ -43,6 +44,15 @@ export function WordList({ initialWords, total, listQuery }: Props) {
   }, [words])
 
   const hasMore = words.length < total
+
+  /** important 更新成功後只改本地資料，不重新載入（保留已載入的頁面） */
+  function updateImportant(wordId: string, important: boolean) {
+    const next = loaded.current.map((w) =>
+      w.id === wordId ? { ...w, is_important: important } : w,
+    )
+    loaded.current = next
+    setWords(next)
+  }
 
   async function loadMore() {
     if (inFlight.current || loaded.current.length >= total) return
@@ -85,7 +95,12 @@ export function WordList({ initialWords, total, listQuery }: Props) {
       <p className="text-muted-foreground text-sm">{total} 個單字</p>
       <ul aria-label="單字列表" className="divide-y rounded-lg border">
         {words.map((word) => (
-          <WordRow key={word.id} word={word} listQuery={listQuery} />
+          <WordRow
+            key={word.id}
+            word={word}
+            listQuery={listQuery}
+            onImportantChange={updateImportant}
+          />
         ))}
       </ul>
       {hasMore && (
@@ -111,14 +126,16 @@ export function WordList({ initialWords, total, listQuery }: Props) {
 function WordRow({
   word,
   listQuery,
+  onImportantChange,
 }: {
   word: WordListItem
   listQuery: string
+  onImportantChange: (wordId: string, important: boolean) => void
 }) {
   const params = new URLSearchParams(listQuery)
   params.set("word", word.id)
   return (
-    <li className="flex items-center gap-2 pr-3">
+    <li className="flex items-center gap-1 pr-1.5">
       {/* R3.6：點擊單字列開啟 popup */}
       <Link
         href={`/words?${params}`}
@@ -136,20 +153,12 @@ function WordRow({
         </span>
         <Stars box={word.box} className="ml-auto" />
       </Link>
-      <ImportantMark important={word.is_important} />
+      <ImportantToggle
+        wordId={word.id}
+        important={word.is_important}
+        onChange={(important) => onImportantChange(word.id, important)}
+      />
     </li>
-  )
-}
-
-/** T1.10 改為可切換的按鈕。 */
-function ImportantMark({ important }: { important: boolean }) {
-  return (
-    <Flag
-      role="img"
-      aria-label={important ? "重要" : "一般"}
-      data-important={important || undefined}
-      className="text-muted-foreground/30 size-4 shrink-0 data-important:fill-red-500 data-important:text-red-500"
-    />
   )
 }
 

@@ -40,7 +40,9 @@ test("每列顯示單字、詞性 tag、星數與 important（R3.1）", async ({
   await expect(stars).toBeVisible()
   await expect(stars.locator("[data-filled]")).toHaveCount(3)
   await expect(stars.locator("svg:not([data-filled])")).toHaveCount(2)
-  await expect(row.getByRole("img", { name: "重要" })).toBeVisible()
+  await expect(
+    row.getByRole("button", { name: "重要", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true")
 })
 
 test("新增的單字會出現在列表最上方", async ({ page, signedIn }) => {

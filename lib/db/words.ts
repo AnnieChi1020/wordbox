@@ -109,3 +109,18 @@ export async function hasAnyWord(db: Db): Promise<boolean> {
   if (error) throw error
   return (count ?? 0) > 0
 }
+
+/** R3.5：設定 important；回傳是否有更新到（別人的字或不存在時為 false）。 */
+export async function setWordImportant(
+  db: Db,
+  wordId: string,
+  value: boolean,
+): Promise<boolean> {
+  const { data, error } = await db
+    .from("words")
+    .update({ is_important: value })
+    .eq("id", wordId)
+    .select("id")
+  if (error) throw error
+  return data.length > 0
+}
