@@ -19,3 +19,16 @@ export function isValidInput(s: string): boolean {
 export function dedupeKey(s: string): string {
   return normalizeInput(s).toLowerCase()
 }
+
+/**
+ * R2.7：儲存用的字典標準寫法。AI 的 headword 只能改變大小寫；
+ * 拼字、詞形或空白不同（例如 ran → run）或格式無效時，改用輸入的全小寫。
+ */
+export function canonicalText(input: string, headword: string | null): string {
+  const fallback = normalizeInput(input).toLowerCase()
+  if (headword === null) return fallback
+  const candidate = normalizeInput(headword)
+  return isValidInput(candidate) && candidate.toLowerCase() === fallback
+    ? candidate
+    : fallback
+}

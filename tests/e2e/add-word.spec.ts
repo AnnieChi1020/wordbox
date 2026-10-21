@@ -29,14 +29,14 @@ test("新增單字後以 ?word=<id> 開啟（R2.1、R2.2、R2.8）", async ({
   await add(page, "  Give   up ")
   await expect(page).toHaveURL(new RegExp(`/words\\?word=${UUID.source}$`))
   // R2.8：開啟新字的 popup；關閉後輸入框已清空
-  await expect(page.getByRole("dialog", { name: "Give up" })).toBeVisible()
+  await expect(page.getByRole("dialog", { name: "give up" })).toBeVisible()
   await page.keyboard.press("Escape")
   await expect(addWordForm(page).input).toHaveValue("")
 
   const words = await getWords(signedIn.id)
   expect(words).toHaveLength(1)
   expect(words[0]).toMatchObject({
-    text: "Give up",
+    text: "give up", // R2.7：字典標準寫法
     box: 0,
     is_important: false,
   })
@@ -125,4 +125,16 @@ test("AI 回傳格式錯誤時不儲存（R2.10）", async ({ page, signedIn }) 
     "AI 回傳的內容有誤，請重試",
   )
   expect(await getWords(signedIn.id)).toHaveLength(0)
+})
+
+test("AC：以字典標準寫法儲存（R2.7）", async ({ page, signedIn }) => {
+  await add(page, "GIVE UP")
+  await expect(page.getByRole("dialog", { name: "give up" })).toBeVisible()
+  await page.keyboard.press("Escape")
+
+  await add(page, "monday")
+  await expect(page.getByRole("dialog", { name: "Monday" })).toBeVisible()
+
+  const texts = (await getWords(signedIn.id)).map((w) => w.text)
+  expect(texts).toEqual(["give up", "Monday"])
 })

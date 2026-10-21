@@ -32,6 +32,7 @@ const returning = (raw: unknown): AiClient => ({
 const validEntry = (overrides: Record<string, unknown> = {}) => ({
   is_valid: true,
   suggestions: [],
+  headword: "test",
   ipa: "/test/",
   senses: [
     {
@@ -95,6 +96,17 @@ describe("generateWord with fixtures", () => {
       reason: "format",
     })
     expect(logs[0].success).toBe(false)
+  })
+
+  it.each([
+    ["Conventional", "conventional"], // 沒有 fixture → 通用條目，小寫
+    ["APPLE", "apple"],
+    ["Give Up", "give up"],
+    ["monday", "Monday"], // 英文本身需要大寫
+    ["ran", "ran"], // AI 改成原形 run → 不採用
+  ])("stores %j as the dictionary headword %j (R2.7)", async (input, text) => {
+    const result = await setup().run(input)
+    expect(result).toMatchObject({ status: "valid", text })
   })
 
   it("logs the regenerate kind (R4.5)", async () => {
@@ -185,7 +197,13 @@ describe("generateWord output cleanup", () => {
   ])(
     "keeps only resubmittable, unique suggestions other than the input: %j",
     async (suggestions, expected) => {
-      const raw = { is_valid: false, suggestions, ipa: null, senses: [] }
+      const raw = {
+        is_valid: false,
+        suggestions,
+        headword: null,
+        ipa: null,
+        senses: [],
+      }
       expect(await setup(returning(raw)).run("aple")).toEqual({
         status: "invalid",
         suggestions: expected,

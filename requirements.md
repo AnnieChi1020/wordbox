@@ -1,6 +1,7 @@
 # 英文單字記憶 App — Requirements
 
-> 版本：v0.1（2026-10-20）
+> 版本：v0.2（2026-10-21）
+> v0.2 變更：R2.7 新增單字以字典標準寫法儲存（含 AC）；R4.5 註明單字本身不變。
 > 格式：需求採 EARS 語法（WHEN / IF / WHILE … THE SYSTEM SHALL …），每節附驗收條件（AC）。
 > 階段：Phase 1 單字管理 → Phase 2 複習 → Phase 3 Dashboard 與 PWA。
 
@@ -52,6 +53,7 @@
 - **R2.5** WHEN 使用者送出新字，THE SYSTEM SHALL 呼叫 AI 驗證並生成內容。
 - **R2.6** IF AI 判定輸入不是有效的英文單字或片語，THE SYSTEM SHALL 不儲存，顯示「找不到這個字」，並列出最多 3 個拼字建議；WHEN 使用者點選建議，THE SYSTEM SHALL 以該建議重新送出（仍適用 R2.4）。
 - **R2.7** WHEN AI 判定有效，THE SYSTEM SHALL 儲存：
+  - 單字本身，以字典標準寫法（headword）儲存：一般為小寫；英文本身需要大寫的保留大寫（星期、月份、語言、國籍、代名詞 I、縮寫如 DNA）。IF AI 回傳的寫法與輸入不只是大小寫不同（例如改成原形），THE SYSTEM SHALL 改以輸入的全小寫儲存
   - 音標 IPA（美式，可為空）
   - 1–3 個義項，依常用程度排序，每個義項包含：
     - 詞性（見 R2.11）
@@ -71,6 +73,7 @@
 - [ ] 已有 `apple` 時輸入 `Apple`：不呼叫 AI，直接開啟 `apple` 的 popup。
 - [ ] 輸入 `aple`：不儲存，顯示含 `apple` 的建議；點擊後成功新增 `apple`。
 - [ ] 輸入 `run`：儲存 1–3 個義項，詞性 tag 至少包含 `v.`。
+- [ ] 輸入 `Conventional` 存為 `conventional`、`GIVE UP` 存為 `give up`；輸入 `monday` 存為 `Monday`、`dna` 存為 `DNA`。
 - [ ] 模擬 AI 逾時：資料庫沒有新增任何 word 或 sense。
 
 ### R3 單字列表頁
@@ -100,7 +103,7 @@
 - **R4.2** WHEN 使用者點擊發音按鈕，THE SYSTEM SHALL 以瀏覽器語音合成（en-US）朗讀單字；IF 瀏覽器不支援語音合成，THE SYSTEM SHALL 隱藏發音按鈕。
 - **R4.3** THE SYSTEM SHALL 提供編輯模式，可修改 IPA 及各義項的所有欄位，並可新增或移除義項（維持 1–3 個）；單字本身不可修改。
 - **R4.4** IF 編輯內容不合規則（英解或中解為空、同義詞或反義詞超過 5 個、例句超過 2 句、義項數不在 1–3），THE SYSTEM SHALL 阻止儲存並標示錯誤欄位。
-- **R4.5** WHEN 使用者選擇「重新生成」並確認，THE SYSTEM SHALL 以 AI 重新生成 IPA 與所有義項並取代舊內容，同時保留 box、next_due_on、is_important 與複習紀錄。
+- **R4.5** WHEN 使用者選擇「重新生成」並確認，THE SYSTEM SHALL 以 AI 重新生成 IPA 與所有義項並取代舊內容，同時保留 box、next_due_on、is_important 與複習紀錄；單字本身不變（R4.3）。
 - **R4.6** IF 重新生成失敗，THE SYSTEM SHALL 保留原內容並顯示錯誤。
 - **R4.7** WHEN 使用者選擇「刪除」並確認，THE SYSTEM SHALL 刪除該單字與其義項、關閉 popup，並從列表移除；複習紀錄保留，以維持 Dashboard 的歷史數據。
 - **R4.8** THE SYSTEM SHALL 允許以關閉按鈕、Esc 鍵、點擊背景、瀏覽器「上一頁」關閉 popup；手機寬度下 popup 以全螢幕顯示。

@@ -76,8 +76,9 @@ export async function addWordWith(
 
     // 4. R2.7、R2.8：box、is_important 由資料庫預設；next_due_on = 當地今天
     const today = localToday(profile.timezone, now)
+    // R2.7：以字典標準寫法儲存
     const { id, existed } = await createWord(db, {
-      text,
+      text: generated.text,
       ipa: generated.ipa,
       senses: generated.senses,
       today,

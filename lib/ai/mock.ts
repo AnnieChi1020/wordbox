@@ -7,6 +7,8 @@ import aple from "./fixtures/aple.json"
 import apple from "./fixtures/apple.json"
 import giveUp from "./fixtures/give-up.json"
 import malformed from "./fixtures/malformed.json"
+import monday from "./fixtures/monday.json"
+import ran from "./fixtures/ran.json"
 import run from "./fixtures/run.json"
 
 /** 觸發特殊情境的輸入（皆符合 R2.3，可從 UI 輸入）。 */
@@ -18,6 +20,8 @@ const WORD_FIXTURES: Record<string, unknown> = {
   run,
   "give up": giveUp,
   aple,
+  monday,
+  ran,
   [MOCK_MALFORMED_INPUT]: malformed,
 }
 
@@ -27,6 +31,7 @@ function genericEntry(input: string) {
   return {
     is_valid: true,
     suggestions: [],
+    headword: text,
     ipa: null,
     senses: [
       {

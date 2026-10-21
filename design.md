@@ -1,8 +1,9 @@
 # 英文單字記憶 App — Design
 
-> 版本：v0.3（2026-10-21）・對應 `requirements.md` v0.1
+> 版本：v0.4（2026-10-21）・對應 `requirements.md` v0.2
 > Phase 2、3 的設計為初稿，進入該階段時再修訂。
 >
+> v0.4 變更：AI 回傳 `headword`，單字以字典標準寫法儲存（§5.1、§5.2、§6、§7.1、D12）。
 > v0.3 變更：`words.text_key`（§4.1）；單字列表改為分頁載入（§6、D11）。
 > v0.2 變更：`profiles.timezone` 改為 nullable（§4.1、§4.4）；編輯改為原地更新義項（§4.1、§4.3、D9）；`middleware.ts` → `proxy.ts`（§3）；`questionId` 由伺服器產生（§6）。
 
@@ -247,6 +248,7 @@ const SenseSchema = z.object({
 const GenerateWordSchema = z.object({
   is_valid: z.boolean(),
   suggestions: z.array(z.string()).max(3),          // is_valid=false 時使用
+  headword: z.string().nullable(),                  // 字典標準寫法；is_valid=false 時為 null
   ipa: z.string().nullable(),
   senses: z.array(SenseSchema).max(3),              // is_valid=true 時 1–3 個
 });
@@ -265,6 +267,7 @@ System prompt（`lib/ai/prompts.ts`）需涵蓋：
 6. 例句 1–2 句、20 個英文字以內，必須包含該字。
 7. `ipa`：美式發音，以 `/…/` 包住；不確定時回傳 `null`。
 8. 片語的詞性使用 `phrase`。
+9. `headword`：字典詞條的寫法。一般為小寫；英文本身需大寫者保留（星期、月份、語言、國籍、代名詞 I、縮寫如 DNA）。只能改變大小寫，不可改拼字、詞形或空白。
 
 使用者輸入只放在 user message，並明確標示為「要查詢的字」，避免 prompt injection。
 
@@ -296,7 +299,8 @@ addWord(input: string): Promise<AddWordResult>
   // 1. normalize + validate（R2.2、R2.3）
   // 2. 以 lower(text) 查詢是否已存在 → exists（R2.4）
   // 3. generateWord → invalid / error
-  // 4. create_word RPC（併發時唯一索引衝突 → exists）
+  // 4. canonicalText(input, headword) 決定儲存的寫法（R2.7、D12）
+  // 5. create_word RPC（併發時唯一索引衝突 → exists）
 
 updateWord(wordId, { ipa, senses }): Promise<Result>       // R4.3、R4.4；senses 帶既有 id → update_word_content
 regenerateWord(wordId): Promise<Result>                    // R4.5、R4.6
@@ -337,6 +341,8 @@ submitAnswer({ questionId, wordId, senseId, questionType, selected }): Promise<A
 normalizeInput(raw: string): string        // trim + 連續空白合併
 isValidInput(s: string): boolean           // /^[A-Za-z][A-Za-z '\-]{0,63}$/
 dedupeKey(s: string): string               // normalizeInput(s).toLowerCase()
+canonicalText(input: string, headword: string | null): string
+  // headword 與 input 只差大小寫且格式有效 → headword；否則 input 全小寫（R2.7）
 ```
 
 ### 7.2 dates.ts
@@ -461,3 +467,4 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | D9 | 編輯原地更新義項，重新生成才整批取代 | 編輯只讓有變動義項的干擾快取失效（R6.5），並保留 `review_logs.sense_id` |
 | D10 | `profiles.timezone` 以 null 表示未初始化 | 可區分「未初始化」與「使用者在 UTC」，首次寫入失敗也能補寫 |
 | D11 | 單字列表每頁 100 筆，捲動載入 | 2,000 字一次渲染時 RSC 1.6MB、篩選 0.6–1 秒；分頁後約 6KB、70–160ms，符合 NFR4。也避開 PostgREST 預設 1,000 筆上限 |
+| D12 | 單字以字典標準寫法儲存，由 AI 在同一次呼叫回傳 `headword` | 一律小寫會錯寫 Monday、English、I、DNA；首字母大寫不符合字典慣例。只接受大小寫差異，避免 AI 擅自改成原形 |

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { dedupeKey, isValidInput, normalizeInput } from "@/lib/domain/normalize"
+import {
+  canonicalText,
+  dedupeKey,
+  isValidInput,
+  normalizeInput,
+} from "@/lib/domain/normalize"
 
 describe("normalizeInput (R2.2)", () => {
   it("trims and collapses whitespace — AC: `  Give   up ` → `Give up`", () => {
@@ -50,4 +55,32 @@ describe("dedupeKey (R2.4)", () => {
   it("normalizes whitespace before comparing", () => {
     expect(dedupeKey("  GIVE   Up")).toBe("give up")
   })
+})
+
+describe("canonicalText (R2.7)", () => {
+  it.each([
+    ["Conventional", "conventional", "conventional"],
+    ["GIVE UP", "give up", "give up"],
+    ["monday", "Monday", "Monday"],
+    ["dna", "DNA", "DNA"],
+    ["i", "I", "I"],
+    ["english", "English", "English"],
+    ["  give   UP ", "give up", "give up"],
+  ])("%j with headword %j → %j", (input, headword, expected) => {
+    expect(canonicalText(input, headword)).toBe(expected)
+  })
+
+  it.each([
+    ["ran", "run", "ran"], // AI 改成原形
+    ["colour", "color", "colour"], // 改拼字
+    ["give up", "give-up", "give up"], // 改符號
+    ["Apple", null, "apple"], // 沒有 headword
+    ["Apple", "Apple!", "apple"], // 格式無效
+    ["Apple", "", "apple"],
+  ])(
+    "falls back to lowercase: %j with headword %j → %j",
+    (input, headword, expected) => {
+      expect(canonicalText(input, headword)).toBe(expected)
+    },
+  )
 })

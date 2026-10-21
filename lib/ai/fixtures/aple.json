@@ -1,6 +1,7 @@
 {
   "is_valid": false,
   "suggestions": ["apple", "ample", "maple"],
+  "headword": null,
   "ipa": null,
   "senses": []
 }

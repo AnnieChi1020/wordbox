@@ -15,6 +15,7 @@ export const SenseSchema = z.object({
 export const GenerateWordSchema = z.object({
   is_valid: z.boolean(),
   suggestions: z.array(z.string()).max(3), // is_valid=false 時使用
+  headword: z.string().nullable(), // 字典標準寫法；is_valid=false 時為 null（R2.7）
   ipa: z.string().nullable(),
   senses: z.array(SenseSchema).max(3), // is_valid=true 時 1–3 個
 })

@@ -1,0 +1,16 @@
+{
+  "is_valid": true,
+  "suggestions": [],
+  "headword": "Monday",
+  "ipa": "/ˈmʌn.deɪ/",
+  "senses": [
+    {
+      "pos": "noun",
+      "def_en": "the day of the week after Sunday and before Tuesday",
+      "def_zh": "星期一",
+      "synonyms": [],
+      "antonyms": [],
+      "examples": ["I have a meeting on Monday."]
+    }
+  ]
+}

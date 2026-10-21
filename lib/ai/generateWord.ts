@@ -1,6 +1,11 @@
 import "server-only"
 
-import { dedupeKey, isValidInput, normalizeInput } from "@/lib/domain/normalize"
+import {
+  canonicalText,
+  dedupeKey,
+  isValidInput,
+  normalizeInput,
+} from "@/lib/domain/normalize"
 
 import { getAiClient, type AiClient } from "./client"
 import { logAiCall, type AiCallLog } from "./log"
@@ -16,7 +21,7 @@ function defaultTimeoutMs() {
 }
 
 export type GenerateWordResult =
-  | { status: "valid"; ipa: string | null; senses: Sense[] }
+  | { status: "valid"; text: string; ipa: string | null; senses: Sense[] }
   | { status: "invalid"; suggestions: string[] }
   | { status: "error"; reason: "timeout" | "format" | "api" }
 
@@ -63,7 +68,8 @@ async function callModel(
       name: "word_entry",
       schema: GenerateWordSchema,
       system: GENERATE_WORD_SYSTEM_PROMPT,
-      user: generateWordUserMessage(input),
+      // 一律以小寫詢問：結果不受使用者輸入的大小寫影響（例如 Apple 被當成專有名詞）
+      user: generateWordUserMessage(input.toLowerCase()),
       input,
       signal: controller.signal,
     })
@@ -92,6 +98,7 @@ async function callModel(
 
   return {
     status: "valid",
+    text: canonicalText(input, output.headword),
     ipa: output.ipa?.trim() || null,
     senses: output.senses.map((sense) => cleanSense(sense, input)),
   }

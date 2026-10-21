@@ -1,0 +1,16 @@
+{
+  "is_valid": true,
+  "suggestions": [],
+  "headword": "run",
+  "ipa": "/ræn/",
+  "senses": [
+    {
+      "pos": "verb",
+      "def_en": "past tense of run",
+      "def_zh": "跑（過去式）",
+      "synonyms": ["sprinted"],
+      "antonyms": [],
+      "examples": ["She ran to the station."]
+    }
+  ]
+}

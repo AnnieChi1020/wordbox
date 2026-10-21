@@ -1,6 +1,12 @@
 {
   "is_valid": true,
   "suggestions": [],
+  "headword": "mock malformed",
   "ipa": "/test/",
-  "senses": [{ "pos": "verb", "def_en": "missing fields" }]
+  "senses": [
+    {
+      "pos": "verb",
+      "def_en": "missing fields"
+    }
+  ]
 }

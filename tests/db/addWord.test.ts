@@ -75,7 +75,7 @@ describe("addWord", () => {
       .eq("id", result.wordId)
       .single()
     expect(word).toMatchObject({
-      text: "Give up",
+      text: "give up", // R2.7：字典標準寫法
       box: 0,
       is_important: false,
       next_due_on: "2026-10-21", // 使用者時區的今天，不是 UTC 的 10/20
@@ -86,6 +86,28 @@ describe("addWord", () => {
       { kind: "generate", input: "Give up", success: true },
     ])
   })
+
+  it.each([
+    ["Conventional", "conventional"],
+    ["GIVE UP", null], // 已存在（上一個測試新增的 give up）
+    ["monday", "Monday"],
+  ])(
+    "AC: stores %j with the dictionary headword (R2.7)",
+    async (input, text) => {
+      const result = await addWordWith(deps(), input)
+      if (text === null) {
+        expect(result.status).toBe("exists")
+        return
+      }
+      expect(result.status).toBe("created")
+      const { data } = await db
+        .from("words")
+        .select("text")
+        .eq("id", (result as { wordId: string }).wordId)
+        .single()
+      expect(data!.text).toBe(text)
+    },
+  )
 
   it("exists: AC — `Apple` matches `apple` without calling AI (R2.4)", async () => {
     const first = await addWordWith(deps(), "apple")

@@ -1,6 +1,6 @@
 # 英文單字記憶 App — Tasks
 
-> 版本：v0.3（2026-10-21）・對應 `requirements.md` v0.1、`design.md` v0.3
+> 版本：v0.4（2026-10-21）・對應 `requirements.md` v0.2、`design.md` v0.4
 > 每個任務都標註對應需求；完成條件以該需求的 AC 為準。
 > 依序實作；一個任務完成（含測試通過）後才開始下一個。
 
@@ -59,11 +59,18 @@
   - 顯示所有欄位、Web Speech 發音（不支援時隱藏）
   - 關閉方式：按鈕、Esc、背景、上一頁；手機全螢幕；focus trap
 
+- [x] **T1.11a 單字以字典標準寫法儲存**（追加需求）— R2.7、design D12
+  - `GenerateWordSchema` 加 `headword`、prompt 規則 9、`canonicalText()` + 單元測試
+  - fixtures 涵蓋需大寫（`monday`）與 AI 改字（`ran` → `run`）
+  - 本地既有資料改為標準寫法
+  - 完成條件：R2.7 新增的 AC 通過
+
 - [ ] **T1.12 編輯模式** — R4.3、R4.4
   - 表單（Zod 驗證）、新增或移除義項（1–3）、`updateWord` → `update_word_content`（既有義項帶 id）
 
 - [ ] **T1.13 重新生成與刪除** — R4.5–R4.7
   - 確認對話框；重新生成失敗時保留原內容
+  - 重新生成不改變單字本身（忽略 AI 回傳的 headword）
   - R4.7 AC「Dashboard 的歷史答題數不變」需要 review_logs 與 Dashboard，延到 T3.3 一併驗證；Phase 1 只驗證列表立即移除
 
 - [ ] **T1.14 Phase 1 E2E 測試**
