@@ -161,7 +161,7 @@
     - 作答 3 題後離開頁面，資料庫有 3 筆 review_logs（R7 AC）
     - 結算畫面的題數與星數變化正確；「再來一輪」可開始新的一輪
 
-- [ ] **T2.11 Phase 2 部署**
+- [x] **T2.11 Phase 2 部署**
   - `supabase db push` 推送 T2.1 的 migration，Vercel 重新部署
   - 完成條件：正式網址可完成一輪複習
 
