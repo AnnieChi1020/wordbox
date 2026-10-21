@@ -3,6 +3,7 @@
 import { generateWord } from "@/lib/ai/generateWord"
 import { createClient } from "@/lib/db/server"
 import { listWords, setWordImportant } from "@/lib/db/words"
+import { isUuid } from "@/lib/domain/ids"
 import { addWordWith, type AddWordResult } from "@/lib/words/addWord"
 import { parseListParams } from "@/lib/words/listParams"
 
@@ -36,19 +37,12 @@ export async function loadMoreWords(listQuery: string, offset: number) {
 
 export type ActionResult = { ok: true } | { ok: false; message: string }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
 /** R3.5：切換 important（前端 optimistic update）。傳入目標值，重複送出結果相同。 */
 export async function setImportant(
   wordId: string,
   value: boolean,
 ): Promise<ActionResult> {
-  if (
-    typeof wordId !== "string" ||
-    !UUID_PATTERN.test(wordId) ||
-    typeof value !== "boolean"
-  ) {
+  if (!isUuid(wordId) || typeof value !== "boolean") {
     return { ok: false, message: "參數錯誤" }
   }
   try {

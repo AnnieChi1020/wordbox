@@ -6,9 +6,12 @@ import { Suspense } from "react"
 import { buttonVariants } from "@/components/ui/button"
 import { AddWordForm } from "@/components/words/add-word-form"
 import { WordFilters } from "@/components/words/word-filters"
+import { WordDialog } from "@/components/words/word-dialog"
 import { WordList, WordListSkeleton } from "@/components/words/word-list"
+import { WordStateProvider } from "@/components/words/word-state"
 import { createClient } from "@/lib/db/server"
-import { hasAnyWord, listWords } from "@/lib/db/words"
+import { getWordDetail, hasAnyWord, listWords } from "@/lib/db/words"
+import { isUuid } from "@/lib/domain/ids"
 import {
   DEFAULT_LIST_PARAMS,
   hasActiveFilters,
@@ -20,13 +23,18 @@ export const metadata: Metadata = { title: "單字 | Wordbox" }
 
 export default function WordsPage({ searchParams }: PageProps<"/words">) {
   return (
-    <main className="flex-1 space-y-6 p-4">
-      <h1 className="text-xl font-semibold">單字</h1>
-      <AddWordForm />
-      <Suspense fallback={<WordListSkeleton />}>
-        <WordListSection searchParams={searchParams} />
+    <WordStateProvider>
+      <main className="flex-1 space-y-6 p-4">
+        <h1 className="text-xl font-semibold">單字</h1>
+        <AddWordForm />
+        <Suspense fallback={<WordListSkeleton />}>
+          <WordListSection searchParams={searchParams} />
+        </Suspense>
+      </main>
+      <Suspense fallback={null}>
+        <WordDialogSection searchParams={searchParams} />
       </Suspense>
-    </main>
+    </WordStateProvider>
   )
 }
 
@@ -76,4 +84,17 @@ async function WordListSection({
       )}
     </section>
   )
+}
+
+/** R4.9：?word=<id> 開啟 popup；重新整理後仍開啟。找不到（已刪除或別人的字）時不顯示。 */
+async function WordDialogSection({
+  searchParams,
+}: {
+  searchParams: PageProps<"/words">["searchParams"]
+}) {
+  const { word: wordId } = await searchParams
+  if (!isUuid(wordId)) return null
+  const word = await getWordDetail(await createClient(), wordId)
+  // key：切換到另一個字時重設 popup 狀態
+  return word ? <WordDialog key={word.id} word={word} /> : null
 }

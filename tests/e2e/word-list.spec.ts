@@ -50,7 +50,8 @@ test("新增的單字會出現在列表最上方", async ({ page, signedIn }) =>
   await page.goto("/words")
   await page.getByRole("textbox", { name: "新增單字" }).fill("apple")
   await page.getByRole("button", { name: "新增" }).click()
-  await expect(page).toHaveURL(/\?word=/)
+  await expect(page.getByRole("dialog", { name: "apple" })).toBeVisible()
+  await page.keyboard.press("Escape")
   await expect.poll(() => visibleTexts(page)).toEqual(["apple", "older"])
 })
 

@@ -51,6 +51,8 @@ describe(`listWords with ${WORD_COUNT} words (NFR4)`, () => {
   beforeAll(async () => {
     u = await createTestUser()
     await seed2000(u.id)
+    // 暖機：剛大量寫入後的前幾次查詢會比較慢，不代表實際使用的效能
+    for (const [, params] of cases) await listWords(u.client as Db, params)
   }, 60_000)
   afterAll(() => deleteTestUser(u))
 

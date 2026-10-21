@@ -55,7 +55,7 @@
 - [x] **T1.10 Important 切換** — R3.5
   - `setImportant` action + optimistic update；列表與 popup 共用
 
-- [ ] **T1.11 單字 popup（檢視）** — R4.1、R4.2、R4.8、R4.9、NFR5
+- [x] **T1.11 單字 popup（檢視）** — R4.1、R4.2、R4.8、R4.9、NFR5
   - 顯示所有欄位、Web Speech 發音（不支援時隱藏）
   - 關閉方式：按鈕、Esc、背景、上一頁；手機全螢幕；focus trap
 

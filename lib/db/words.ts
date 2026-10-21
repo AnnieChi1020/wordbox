@@ -127,3 +127,38 @@ export async function setWordImportant(
   if (error) throw error
   return data.length > 0
 }
+
+export type WordDetail = {
+  id: string
+  text: string
+  ipa: string | null
+  box: number
+  is_important: boolean
+  senses: {
+    id: string
+    position: number
+    pos: PartOfSpeech
+    def_en: string
+    def_zh: string
+    synonyms: string[]
+    antonyms: string[]
+    examples: string[]
+  }[]
+}
+
+/** R4.1：popup 顯示的完整內容；別人的字或不存在時為 null。 */
+export async function getWordDetail(
+  db: Db,
+  wordId: string,
+): Promise<WordDetail | null> {
+  const { data, error } = await db
+    .from("words")
+    .select(
+      "id, text, ipa, box, is_important, senses(id, position, pos, def_en, def_zh, synonyms, antonyms, examples)",
+    )
+    .eq("id", wordId)
+    .order("position", { referencedTable: "senses" })
+    .maybeSingle()
+  if (error) throw error
+  return data
+}

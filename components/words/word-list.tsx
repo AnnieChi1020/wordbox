@@ -12,6 +12,7 @@ import { posTags } from "@/lib/domain/pos"
 
 import { ImportantToggle } from "./important-toggle"
 import { Stars } from "./stars"
+import { useImportant } from "./word-state"
 
 type Props = {
   /** 伺服器端查詢的第一頁 */
@@ -44,15 +45,6 @@ export function WordList({ initialWords, total, listQuery }: Props) {
   }, [words])
 
   const hasMore = words.length < total
-
-  /** important 更新成功後只改本地資料，不重新載入（保留已載入的頁面） */
-  function updateImportant(wordId: string, important: boolean) {
-    const next = loaded.current.map((w) =>
-      w.id === wordId ? { ...w, is_important: important } : w,
-    )
-    loaded.current = next
-    setWords(next)
-  }
 
   async function loadMore() {
     if (inFlight.current || loaded.current.length >= total) return
@@ -95,12 +87,7 @@ export function WordList({ initialWords, total, listQuery }: Props) {
       <p className="text-muted-foreground text-sm">{total} 個單字</p>
       <ul aria-label="單字列表" className="divide-y rounded-lg border">
         {words.map((word) => (
-          <WordRow
-            key={word.id}
-            word={word}
-            listQuery={listQuery}
-            onImportantChange={updateImportant}
-          />
+          <WordRow key={word.id} word={word} listQuery={listQuery} />
         ))}
       </ul>
       {hasMore && (
@@ -126,12 +113,11 @@ export function WordList({ initialWords, total, listQuery }: Props) {
 function WordRow({
   word,
   listQuery,
-  onImportantChange,
 }: {
   word: WordListItem
   listQuery: string
-  onImportantChange: (wordId: string, important: boolean) => void
 }) {
+  const [important, setImportant] = useImportant(word.id, word.is_important)
   const params = new URLSearchParams(listQuery)
   params.set("word", word.id)
   return (
@@ -155,8 +141,8 @@ function WordRow({
       </Link>
       <ImportantToggle
         wordId={word.id}
-        important={word.is_important}
-        onChange={(important) => onImportantChange(word.id, important)}
+        important={important}
+        onChange={setImportant}
       />
     </li>
   )
