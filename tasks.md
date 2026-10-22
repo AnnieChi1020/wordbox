@@ -210,7 +210,7 @@
   - `npm run test:pwa`：以 production build 執行的 Playwright 設定（同 `test:perf`）
   - 完成條件（`test:pwa`）：`/manifest.webmanifest` 含 R9.1 的欄位；每個圖示都能取得，且實際尺寸與宣告相符
 
-- [ ] **T3.5 Service worker 與離線頁** — R9.2
+- [x] **T3.5 Service worker 與離線頁** — R9.2
   - `public/sw.js`、`components/pwa/sw-register.tsx`、`app/offline/page.tsx`（design §8.2、D19、D20）
   - `proxy.ts` 放行離線頁與 PWA 檔案；`next.config.ts` 設定 `/sw.js` headers
   - 完成條件（`test:pwa`）：

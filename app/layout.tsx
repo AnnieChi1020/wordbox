@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
+import { ServiceWorkerRegister } from "@/components/pwa/sw-register"
 import { Toaster } from "@/components/ui/sonner"
 
 import "./globals.css"
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         {/* 放在上方，避免被手機底部分頁列擋住 */}
         <Toaster position="top-center" richColors />
+        <ServiceWorkerRegister />
       </body>
     </html>
   )
