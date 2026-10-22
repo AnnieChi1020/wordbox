@@ -174,7 +174,7 @@
 
 ## Phase 3 — Dashboard 與 PWA
 
-- [ ] **T3.1 `heatmap.ts`** — R8.3、R8.4
+- [x] **T3.1 `heatmap.ts`** — R8.3、R8.4
   - `heatLevel`、`heatmapStart`、`buildHeatmapGrid`（design §7.6）
   - 完成條件：
     - `heatLevel` 邊界：0、1、8、9、16、17、32、33（R8 AC：10 題為第 3 級，即 level 2）
