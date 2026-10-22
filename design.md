@@ -1,8 +1,8 @@
 # 英文單字記憶 App — Design
 
-> 版本：v0.6（2026-10-21）・對應 `requirements.md` v0.3
-> Phase 3 的設計為初稿，進入該階段時再修訂。
+> 版本：v0.7（2026-10-22）・對應 `requirements.md` v0.3
 >
+> v0.7 變更：細化 Phase 3——Dashboard 統計 RPC（§4.3、D17）、圖表改以 CSS 實作（§2、D18）、熱力圖介面與鍵盤操作（§7.6、§8.1）、PWA 與 service worker（§8.2、D19、D20）、品牌色（§8.3、D21）。
 > v0.6 變更：答錯時 box 設為 0（§7.3、D16）。
 > v0.5 變更：細化 Phase 2——目錄（§3）、`apply_review` 介面與併發處理（§4.3、D13）、干擾選項快取的使用方式（§5.3）、出題與作答的介面（§6、D14、D15）、選字回傳完整序列（§7.4）。
 > v0.4 變更：AI 回傳 `headword`，單字以字典標準寫法儲存（§5.1、§5.2、§6、§7.1、D12）。
@@ -49,7 +49,7 @@
 | AI | `openai` SDK，structured outputs（JSON Schema strict） | 模型型號以 `OPENAI_MODEL` 設定 |
 | 驗證 | Zod | AI 回傳與表單共用 schema |
 | 日期 / 時區 | `date-fns` + `date-fns-tz` | 一律在伺服器端計算當地日期 |
-| 圖表 | 長條圖用 Recharts；熱力圖自行以 CSS Grid 實作 | |
+| 圖表 | 長條圖與熱力圖皆以 CSS 自行實作 | 只有 6 根長條與一張熱力圖，不引入圖表套件（D18） |
 | 測試 | Vitest（單元）、Playwright（E2E） | |
 | 部署 | Vercel + Supabase Cloud | |
 
@@ -73,8 +73,12 @@ app/
   (app)/words/page.tsx            # ?stars=0,1&important=1&sort=created_desc&word=<id>
   (app)/review/page.tsx
   (app)/dashboard/page.tsx
-  manifest.ts                     # Phase 3
-  offline/page.tsx                # Phase 3
+  manifest.ts                     # R9.1
+  offline/page.tsx                # R9.2；不需登入，由 service worker 預先快取
+  icon.png / apple-icon.png       # 分頁與 iOS 主畫面圖示
+public/
+  sw.js                           # service worker（§8.2）
+  icons/                          # manifest 圖示 192、512、maskable
 proxy.ts                          # 未登入導向 /login（R1.1、R1.6）；Next.js 16 起取代 middleware.ts
 lib/
   domain/
@@ -105,7 +109,7 @@ lib/
     words.ts                      # addWord、updateWord、regenerateWord、deleteWord、setImportant
     review.ts                     # startReviewSession、submitAnswer、countDueWords（Phase 2）
 components/
-  words/  review/  dashboard/  ui/
+  words/  review/  dashboard/  pwa/  ui/
 supabase/migrations/
 tests/unit/  tests/e2e/
 ```
@@ -226,6 +230,7 @@ Supabase JS client 不支援多語句交易，因此以 Postgres function（`sec
 | `create_word(p_text, p_ipa, p_senses jsonb, p_today date)` | R2.7、R2.8 | 新增 word 與 senses；若觸發唯一索引衝突則回傳既有 word id 與 `exists = true` |
 | `update_word_content(p_word_id, p_ipa, p_senses jsonb)` | R4.3、R6.5 | 編輯用，原地更新：`p_senses` 依顯示順序排列，帶 `id` 的更新該義項、沒有 `id` 的新增，不在清單中的刪除；position 依陣列順序重排。內容有變動的義項刪除其 ai_distractors；未變動的保留快取與 sense id。更新 `updated_at` |
 | `replace_word_content(p_word_id, p_ipa, p_senses jsonb)` | R4.5 | 重新生成用：刪除所有舊 senses、新增新 senses、更新 `updated_at`；舊義項的 ai_distractors 隨之 cascade 刪除（R6.5） |
+| `get_dashboard_stats(p_since date)` | R8.1、R8.2、R8.6（Phase 3） | 唯讀。回傳 `{ total, by_box: number[6], daily: [{ date, count }] }`；`daily` 為 `local_date >= p_since` 的每日答題數（只含有作答的日期）。D17 |
 | `apply_review(p_question_id, p_word_id, p_sense_id, p_question_type, p_is_correct, p_was_due, p_box_before, p_due_before, p_box_after, p_due_after, p_local_date)` | R7.3、R7.4（Phase 2） | 見下方 |
 
 `apply_review` 依序：
@@ -485,9 +490,16 @@ findCorrectOption(type, word, sense, options): string | null   // submitAnswer �
 heatLevel(count: number): 0 | 1 | 2 | 3 | 4
   // 0 → 0, 1–8 → 1, 9–16 → 2, 17–32 → 3, 33+ → 4
 
+heatmapStart(today: string): string
+  // 第一欄的週日 = today 所在週的週日往前 52 週；查詢 daily 時作為 p_since
+
+type Cell = { date: string; count: number; level: 0 | 1 | 2 | 3 | 4 } | null
+
 buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
-  // 53 欄 × 7 列，最後一欄包含 today，週日為第一列；today 之後的格子不顯示
+  // 53 欄（週）× 7 列（週日在第一列），最後一欄包含 today；today 之後的格子為 null（不顯示）
 ```
+
+日期一律為 `YYYY-MM-DD` 字串，以 §7.2 的 `addDays` 計算，不受時區與夏令時間影響。
 
 ## 8. 畫面
 
@@ -499,6 +511,47 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | `/dashboard` | `StatTotal`、`StarDistributionChart`、`Heatmap` | Server Component 查詢後傳入 |
 
 狀態處理：AI 生成中顯示 skeleton；所有錯誤以 toast 顯示，並在原位置提供重試按鈕。
+
+### 8.1 Dashboard（R8）
+
+- Server Component 依 profile 時區算出 today，呼叫一次 `get_dashboard_stats(heatmapStart(today))`，整理後傳給元件。
+- **StatTotal**：總單字數。
+- **StarDistributionChart**：0–5 星各一列的水平長條（CSS width 百分比），每列顯示數量；以 `<dl>` 或表格語意提供文字替代。
+- **Heatmap**（client component）：
+  - CSS Grid，53 × 7；月份標籤在上方、週日 / 二 / 四 / 六標籤在左側；手機寬度可水平捲動，預設捲到最右（最近）。
+  - 5 種深淺使用主題色階，深色模式另設一組；圖例「少 → 多」。
+  - R8.5：桌面 hover、手機點擊時顯示 tooltip「2026 年 10 月 21 日：10 題」。
+  - NFR5：roving tabindex，整張圖只有一個 Tab 停點，方向鍵移動，焦點格同時顯示 tooltip；另以 sr-only 文字摘要「過去一年共答 N 題，作答 M 天」。
+- 沒有單字時顯示空狀態與「去新增單字」；有單字但沒有作答時熱力圖照常顯示（全為 0）。
+
+### 8.2 PWA（R9）
+
+- **Manifest**（`app/manifest.ts`）：`name`、`short_name`、`start_url: "/words"`、`display: "standalone"`、`theme_color`、`background_color`、圖示 192 / 512 與 maskable 512。iOS 以 `apple-icon.png` 與 `appleWebApp` metadata 支援加入主畫面。
+- **Service worker**（`public/sw.js`，手寫，D19）：
+  - install：預先快取 `/offline` 與圖示。
+  - fetch：
+    - `/_next/static/*`、圖示：cache-first（檔名含 hash，可永久快取）。
+    - 頁面導覽（`request.mode === "navigate"`）：network-only，失敗時回傳快取的 `/offline`。
+    - 其他請求（RSC、Server Actions、Supabase、API）：不攔截，一律走網路（R9.2：只快取靜態資源）。
+  - activate：刪除舊版本的快取（快取名稱帶版本號）。
+- **註冊**：`components/pwa/sw-register.tsx` 在 layout 掛載，只在 production 註冊（D20）。
+- **`proxy.ts`**：`/offline`、`/sw.js`、`/manifest.webmanifest`、圖示不需登入。
+- **Headers**（`next.config.ts`）：`/sw.js` 設定 `Cache-Control: no-cache, no-store, must-revalidate`，確保更新立即生效。
+- **測試**：`npm run test:pwa` 以 production build 執行 Playwright（同 `test:perf` 的做法），驗證 manifest、service worker 註冊、離線時重新整理顯示離線頁。
+
+### 8.3 品牌色（D21）
+
+| Token | 色碼 | 用途 |
+|---|---|---|
+| `brand-900` | `#086288` | 圖示背景、manifest `theme_color`、熱力圖 level 3（淺色模式） |
+| `brand-600` | `#4D8DBA` | 星數長條、熱力圖 level 2 |
+| `brand-300` | `#97D7FF` | 熱力圖 level 1（淺色模式） |
+| `cream` | `#FFEFC4` | 圖示上的「W」、manifest `background_color` |
+
+- 只用於圖示、PWA 與 Dashboard 圖表；其他 UI 維持現有的中性色。
+- 以 CSS 變數定義在 `globals.css`，深色模式另設一組。
+- 熱力圖：level 0 為中性灰；淺色模式 level 1–3 依序為 brand-300 → 600 → 900，level 4 以 brand-900 加深；深色模式反向，越多越亮。實作時以 dataviz 準則檢查對比。
+- 圖示：brand-900 底、cream 的「W」；maskable 版本的字放在中央 80% 安全區內。
 
 ## 9. 錯誤處理
 
@@ -537,3 +590,8 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | D14 | 出題時需要 AI 的題目平行處理 | 字庫小時每題都可能需要 AI，依序呼叫最壞要 8 × 20 秒 |
 | D15 | 題目不帶正確答案，作答時 client 帶回 4 個選項由伺服器判定 | 無狀態且不洩漏答案；伺服器需要選項才能回傳要標綠色的那一個（R7.2） |
 | D16 | 答錯時 box 設為 0，而非標準 Leitner 的 1 | 星數 = box，設為 1 會讓新字答錯反而多一顆星；排程不變，答錯的字仍是明天複習 |
+| D17 | Dashboard 統計以一個唯讀 RPC 在資料庫彙總 | PostgREST 無法 group by；一次往返取得總數、星數分布與每日答題數，最多 371 列 |
+| D18 | 長條圖與熱力圖都以 CSS 實作，不使用 Recharts | 只有 6 根長條，圖表套件會增加約 100KB 的 client bundle；自行實作也較容易控制無障礙與深色模式 |
+| D19 | 手寫 service worker，不使用 Serwist 等套件 | 只需要快取靜態資源與離線頁（R9.2），規則少；避免為 Turbopack 額外設定建置流程 |
+| D20 | Service worker 只在 production 註冊 | 開發時快取會干擾 HMR；以 `test:pwa`（production build）測試 |
+| D21 | 品牌色（深藍、中藍、淺藍、米黃）只用於圖示、PWA 與 Dashboard 圖表 | 使用者提供的配色；全站主題維持中性色，避免擴大 Phase 3 範圍 |

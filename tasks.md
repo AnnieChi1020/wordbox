@@ -1,6 +1,6 @@
 # 英文單字記憶 App — Tasks
 
-> 版本：v0.6（2026-10-21）・對應 `requirements.md` v0.3、`design.md` v0.6
+> 版本：v0.7（2026-10-22）・對應 `requirements.md` v0.3、`design.md` v0.7
 > 每個任務都標註對應需求；完成條件以該需求的 AC 為準。
 > 依序實作；一個任務完成（含測試通過）後才開始下一個。
 
@@ -172,11 +172,54 @@
 
 ---
 
-## Phase 3 — Dashboard 與 PWA（初稿，進入時細化）
+## Phase 3 — Dashboard 與 PWA
 
-- [ ] **T3.1** Dashboard 查詢：總數、星數分布、每日答題數（最近 53 週）— R8.1、R8.2、R8.6
-- [ ] **T3.2** 總單字數與星數分布長條圖 — R8.1、R8.2
-- [ ] **T3.3** `heatmap.ts` + 單元測試；熱力圖元件與 tooltip — R8.3–R8.5
-  - 補驗 R4.7 AC：刪除單字後 Dashboard 歷史答題數與熱力圖不變
-- [ ] **T3.4** Manifest、圖示、service worker（只快取靜態資源）、離線頁 — R9.1、R9.2
-- [ ] **T3.5** Android 與 iOS 安裝實機測試 — R9 AC
+- [ ] **T3.1 `heatmap.ts`** — R8.3、R8.4
+  - `heatLevel`、`heatmapStart`、`buildHeatmapGrid`（design §7.6）
+  - 完成條件：
+    - `heatLevel` 邊界：0、1、8、9、16、17、32、33（R8 AC：10 題為第 3 級，即 level 2）
+    - 53 欄 × 7 列，第一列為週日，最後一欄包含 today，today 之後的格子為 null
+    - today 為週日、週六，以及跨年、跨閏日時格子日期正確
+    - 有作答的日期對應到正確的格子與 level
+
+- [ ] **T3.2 Dashboard 統計 RPC** — R8.1、R8.2、R8.6
+  - Migration：`get_dashboard_stats(p_since)`（design §4.3、D17）
+  - `lib/db/stats.ts`；`npm run db:types`
+  - 完成條件（`tests/db`）：
+    - 總數與 0–5 星分布正確
+    - `daily` 依 `local_date` 彙總，只含 `p_since` 之後
+    - RLS：不會計入其他使用者的資料
+    - 刪除單字後總數減 1、`daily` 不變（R8 AC、R4.7 AC）
+
+- [ ] **T3.3 Dashboard 畫面** — R8.1–R8.5、NFR1、NFR5
+  - `/dashboard`：`StatTotal`、`StarDistributionChart`、`Heatmap`（design §8.1）
+  - 品牌色 CSS 變數（design §8.3）
+  - Heatmap：tooltip（hover / 點擊）、roving tabindex 與方向鍵、sr-only 摘要、手機水平捲動並預設顯示最近幾週、深色模式色階
+  - 沒有單字時的空狀態
+  - 完成條件（E2E）：
+    - 總數與星數分布和資料一致
+    - 今天答 10 題 → 今天的格子為 level 2，tooltip 顯示日期與題數（R8 AC）
+    - 刪除一個單字後總數減 1，熱力圖不變（R8 AC、R4.7 AC）
+    - 可用鍵盤移動並讀到每格的日期與題數
+    - 360px 寬度沒有頁面水平捲動（只有熱力圖本身可捲動）
+
+- [ ] **T3.4 Manifest 與圖示** — R9.1
+  - `app/manifest.ts`、`public/icons/*`（192、512、maskable 512）、`app/icon.png`、`app/apple-icon.png`
+  - 圖示依 design §8.3：深藍底、米黃「W」；由 SVG 以 sharp 產生各尺寸 PNG
+  - `appleWebApp` metadata、`viewport.themeColor`
+  - `npm run test:pwa`：以 production build 執行的 Playwright 設定（同 `test:perf`）
+  - 完成條件（`test:pwa`）：`/manifest.webmanifest` 含 R9.1 的欄位；每個圖示都能取得，且實際尺寸與宣告相符
+
+- [ ] **T3.5 Service worker 與離線頁** — R9.2
+  - `public/sw.js`、`components/pwa/sw-register.tsx`、`app/offline/page.tsx`（design §8.2、D19、D20）
+  - `proxy.ts` 放行離線頁與 PWA 檔案；`next.config.ts` 設定 `/sw.js` headers
+  - 完成條件（`test:pwa`）：
+    - service worker 註冊成功
+    - 離線時重新整理 `/words` 顯示「需要網路連線」頁面（R9 AC）
+    - 恢復連線後重新整理回到正常頁面
+    - 只快取靜態資源：Cache Storage 中沒有頁面 HTML（離線頁除外）與 API 回應
+
+- [ ] **T3.6 Phase 3 部署與實機測試** — R9 AC
+  - `supabase db push` 推送 T3.2 的 migration，Vercel 重新部署
+  - 實機（使用者操作）：Chrome（Android）與 Safari（iOS）加入主畫面、以獨立視窗開啟；開啟飛航模式後重新整理顯示離線頁
+  - 完成條件：正式網址的 Dashboard 正確顯示；R9 AC 實機通過
