@@ -131,17 +131,22 @@ function WordRow({
         href={`/words?${params}`}
         scroll={false}
         prefetch={false}
-        className="hover:bg-muted/50 focus-visible:ring-ring/50 flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 rounded-l-lg px-3 py-3 outline-none focus-visible:ring-3"
+        className="hover:bg-muted/50 focus-visible:ring-ring/50 flex min-w-0 flex-1 items-center gap-3 rounded-l-lg px-3 py-3 outline-none focus-visible:ring-3"
       >
-        <span className="min-w-0 truncate font-medium">{word.text}</span>
-        <span className="flex gap-1">
-          {posTags(word.senses).map((tag) => (
-            <Badge key={tag} variant="secondary" className="font-normal">
-              {tag}
-            </Badge>
-          ))}
-        </span>
-        <Stars box={word.box} className="ml-auto" />
+        {/* 單字與詞性在剩餘寬度內換行，星等固定在右側不被擠壓 */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="min-w-0 font-medium wrap-break-word">
+            {word.text}
+          </span>
+          <span className="flex gap-1">
+            {posTags(word.senses).map((tag) => (
+              <Badge key={tag} variant="secondary" className="font-normal">
+                {tag}
+              </Badge>
+            ))}
+          </span>
+        </div>
+        <Stars box={word.box} />
       </Link>
       <ImportantToggle
         wordId={word.id}

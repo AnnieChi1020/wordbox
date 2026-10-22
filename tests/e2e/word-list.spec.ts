@@ -45,6 +45,42 @@ test("每列顯示單字、詞性 tag、星數與 important（R3.1）", async ({
   ).toHaveAttribute("aria-pressed", "true")
 })
 
+test("單字太長時換行，星數維持在右側同一位置", async ({ page, signedIn }) => {
+  await page.setViewportSize({ width: 360, height: 740 })
+  await seedWords(signedIn.id, [
+    { text: "run", box: 2 },
+    {
+      text: "bring home the bacon every single day",
+      box: 2,
+      pos: ["phrase"],
+    },
+  ])
+  await page.goto("/words")
+  const row = (text: string) =>
+    page
+      .getByRole("list", { name: "單字列表" })
+      .getByRole("listitem")
+      .filter({ hasText: text })
+  const stars = (text: string) =>
+    row(text).getByRole("img", { name: "熟悉度 2 / 5" })
+
+  const short = (await stars("run").boundingBox())!
+  const long = (await stars("bring home").boundingBox())!
+  expect(long.x).toBeCloseTo(short.x, 0)
+  expect(long.width).toBeCloseTo(short.width, 0)
+
+  // 長片語換行，該列比短單字的列高
+  const shortRow = (await row("run").boundingBox())!
+  const longRow = (await row("bring home").boundingBox())!
+  expect(longRow.height).toBeGreaterThan(shortRow.height)
+  const overflow = await page.evaluate(
+    () =>
+      document.documentElement.scrollWidth -
+      document.documentElement.clientWidth,
+  )
+  expect(overflow).toBeLessThanOrEqual(0)
+})
+
 test("新增的單字會出現在列表最上方", async ({ page, signedIn }) => {
   await seedWords(signedIn.id, [{ text: "older" }])
   await page.goto("/words")
