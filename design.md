@@ -1,7 +1,8 @@
 # 英文單字記憶 App — Design
 
-> 版本：v0.8（2026-10-22）・對應 `requirements.md` v0.3
+> 版本：v0.9（2026-10-22）・對應 `requirements.md` v0.4
 >
+> v0.9 變更：深色模式（§8.4、D23、D24）。
 > v0.8 變更：品牌色擴大到主要按鈕、導覽列與焦點外框，背景維持白色（§8.3、D22，取代 D21）。
 > v0.7 變更：細化 Phase 3——Dashboard 統計 RPC（§4.3、D17）、圖表改以 CSS 實作（§2、D18）、熱力圖介面與鍵盤操作（§7.6、§8.1）、PWA 與 service worker（§8.2、D19、D20）、品牌色（§8.3、D21）。
 > v0.6 變更：答錯時 box 設為 0（§7.3、D16）。
@@ -556,6 +557,28 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 - 熱力圖：level 0 為中性灰。淺色模式 level 1–4 為 `#6FBCEB`（brand-300 加深一階，才能在白底達到 2:1）→ brand-600 → brand-900 → `#043E57`；深色模式為 brand-900 → 600 → 300 → `#D4EEFF`，越多越亮。兩組皆通過 dataviz ordinal 檢查（單一色相、明度單調、相鄰階差、淺端對比）。
 - 圖示：brand-900 底、cream 的「W」；maskable 版本的字放在中央 80% 安全區內。
 
+### 8.4 深色模式（R10）
+
+**切換機制**（D23，不使用 next-themes）
+- 設定存在 `localStorage` 的 `theme`：`"light"`、`"dark"`；沒有值代表跟隨系統。
+- 根 layout 的 `<head>` 放一段 inline script，在畫面繪製前依設定與 `prefers-color-scheme` 為 `<html>` 加上或移除 `.dark`，並設定 `color-scheme`（R10.3）。`<html>` 加上 `suppressHydrationWarning`。
+- `ThemeToggle`（`components/theme/theme-toggle.tsx`）：頂部導覽列右側、登出按鈕旁的三選一切換（淺色／深色／跟隨系統），`role="radiogroup"`，每個選項有文字標籤供螢幕閱讀器使用。掛載後才讀取 `localStorage`，避免 hydration 不一致。
+- 跟隨系統時監聽 `matchMedia("(prefers-color-scheme: dark)")` 的 change 事件（R10.4）。
+- 登入頁與離線頁沒有導覽列，不提供切換，但同樣套用已儲存的設定（R10 AC）。
+
+**深色配色**（D24）
+
+| 變數 | 值 | 說明 |
+|---|---|---|
+| `--background` / `--card` / `--muted` 等 | shadcn 預設深色中性色 | |
+| `--primary` / `--primary-foreground` | brand-300 `#97D7FF` / 深色字 | brand-900 在深色底上只有 2.93:1，改用淺藍底加深色字（12.71:1） |
+| `--ring` | brand-600 | 5.50:1 |
+| `--chart-bar` | brand-600 | 5.50:1 |
+| 熱力圖 | brand-900 → 600 → 300 → `#D4EEFF` | 已通過 dataviz ordinal 檢查（§8.3） |
+
+- 星星外框、答對與答錯的圖示和文字改用深色模式較亮的色階（amber-400、green-500 / 400、red-500 / 400），達到 R10.5。
+- manifest 的 `theme_color` 與 `<meta name="theme-color">` 維持 brand-900。
+
 ## 9. 錯誤處理
 
 | 情況 | 行為 |
@@ -599,3 +622,5 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | D20 | Service worker 只在 production 註冊 | 開發時快取會干擾 HMR；以 `test:pwa`（production build）測試 |
 | D21 | ~~品牌色只用於圖示、PWA 與 Dashboard 圖表~~（已由 D22 取代） | 使用者提供的配色；全站主題維持中性色，避免擴大 Phase 3 範圍 |
 | D22 | 品牌色擴大到主要按鈕、導覽列選取狀態與焦點外框；背景維持白色 | 使用者要求套用品牌色；cream 當頁面背景試過後認為不適合，改回白色 |
+| D23 | 深色模式以自寫的 inline script 與 `localStorage` 實作，不使用 next-themes | 需求只有三種選項與防閃爍，自寫約 30 行即可，不必多一個依賴，也能完全掌握 script 的執行時機 |
+| D24 | 深色模式的主要色改為 brand-300 淺藍底、深色字 | brand-900 在深色背景上對比不足（2.93:1） |

@@ -1,10 +1,11 @@
 # 英文單字記憶 App — Requirements
 
-> 版本：v0.3（2026-10-21）
+> 版本：v0.4（2026-10-22）
+> v0.4 變更：新增 Phase 4 深色模式（R10）。
 > v0.3 變更：R7.4 答錯時 box 設為 0（原為 1），星數歸零（含 AC）。
 > v0.2 變更：R2.7 新增單字以字典標準寫法儲存（含 AC）；R4.5 註明單字本身不變。
 > 格式：需求採 EARS 語法（WHEN / IF / WHILE … THE SYSTEM SHALL …），每節附驗收條件（AC）。
-> 階段：Phase 1 單字管理 → Phase 2 複習 → Phase 3 Dashboard 與 PWA。
+> 階段：Phase 1 單字管理 → Phase 2 複習 → Phase 3 Dashboard 與 PWA → Phase 4 深色模式。
 
 ---
 
@@ -205,6 +206,24 @@
 **AC**
 - [ ] Chrome（Android）與 Safari（iOS）可將 app 加入主畫面並以獨立視窗開啟。
 - [ ] 開啟飛航模式後重新整理，顯示離線提示頁面。
+
+---
+
+## Phase 4 — 深色模式
+
+### R10 外觀
+
+- **R10.1** THE SYSTEM SHALL 提供淺色與深色兩種外觀；預設依裝置的系統設定（`prefers-color-scheme`）。
+- **R10.2** THE SYSTEM SHALL 提供「淺色／深色／跟隨系統」切換，選擇儲存在該裝置上（不同步到其他裝置或帳號）。
+- **R10.3** WHEN 頁面載入，THE SYSTEM SHALL 在畫面顯示前套用外觀，不先閃現另一種外觀。
+- **R10.4** WHILE 選擇「跟隨系統」，WHEN 系統設定改變，THE SYSTEM SHALL 立即切換外觀，不需重新整理。
+- **R10.5** 深色外觀下，文字對比 SHALL 至少 4.5:1，圖示與圖表標記 SHALL 至少 3:1（熱力圖依 dataviz ordinal 檢查）。
+
+**AC**
+- [ ] 系統為深色、尚未選擇時，首次開啟即為深色。
+- [ ] 選擇「淺色」後重新整理，仍為淺色，且載入過程不閃現深色。
+- [ ] 選擇「跟隨系統」後切換系統設定，外觀立即跟著改變。
+- [ ] 登入頁與離線頁也套用相同外觀。
 
 ---
 
