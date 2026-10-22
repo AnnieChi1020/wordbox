@@ -257,6 +257,7 @@ export type Database = {
         Args: { p_ipa: string; p_senses: Json; p_text: string; p_today: string }
         Returns: Json
       }
+      get_dashboard_stats: { Args: { p_since: string }; Returns: Json }
       replace_word_content: {
         Args: { p_ipa: string; p_senses: Json; p_word_id: string }
         Returns: undefined

@@ -182,7 +182,7 @@
     - today 為週日、週六，以及跨年、跨閏日時格子日期正確
     - 有作答的日期對應到正確的格子與 level
 
-- [ ] **T3.2 Dashboard 統計 RPC** — R8.1、R8.2、R8.6
+- [x] **T3.2 Dashboard 統計 RPC** — R8.1、R8.2、R8.6
   - Migration：`get_dashboard_stats(p_since)`（design §4.3、D17）
   - `lib/db/stats.ts`；`npm run db:types`
   - 完成條件（`tests/db`）：
