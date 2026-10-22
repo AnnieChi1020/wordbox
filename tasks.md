@@ -203,8 +203,8 @@
     - 可用鍵盤移動並讀到每格的日期與題數
     - 360px 寬度沒有頁面水平捲動（只有熱力圖本身可捲動）
 
-- [ ] **T3.4 Manifest 與圖示** — R9.1
-  - `app/manifest.ts`、`public/icons/*`（192、512、maskable 512）、`app/icon.png`、`app/apple-icon.png`
+- [x] **T3.4 Manifest 與圖示** — R9.1
+  - `app/manifest.ts`、`public/icons/*`（192、512、maskable 512）、`app/icon.svg`、`app/apple-icon.png`
   - 圖示依 design §8.3：深藍底、米黃「W」；由 SVG 以 sharp 產生各尺寸 PNG
   - `appleWebApp` metadata、`viewport.themeColor`
   - `npm run test:pwa`：以 production build 執行的 Playwright 設定（同 `test:perf`）

@@ -4,8 +4,13 @@ import { redirectWithSession, updateSession } from "@/lib/db/proxy"
 
 const HOME = "/words"
 
+/** 不需登入：登入流程與 PWA 檔案（R9；瀏覽器取得 manifest 時不帶 session 也要能讀到）。 */
 function isPublicPath(pathname: string) {
-  return pathname === "/login" || pathname.startsWith("/auth/")
+  return (
+    pathname === "/login" ||
+    pathname.startsWith("/auth/") ||
+    pathname === "/manifest.webmanifest"
+  )
 }
 
 export async function proxy(request: NextRequest) {

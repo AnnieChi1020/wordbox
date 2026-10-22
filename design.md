@@ -75,7 +75,7 @@ app/
   (app)/dashboard/page.tsx
   manifest.ts                     # R9.1
   offline/page.tsx                # R9.2；不需登入，由 service worker 預先快取
-  icon.png / apple-icon.png       # 分頁與 iOS 主畫面圖示
+  icon.svg / apple-icon.png       # 分頁與 iOS 主畫面圖示（npm run icons 產生）
 public/
   sw.js                           # service worker（§8.2）
   icons/                          # manifest 圖示 192、512、maskable

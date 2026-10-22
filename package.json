@@ -18,7 +18,9 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local --schema public > lib/db/types.ts && prettier --write lib/db/types.ts",
-    "test:perf": "playwright test -c playwright.perf.config.ts"
+    "test:perf": "playwright test -c playwright.perf.config.ts",
+    "icons": "node scripts/generate-icons.mjs",
+    "test:pwa": "playwright test -c playwright.pwa.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

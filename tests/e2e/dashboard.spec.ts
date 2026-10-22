@@ -136,7 +136,8 @@ test.describe("Dashboard（R8）", () => {
   })
 })
 
-test("沒有單字時顯示空狀態", async ({ page, signedIn: _ }) => {
+test("沒有單字時顯示空狀態", async ({ page, signedIn }) => {
+  expect(signedIn.id).toBeTruthy()
   await page.goto("/dashboard")
   await expect(page.getByText("還沒有任何單字")).toBeVisible()
   await page.getByRole("link", { name: "去新增單字" }).click()

@@ -1,6 +1,7 @@
 .next
 .next-e2e
 .next-perf
+.next-pwa
 node_modules
 coverage
 playwright-report
