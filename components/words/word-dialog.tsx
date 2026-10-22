@@ -163,7 +163,8 @@ export function WordDialog({ word }: { word: WordDetail }) {
         )}
 
         {!editing && (
-          <div className="flex items-center gap-2 border-t p-3">
+          // 手機全螢幕時與頁面同為 16px 側邊距，底部避開 home 指示條（safe area）
+          <div className="flex items-center gap-2 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-3">
             {/* R4.7 */}
             <ConfirmAction
               destructive

@@ -303,7 +303,7 @@ export function WordEditForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t p-3">
+      <div className="flex justify-end gap-2 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-3">
         <Button
           type="button"
           variant="ghost"
