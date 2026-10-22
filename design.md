@@ -545,12 +545,12 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 |---|---|---|
 | `brand-900` | `#086288` | 圖示背景、manifest `theme_color`、熱力圖 level 3（淺色模式） |
 | `brand-600` | `#4D8DBA` | 星數長條、熱力圖 level 2 |
-| `brand-300` | `#97D7FF` | 熱力圖 level 1（淺色模式） |
+| `brand-300` | `#97D7FF` | 熱力圖 level 3（深色模式） |
 | `cream` | `#FFEFC4` | 圖示上的「W」、manifest `background_color` |
 
 - 只用於圖示、PWA 與 Dashboard 圖表；其他 UI 維持現有的中性色。
 - 以 CSS 變數定義在 `globals.css`，深色模式另設一組。
-- 熱力圖：level 0 為中性灰；淺色模式 level 1–3 依序為 brand-300 → 600 → 900，level 4 以 brand-900 加深；深色模式反向，越多越亮。實作時以 dataviz 準則檢查對比。
+- 熱力圖：level 0 為中性灰。淺色模式 level 1–4 為 `#6FBCEB`（brand-300 加深一階，才能在白底達到 2:1）→ brand-600 → brand-900 → `#043E57`；深色模式為 brand-900 → 600 → 300 → `#D4EEFF`，越多越亮。兩組皆通過 dataviz ordinal 檢查（單一色相、明度單調、相鄰階差、淺端對比）。
 - 圖示：brand-900 底、cream 的「W」；maskable 版本的字放在中央 80% 安全區內。
 
 ## 9. 錯誤處理
