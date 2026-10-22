@@ -86,7 +86,7 @@ export function SessionSummary({
                     —
                   </span>
                 ) : result.isCorrect ? (
-                  <Check aria-hidden className="size-5 text-green-600" />
+                  <Check aria-hidden className="size-5 text-green-700" />
                 ) : (
                   <X aria-hidden className="size-5 text-red-600" />
                 )}

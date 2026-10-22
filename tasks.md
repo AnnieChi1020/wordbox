@@ -1,6 +1,6 @@
 # 英文單字記憶 App — Tasks
 
-> 版本：v0.7（2026-10-22）・對應 `requirements.md` v0.3、`design.md` v0.7
+> 版本：v0.8（2026-10-22）・對應 `requirements.md` v0.3、`design.md` v0.8
 > 每個任務都標註對應需求；完成條件以該需求的 AC 為準。
 > 依序實作；一個任務完成（含測試通過）後才開始下一個。
 
@@ -224,3 +224,9 @@
   - 實機（使用者操作）：Chrome（Android）與 Safari（iOS）加入主畫面、以獨立視窗開啟；開啟飛航模式後重新整理顯示離線頁
   - 完成條件：正式網址的 Dashboard 正確顯示；R9 AC 實機通過
   - 結果（2026-10-22）：iOS Safari 實機通過（加入主畫面、獨立視窗、離線頁）。Android Chrome 未實機測試；安裝條件（manifest、圖示、service worker）由 `test:pwa` 在 Chromium 驗證
+
+- [x] **T3.7 全站品牌配色**（追加需求）— design §8.3、D22
+  - `--primary` 改為 brand-900、`--ring` 改為 brand-600；導覽列選取狀態使用主要色
+  - 背景維持白色（cream 背景試過後不採用）
+  - 星星與答對顏色加深，對比更清楚
+  - 完成條件：各頁截圖確認（單字、popup、複習、統計、登入、離線）；既有 E2E 與 `test:pwa` 全數通過

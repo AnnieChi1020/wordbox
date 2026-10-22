@@ -17,7 +17,7 @@ export function Stars({ box, className }: { box: number; className?: string }) {
           key={i}
           aria-hidden
           data-filled={i < filled || undefined}
-          className="text-muted-foreground/40 size-3.5 data-filled:fill-amber-400 data-filled:text-amber-400"
+          className="text-muted-foreground/50 size-3.5 data-filled:fill-amber-500 data-filled:text-amber-700"
         />
       ))}
     </span>

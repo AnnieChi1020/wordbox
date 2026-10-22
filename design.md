@@ -1,7 +1,8 @@
 # 英文單字記憶 App — Design
 
-> 版本：v0.7（2026-10-22）・對應 `requirements.md` v0.3
+> 版本：v0.8（2026-10-22）・對應 `requirements.md` v0.3
 >
+> v0.8 變更：品牌色擴大到主要按鈕、導覽列與焦點外框，背景維持白色（§8.3、D22，取代 D21）。
 > v0.7 變更：細化 Phase 3——Dashboard 統計 RPC（§4.3、D17）、圖表改以 CSS 實作（§2、D18）、熱力圖介面與鍵盤操作（§7.6、§8.1）、PWA 與 service worker（§8.2、D19、D20）、品牌色（§8.3、D21）。
 > v0.6 變更：答錯時 box 設為 0（§7.3、D16）。
 > v0.5 變更：細化 Phase 2——目錄（§3）、`apply_review` 介面與併發處理（§4.3、D13）、干擾選項快取的使用方式（§5.3）、出題與作答的介面（§6、D14、D15）、選字回傳完整序列（§7.4）。
@@ -539,17 +540,19 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 - **Headers**（`next.config.ts`）：`/sw.js` 設定 `Cache-Control: no-cache, no-store, must-revalidate`，確保更新立即生效。
 - **測試**：`npm run test:pwa` 以 production build 執行 Playwright（同 `test:perf` 的做法），驗證 manifest、service worker 註冊、離線時重新整理顯示離線頁。
 
-### 8.3 品牌色（D21）
+### 8.3 品牌色（D22）
 
 | Token | 色碼 | 用途 |
 |---|---|---|
-| `brand-900` | `#086288` | 圖示背景、manifest `theme_color`、熱力圖 level 3（淺色模式） |
-| `brand-600` | `#4D8DBA` | 星數長條、熱力圖 level 2 |
+| `brand-900` | `#086288` | 主要按鈕（`--primary`，白字 6.75:1）、導覽列選取狀態、圖示背景、manifest `theme_color`、熱力圖 level 3 |
+| `brand-600` | `#4D8DBA` | 焦點外框（`--ring`）、星數長條、熱力圖 level 2 |
 | `brand-300` | `#97D7FF` | 熱力圖 level 3（深色模式） |
 | `cream` | `#FFEFC4` | 圖示上的「W」、manifest `background_color` |
 
-- 只用於圖示、PWA 與 Dashboard 圖表；其他 UI 維持現有的中性色。
-- 以 CSS 變數定義在 `globals.css`，深色模式另設一組。
+- 頁面背景、表面、邊框與說明文字維持白底中性色；品牌色用於主要按鈕、導覽列選取狀態、焦點外框、圖示、PWA 與 Dashboard 圖表。（曾試過以 cream 為頁面背景，使用者認為不適合，改回白色。）
+- 以 CSS 變數定義在 `globals.css`；深色模式目前沒有啟用（沒有任何地方加上 `.dark`），只預先定義熱力圖色階。
+- 星星：amber-500 填色加 amber-700 外框，在白底上比原本的 amber-400 清楚。
+- 答對：圖示 green-700、文字 green-800。
 - 熱力圖：level 0 為中性灰。淺色模式 level 1–4 為 `#6FBCEB`（brand-300 加深一階，才能在白底達到 2:1）→ brand-600 → brand-900 → `#043E57`；深色模式為 brand-900 → 600 → 300 → `#D4EEFF`，越多越亮。兩組皆通過 dataviz ordinal 檢查（單一色相、明度單調、相鄰階差、淺端對比）。
 - 圖示：brand-900 底、cream 的「W」；maskable 版本的字放在中央 80% 安全區內。
 
@@ -594,4 +597,5 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | D18 | 長條圖與熱力圖都以 CSS 實作，不使用 Recharts | 只有 6 根長條，圖表套件會增加約 100KB 的 client bundle；自行實作也較容易控制無障礙與深色模式 |
 | D19 | 手寫 service worker，不使用 Serwist 等套件 | 只需要快取靜態資源與離線頁（R9.2），規則少；避免為 Turbopack 額外設定建置流程 |
 | D20 | Service worker 只在 production 註冊 | 開發時快取會干擾 HMR；以 `test:pwa`（production build）測試 |
-| D21 | 品牌色（深藍、中藍、淺藍、米黃）只用於圖示、PWA 與 Dashboard 圖表 | 使用者提供的配色；全站主題維持中性色，避免擴大 Phase 3 範圍 |
+| D21 | ~~品牌色只用於圖示、PWA 與 Dashboard 圖表~~（已由 D22 取代） | 使用者提供的配色；全站主題維持中性色，避免擴大 Phase 3 範圍 |
+| D22 | 品牌色擴大到主要按鈕、導覽列選取狀態與焦點外框；背景維持白色 | 使用者要求套用品牌色；cream 當頁面背景試過後認為不適合，改回白色 |

@@ -175,7 +175,7 @@ export function QuestionCard({
                 )}
                 {isCorrect && (
                   <>
-                    <Check aria-hidden className="size-5 text-green-600" />
+                    <Check aria-hidden className="size-5 text-green-700" />
                     <span className="sr-only">正確答案</span>
                   </>
                 )}
@@ -194,7 +194,7 @@ export function QuestionCard({
       <p aria-live="polite" className="min-h-6 font-medium">
         {answered &&
           (answered.result.isCorrect ? (
-            <span className="text-green-700 dark:text-green-400">答對了！</span>
+            <span className="text-green-800 dark:text-green-400">答對了！</span>
           ) : (
             <span className="text-red-700 dark:text-red-400">
               答錯了，正確答案是「{answered.result.correctOption}」

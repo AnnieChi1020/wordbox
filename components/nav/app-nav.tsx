@@ -32,7 +32,7 @@ export function TopNav() {
               aria-current={isActive(href) ? "page" : undefined}
               className={cn(
                 "text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                "aria-[current=page]:bg-muted aria-[current=page]:text-foreground",
+                "aria-[current=page]:bg-muted aria-[current=page]:text-primary",
               )}
             >
               <Icon aria-hidden className="size-4" />
@@ -61,7 +61,7 @@ export function BottomNav() {
               aria-current={isActive(href) ? "page" : undefined}
               className={cn(
                 "text-muted-foreground flex h-14 flex-col items-center justify-center gap-1 text-xs",
-                "aria-[current=page]:text-foreground aria-[current=page]:font-medium",
+                "aria-[current=page]:text-primary aria-[current=page]:font-medium",
               )}
             >
               <Icon aria-hidden className="size-5" />
