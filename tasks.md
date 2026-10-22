@@ -191,7 +191,7 @@
     - RLS：不會計入其他使用者的資料
     - 刪除單字後總數減 1、`daily` 不變（R8 AC、R4.7 AC）
 
-- [ ] **T3.3 Dashboard 畫面** — R8.1–R8.5、NFR1、NFR5
+- [x] **T3.3 Dashboard 畫面** — R8.1–R8.5、NFR1、NFR5
   - `/dashboard`：`StatTotal`、`StarDistributionChart`、`Heatmap`（design §8.1）
   - 品牌色 CSS 變數（design §8.3）
   - Heatmap：tooltip（hover / 點擊）、roving tabindex 與方向鍵、sr-only 摘要、手機水平捲動並預設顯示最近幾週、深色模式色階

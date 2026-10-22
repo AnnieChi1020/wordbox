@@ -5,6 +5,16 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-brand-900: var(--brand-900);
+  --color-brand-600: var(--brand-600);
+  --color-brand-300: var(--brand-300);
+  --color-cream: var(--cream);
+  --color-chart-bar: var(--chart-bar);
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -49,6 +59,18 @@
 }
 
 :root {
+  /* 品牌色（design §8.3）：只用於圖示、PWA 與 Dashboard 圖表 */
+  --brand-900: #086288;
+  --brand-600: #4d8dba;
+  --brand-300: #97d7ff;
+  --cream: #ffefc4;
+  --chart-bar: var(--brand-600);
+  /* 熱力圖（R8.4）：level 1 由 brand-300 加深一階，才能在白底達到 2:1 */
+  --heat-0: oklch(0.93 0 0);
+  --heat-1: #6fbceb;
+  --heat-2: var(--brand-600);
+  --heat-3: var(--brand-900);
+  --heat-4: #043e57;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -84,6 +106,12 @@
 }
 
 .dark {
+  /* 深色模式：越多越亮 */
+  --heat-0: oklch(0.27 0 0);
+  --heat-1: var(--brand-900);
+  --heat-2: var(--brand-600);
+  --heat-3: var(--brand-300);
+  --heat-4: #d4eeff;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
