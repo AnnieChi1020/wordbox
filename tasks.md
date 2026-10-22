@@ -219,7 +219,8 @@
     - 恢復連線後重新整理回到正常頁面
     - 只快取靜態資源：Cache Storage 中沒有頁面 HTML（離線頁除外）與 API 回應
 
-- [ ] **T3.6 Phase 3 部署與實機測試** — R9 AC
+- [x] **T3.6 Phase 3 部署與實機測試** — R9 AC
   - `supabase db push` 推送 T3.2 的 migration，Vercel 重新部署
   - 實機（使用者操作）：Chrome（Android）與 Safari（iOS）加入主畫面、以獨立視窗開啟；開啟飛航模式後重新整理顯示離線頁
   - 完成條件：正式網址的 Dashboard 正確顯示；R9 AC 實機通過
+  - 結果（2026-10-22）：iOS Safari 實機通過（加入主畫面、獨立視窗、離線頁）。Android Chrome 未實機測試；安裝條件（manifest、圖示、service worker）由 `test:pwa` 在 Chromium 驗證
