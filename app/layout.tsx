@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { ServiceWorkerRegister } from "@/components/pwa/sw-register"
 import { Toaster } from "@/components/ui/sonner"
+import { THEME_INIT_SCRIPT } from "@/lib/theme"
 
 import "./globals.css"
 
@@ -31,10 +32,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
+    // .dark 由 head 的 script 在 hydration 前加上（R10.3）
     <html
       lang="zh-Hant"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
         {children}
         {/* 放在上方，避免被手機底部分頁列擋住 */}

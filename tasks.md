@@ -235,7 +235,7 @@
 
 ## Phase 4 — 深色模式
 
-- [ ] **T4.1 外觀切換機制** — R10.1–R10.4
+- [x] **T4.1 外觀切換機制** — R10.1–R10.4
   - 根 layout 的防閃爍 inline script、`suppressHydrationWarning`（design §8.4、D23）
   - `ThemeToggle`：深色模式開關（開 = 深色），放在頂部導覽列登出按鈕旁
   - 完成條件（E2E）：

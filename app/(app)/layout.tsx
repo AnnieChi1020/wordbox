@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import { SignOutButton } from "@/components/auth/sign-out-button"
 import { TimezoneInit } from "@/components/auth/timezone-init"
 import { BottomNav, TopNav } from "@/components/nav/app-nav"
+import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { createClient } from "@/lib/db/server"
 
 /** profile.timezone 尚未初始化時，掛上回報瀏覽器時區的元件（R1.3）。 */
@@ -24,7 +25,10 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
             </Link>
             <TopNav />
           </div>
-          <SignOutButton />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <SignOutButton />
+          </div>
         </div>
       </header>
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
