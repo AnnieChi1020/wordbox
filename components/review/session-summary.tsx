@@ -86,9 +86,15 @@ export function SessionSummary({
                     —
                   </span>
                 ) : result.isCorrect ? (
-                  <Check aria-hidden className="size-5 text-green-700" />
+                  <Check
+                    aria-hidden
+                    className="size-5 text-green-700 dark:text-green-500"
+                  />
                 ) : (
-                  <X aria-hidden className="size-5 text-red-600" />
+                  <X
+                    aria-hidden
+                    className="size-5 text-red-600 dark:text-red-500"
+                  />
                 )}
                 <span className="sr-only">
                   {result === null
@@ -97,7 +103,7 @@ export function SessionSummary({
                       ? "答對"
                       : "答錯"}
                 </span>
-                <span className="min-w-0 flex-1 truncate font-medium">
+                <span className="min-w-0 flex-1 font-medium wrap-break-word">
                   {wordLabel(outcome)}
                 </span>
                 {result && (

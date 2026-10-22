@@ -97,7 +97,7 @@ export function WordFilters({ params }: { params: ListParams }) {
           onChange={(e) =>
             apply({ ...current, sort: e.target.value as SortKey })
           }
-          className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2 text-sm outline-none focus-visible:ring-3"
+          className="border-input bg-background dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2 text-sm outline-none focus-visible:ring-3"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>

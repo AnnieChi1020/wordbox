@@ -175,13 +175,19 @@ export function QuestionCard({
                 )}
                 {isCorrect && (
                   <>
-                    <Check aria-hidden className="size-5 text-green-700" />
+                    <Check
+                      aria-hidden
+                      className="size-5 text-green-700 dark:text-green-500"
+                    />
                     <span className="sr-only">正確答案</span>
                   </>
                 )}
                 {isWrongPick && (
                   <>
-                    <X aria-hidden className="size-5 text-red-600" />
+                    <X
+                      aria-hidden
+                      className="size-5 text-red-600 dark:text-red-500"
+                    />
                     <span className="sr-only">你的答案</span>
                   </>
                 )}

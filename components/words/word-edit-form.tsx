@@ -199,7 +199,7 @@ export function WordEditForm({
                     onChange={(e) =>
                       update(i, { pos: e.target.value as PartOfSpeech })
                     }
-                    className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2 text-sm outline-none focus-visible:ring-3"
+                    className="border-input bg-background dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2 text-sm outline-none focus-visible:ring-3"
                   >
                     {POS_VALUES.map((pos) => (
                       <option key={pos} value={pos}>
