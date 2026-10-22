@@ -560,10 +560,10 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 ### 8.4 深色模式（R10）
 
 **切換機制**（D23，不使用 next-themes）
-- 設定存在 `localStorage` 的 `theme`：`"light"`、`"dark"`；沒有值代表跟隨系統。
-- 根 layout 的 `<head>` 放一段 inline script，在畫面繪製前依設定與 `prefers-color-scheme` 為 `<html>` 加上或移除 `.dark`，並設定 `color-scheme`（R10.3）。`<html>` 加上 `suppressHydrationWarning`。
-- `ThemeToggle`（`components/theme/theme-toggle.tsx`）：頂部導覽列右側、登出按鈕旁的三選一切換（淺色／深色／跟隨系統），`role="radiogroup"`，每個選項有文字標籤供螢幕閱讀器使用。掛載後才讀取 `localStorage`，避免 hydration 不一致。
-- 跟隨系統時監聽 `matchMedia("(prefers-color-scheme: dark)")` 的 change 事件（R10.4）。
+- 設定存在 `localStorage` 的 `theme`：`"light"` 或 `"dark"`；沒有值（從未手動切換）時，依載入當下的 `prefers-color-scheme` 決定（R10.1）。
+- 根 layout 的 `<head>` 放一段 inline script，在畫面繪製前為 `<html>` 加上或移除 `.dark`，並設定 `color-scheme`（R10.3）。`<html>` 加上 `suppressHydrationWarning`。
+- `ThemeToggle`（`components/theme/theme-toggle.tsx`）：頂部導覽列右側、登出按鈕旁的切換開關（`role="switch"`、`aria-checked`，標籤「深色模式」，開 = 深色）。切換時寫入 `localStorage` 並更新 `<html>` 的 class；初始狀態讀取 `<html>` 目前是否有 `.dark`，避免 hydration 不一致。
+- 不監聽系統設定變化，不提供「跟隨系統」模式（R10.4）。
 - 登入頁與離線頁沒有導覽列，不提供切換，但同樣套用已儲存的設定（R10 AC）。
 
 **深色配色**（D24）
