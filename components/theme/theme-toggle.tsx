@@ -1,6 +1,6 @@
 "use client"
 
-import { Moon } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { useSyncExternalStore } from "react"
 
 import { setTheme } from "@/lib/theme"
@@ -23,7 +23,12 @@ export function ThemeToggle() {
   const dark = useSyncExternalStore(subscribe, isDark, () => false)
   return (
     <label className="flex cursor-pointer items-center gap-2">
-      <Moon aria-hidden className="text-muted-foreground size-4" />
+      {/* 圖示依目前外觀顯示：淺色為太陽、深色為月亮；以 dark: 樣式切換，hydration 前就正確 */}
+      <Sun aria-hidden className="text-muted-foreground size-4 dark:hidden" />
+      <Moon
+        aria-hidden
+        className="text-muted-foreground hidden size-4 dark:block"
+      />
       <button
         type="button"
         role="switch"
