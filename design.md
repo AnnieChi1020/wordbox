@@ -1,7 +1,8 @@
 # Wordbox — Design
 
-> Version: v1.1 (2026-10-23) · matches `requirements.md` v0.6
+> Version: v1.2 (2026-10-23) · matches `requirements.md` v0.7
 >
+> v1.2 changes: word list search (§3, §6, §7.7, D26).
 > v1.1 changes: translated into English. §8.3 no longer says dark mode is disabled (it shipped in v0.9, §8.4).
 > v1.0 changes: antonym question type `word_to_antonym` (§4.1, §5.3, §6, §7.5, D25).
 >
@@ -76,7 +77,7 @@ app/
   login/page.tsx
   auth/callback/route.ts          # OAuth callback; exchanges the session
   (app)/layout.tsx                # navigation (NFR1)
-  (app)/words/page.tsx            # ?stars=0,1&important=1&sort=created_desc&word=<id>
+  (app)/words/page.tsx            # ?q=up&stars=0,1&important=1&sort=created_desc&word=<id>
   (app)/review/page.tsx
   (app)/dashboard/page.tsx
   manifest.ts                     # R9.1
@@ -389,7 +390,8 @@ Reads (list, popup, dashboard) query directly in Server Components. List filteri
 - Each query fetches 100 rows (`range`) and gets `count: exact` in the same query for the total; the sort ends with `id` so pages never repeat or skip rows.
 - The first page is queried by the Server Component; scrolling to the bottom loads the next page with the `loadMoreWords(listQuery, offset)` action, and a 「載入更多」 (Load more) button provides the same for keyboard users.
 - The server sends only compact data to the client list component, which renders each row, so RSC does not send the whole element tree.
-- When filters, sort order, or data change, the server re-renders the first page and the client list resets; results from pages still loading are discarded.
+- Search (R3.9) is one more filter in the same query: `text_key ilike '%<q>%'`, with `\`, `%`, and `_` escaped (§7.7, D26).
+- When the search, filters, sort order, or data change, the server re-renders the first page and the client list resets; results from pages still loading are discarded.
 - Performance is measured with `npm run test:perf` (production build, 2,000 words).
 
 ### Server-side answer checking in submitAnswer (R7.3)
@@ -508,6 +510,23 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 ```
 
 Dates are always `YYYY-MM-DD` strings computed with `addDays` from §7.2, so time zones and daylight saving time do not affect them.
+
+### 7.7 listParams.ts (R3.2–R3.4, R3.9)
+
+```ts
+type ListParams = { q: string; stars: number[]; importantOnly: boolean; sort: SortKey }
+
+normalizeSearch(raw: string): string
+  // normalizeInput (§7.1), lowercased, first 64 characters; '' = no search
+likePattern(q: string): string
+  // '%' + q with \, %, _ escaped + '%', for text_key ilike
+hasActiveFilters(params): boolean
+  // true when q, stars, or importantOnly is set (R3.8 decides between the empty state and "no matching words")
+```
+
+`parseListParams` reads `q` from the URL and normalizes it; `serializeListParams` omits it when empty.
+
+**UI**: `WordSearch` sits above `WordFilters` in the list section. It keeps the input in local state and calls `router.replace` 300ms after the last keystroke (R3.9), so history does not grow. When the URL changes elsewhere (e.g. 「清除篩選」), the input resets to the URL's `q`. A clear button appears when the input has text. The input is labeled 「搜尋單字」 (Search words) and sits in a `role="search"` region.
 
 ## 8. Screens
 
@@ -630,4 +649,5 @@ State handling: a skeleton is shown while the AI is generating; every error is s
 | D22 | Brand colors extend to primary buttons, the navigation bar's selected state, and focus rings; the background stays white | The user asked for the brand colors to be applied; cream was tried as the page background but found unsuitable, so it went back to white |
 | D23 | Dark mode uses a hand-written inline script and `localStorage`, without next-themes | The need is only a few options plus no flash; about 30 lines of custom code avoids a dependency and gives full control over when the script runs |
 | D24 | In dark mode the primary color becomes a brand-300 light blue background with dark text | brand-900 lacks contrast on a dark background (2.93:1) |
+| D26 | Search uses `ilike` substring matching on `text_key` without a new index | Each query is already limited to one user's words by RLS and `user_id`, at most a few thousand rows, so a scan stays within NFR4; a trigram index (`pg_trgm`) can be added if that changes. Substring matching finds phrases by any of their words (`up` → `give up`) |
 | D25 | Antonym question distractors come only from other words' antonyms, and all antonyms of the quiz word's senses are excluded | Mirrors the synonym questions; excluding the antonyms of every sense guarantees exactly one of the 4 options matches (§6 checking). Synonyms are still excluded per R6.4: they would be clearly wrong answers, but a single rule is simpler |

@@ -1,13 +1,14 @@
 # Wordbox — Requirements
 
-> Version: v0.6 (2026-10-23)
+> Version: v0.7 (2026-10-23)
+> v0.7 changes: added Phase 6, word list search (R3.9; R3.4, R3.8 updated; AC included).
 > v0.6 changes: translated into English; content unchanged.
 > v0.5 changes: added Phase 5, the antonym question type `word_to_antonym` (R6.1, R6.4, R7 AC).
 > v0.4 changes: added Phase 4, dark mode (R10).
 > v0.3 changes: R7.4 sets box to 0 on a wrong answer (was 1), so the star count resets to zero (AC included).
 > v0.2 changes: R2.7 stores new words in their dictionary headword spelling (AC included); R4.5 notes that the word itself does not change.
 > Format: requirements use EARS syntax (WHEN / IF / WHILE … THE SYSTEM SHALL …); each section ends with acceptance criteria (AC).
-> Phases: Phase 1 word management → Phase 2 review → Phase 3 dashboard and PWA → Phase 4 dark mode → Phase 5 antonym questions.
+> Phases: Phase 1 word management → Phase 2 review → Phase 3 dashboard and PWA → Phase 4 dark mode → Phase 5 antonym questions → Phase 6 word list search.
 > UI text: the interface is in Traditional Chinese (NFR2). UI strings are quoted in Chinese, followed by an English gloss in parentheses.
 
 ---
@@ -91,16 +92,26 @@ Offline use, bulk adding, sign-in methods other than Google, AI usage limits (on
   - Date added (newest first, **default**; oldest first)
   - Alphabetical (A→Z; Z→A; case-insensitive)
   - Stars (low→high; high→low; ties ordered by date added, newest first)
-- **R3.4** THE SYSTEM SHALL reflect the filter and sort state in the URL query string so that it survives a reload.
+- **R3.4** THE SYSTEM SHALL reflect the search, filter, and sort state in the URL query string so that it survives a reload.
 - **R3.5** WHEN the user clicks the important flag in the list, THE SYSTEM SHALL toggle the word's important state without opening the popup.
 - **R3.6** WHEN the user clicks elsewhere on a word row, THE SYSTEM SHALL open that word's popup.
 - **R3.7** IF the user has no words yet, THE SYSTEM SHALL show an empty state that guides them to add one.
-- **R3.8** IF no words match the filters, THE SYSTEM SHALL show 「沒有符合條件的單字」 (No matching words) and offer a way to clear the filters.
+- **R3.8** IF no words match the search and filters, THE SYSTEM SHALL show 「沒有符合條件的單字」 (No matching words) and offer a way to clear the search and filters.
+- **R3.9** THE SYSTEM SHALL provide a search box above the filters (Phase 6):
+  - WHEN the user types, THE SYSTEM SHALL show only words whose text contains the search text anywhere, case-insensitively, after normalizing it as in R2.2. Only the word itself is searched, not its definitions.
+  - THE SYSTEM SHALL apply the search together with the filters in R3.2 and keep the sort order in R3.3.
+  - THE SYSTEM SHALL update the results after the user stops typing for 300ms, without adding browser history entries for each keystroke.
+  - THE SYSTEM SHALL treat every character in the search text literally (e.g. `%` and `_` are not wildcards), and SHALL use at most the first 64 characters.
+  - THE SYSTEM SHALL provide a button to clear the search.
 
 **AC**
 - [ ] A word in box 3 shows 3 filled stars and 2 empty stars.
 - [ ] The filters "0 stars + 1 star" and "important only" can apply at the same time.
 - [ ] After choosing "A→Z" and reloading, the sort order is kept.
+- [ ] Searching `up` with `give up`, `upset`, and `apple` saved shows `give up` and `upset`; searching `APP` shows `apple`.
+- [ ] Searching together with the "1 star" filter shows only 1-star words that match.
+- [ ] After searching and reloading, the search text and results are kept.
+- [ ] Searching `%` does not match every word.
 
 ### R4 Word popup
 

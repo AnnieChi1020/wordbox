@@ -1,6 +1,7 @@
 # Wordbox — Tasks
 
-> Version: v1.1 (2026-10-23) · matches `requirements.md` v0.6 and `design.md` v1.1
+> Version: v1.2 (2026-10-23) · matches `requirements.md` v0.7 and `design.md` v1.2
+> v1.2 changes: added Phase 6.
 > v1.1 changes: translated into English; content unchanged.
 > Each task lists the requirements it covers; it is done when those requirements' AC pass.
 > Implement in order; start the next task only after the current one is done (tests included).
@@ -285,3 +286,23 @@
   - Push the T5.1 migration with `supabase db push`, redeploy Vercel
   - Done when: antonym questions appear and can be answered on the production URL
   - Result (2026-10-23): confirmed on the production URL
+
+---
+
+## Phase 6 — Word list search
+
+- [ ] **T6.1 Search query** — R3.4, R3.9
+  - `listParams.ts`: `q` in `ListParams`, `normalizeSearch`, `likePattern`; `hasActiveFilters` includes `q` (design §7.7)
+  - `listWords` filters with `text_key ilike` (design §6, D26)
+  - Done when:
+    - unit: parsing and serializing `q` (normalized, lowercased, at most 64 characters, omitted when empty); `likePattern` escapes `\`, `%`, and `_`
+    - db: substring and case-insensitive matches; combined with the star filter; `%` and `_` match literally
+
+- [ ] **T6.2 Search UI and E2E** — R3.8, R3.9, NFR5
+  - `WordSearch` above the filters: 300ms debounce with `router.replace`, clear button, `role="search"` (design §7.7)
+  - 「清除篩選」 also clears the search; the popup keeps the search when opened and closed
+  - Done when (E2E): the R3 search AC pass; typing does not add history entries; the clear button works from the keyboard; existing E2E pass
+
+- [ ] **T6.3 Deployment**
+  - Redeploy Vercel (no migration)
+  - Done when: search works on the production URL
