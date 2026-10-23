@@ -33,6 +33,8 @@ function questionText(type: QuestionType): [before: string, after: string] {
       return ["哪一個是", "的反義詞？"]
     case "zh_to_word":
       return ["", "的英文是？"]
+    case "cloze":
+      return ["選出最適合填入空格的字", ""]
   }
 }
 

@@ -318,7 +318,7 @@
   - Applied locally with `supabase migration up`, without a reset
   - Done when (`tests/db`): `apply_review` and `ai_distractors` accept `cloze`
 
-- [ ] **T7.2 Cloze questions in `questions.ts`** — R6.1, R6.4, R7.3
+- [x] **T7.2 Cloze questions in `questions.ts`** — R6.1, R6.4, R7.3
   - `clozeSentence`; `examples` in `QuestionSense`; `availableTypes`, `buildQuestion`, and `findCorrectOption` support `cloze` (design §7.5, D27, D28)
   - `listReviewWords` reads `examples`
   - Done when:

@@ -44,7 +44,7 @@ export async function listReviewWords(db: Db): Promise<ReviewWord[]> {
     const { data, error } = await db
       .from("words")
       .select(
-        "id, text, box, next_due_on, senses(id, pos, def_zh, synonyms, antonyms)",
+        "id, text, box, next_due_on, senses(id, pos, def_zh, synonyms, antonyms, examples)",
       )
       .order("id")
       .range(offset, offset + MAX_ROWS - 1)

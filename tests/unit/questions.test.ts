@@ -4,6 +4,8 @@ import type { PartOfSpeech } from "@/lib/domain/pos"
 import {
   availableTypes,
   buildQuestion,
+  CLOZE_BLANK,
+  clozeSentence,
   completeQuestion,
   filterDistractors,
   findCorrectOption,
@@ -22,8 +24,9 @@ function s(
   def_zh: string,
   synonyms: string[] = [],
   antonyms: string[] = [],
+  examples: string[] = [],
 ): QuestionSense {
-  return { id: `s${nextId++}`, pos, def_zh, synonyms, antonyms }
+  return { id: `s${nextId++}`, pos, def_zh, synonyms, antonyms, examples }
 }
 
 function w(text: string, ...senses: QuestionSense[]): QuestionWord {
@@ -54,7 +57,7 @@ const distractorsOf = (q: Question) => q.options.filter((o) => o !== q.answer)
 
 describe("availableTypes (R6.1)", () => {
   it("offers all three types when the sense has synonyms", () => {
-    expect(availableTypes(s("verb", "跑", ["sprint"]))).toEqual([
+    expect(availableTypes({ text: "w" }, s("verb", "跑", ["sprint"]))).toEqual([
       "word_to_zh",
       "word_to_synonym",
       "zh_to_word",
@@ -62,24 +65,72 @@ describe("availableTypes (R6.1)", () => {
   })
 
   it("offers word_to_antonym when the sense has antonyms", () => {
-    expect(availableTypes(s("adjective", "熱的", [], ["cold"]))).toEqual([
-      "word_to_zh",
-      "word_to_antonym",
-      "zh_to_word",
-    ])
+    expect(
+      availableTypes({ text: "w" }, s("adjective", "熱的", [], ["cold"])),
+    ).toEqual(["word_to_zh", "word_to_antonym", "zh_to_word"])
   })
 
   it("excludes word_to_antonym when the sense has no antonyms (R7 AC)", () => {
-    expect(availableTypes(s("verb", "跑", ["sprint"]))).not.toContain(
-      "word_to_antonym",
-    )
+    expect(
+      availableTypes({ text: "w" }, s("verb", "跑", ["sprint"])),
+    ).not.toContain("word_to_antonym")
+  })
+
+  it("offers cloze only when an example contains the word (R7 AC)", () => {
+    const sense = s("verb", "跑", [], [], ["He ran to catch the bus."])
+    expect(availableTypes({ text: "run" }, sense)).not.toContain("cloze")
+    sense.examples.push("I run every morning.")
+    expect(availableTypes({ text: "run" }, sense)).toEqual([
+      "word_to_zh",
+      "zh_to_word",
+      "cloze",
+    ])
   })
 
   it("excludes word_to_synonym when the sense has no synonyms (R7 AC)", () => {
-    expect(availableTypes(s("noun", "蘋果"))).toEqual([
+    expect(availableTypes({ text: "w" }, s("noun", "蘋果"))).toEqual([
       "word_to_zh",
       "zh_to_word",
     ])
+  })
+})
+
+describe("clozeSentence (R6.1, D27)", () => {
+  it("blanks every whole-word occurrence, ignoring case", () => {
+    expect(clozeSentence("Run, run as fast as you RUN.", "run")).toBe(
+      `${CLOZE_BLANK}, ${CLOZE_BLANK} as fast as you ${CLOZE_BLANK}.`,
+    )
+    expect(clozeSentence("monday is busy.", "Monday")).toBe(
+      `${CLOZE_BLANK} is busy.`,
+    )
+  })
+
+  it("matches phrases across extra whitespace", () => {
+    expect(clozeSentence("Never give   up on it.", "give up")).toBe(
+      `Never ${CLOZE_BLANK} on it.`,
+    )
+  })
+
+  it("does not match inside other words", () => {
+    expect(clozeSentence("I like running and brunch.", "run")).toBeNull()
+    expect(clozeSentence("A well-known run-down shop.", "known")).toBeNull()
+  })
+
+  it("keeps punctuation and possessives around the word", () => {
+    expect(clozeSentence("The apple's skin (apple) is red.", "apple")).toBe(
+      `The ${CLOZE_BLANK}'s skin (${CLOZE_BLANK}) is red.`,
+    )
+  })
+
+  it("returns null when only an inflected form appears", () => {
+    expect(clozeSentence("He ran to catch the bus.", "run")).toBeNull()
+    expect(clozeSentence("She gave up smoking.", "give up")).toBeNull()
+  })
+
+  it("treats regex characters in the word literally", () => {
+    expect(clozeSentence("Is it a.b or ab?", "a.b")).toBe(
+      `Is it ${CLOZE_BLANK} or ab?`,
+    )
   })
 })
 
@@ -133,6 +184,22 @@ describe("buildQuestion", () => {
     expect(q).toMatchObject({ type: "word_to_antonym", prompt: "hot" })
     expect(["cold", "cool"]).toContain(q.answer)
     expect(distractorsOf(q).sort()).toEqual(["down", "slow", "small"])
+  })
+
+  it("builds cloze from an example that contains the word, with the word as the answer", () => {
+    const run = w(
+      "run",
+      s("verb", "跑", [], [], ["He ran to catch the bus.", "I run every day."]),
+    )
+    for (const seed of [1, 2, 3, 4]) {
+      const q = question(build(run, "cloze", [run, ...pool], seed))
+      expect(q).toMatchObject({
+        type: "cloze",
+        prompt: `I ${CLOZE_BLANK} every day.`,
+        answer: "run",
+      })
+      expect(q.options).toHaveLength(4)
+    }
   })
 
   it("shuffles option order by rng", () => {
@@ -208,6 +275,21 @@ describe("buildQuestion", () => {
       expect(
         draft(build(light, "word_to_antonym", others)).distractors.sort(),
       ).toEqual(["dim", "empty"])
+    })
+
+    it("cloze: drops words that are synonyms or antonyms of the target", () => {
+      const run = w(
+        "run",
+        s("verb", "跑", ["sprint"], ["walk"], ["I run every day."]),
+        s("noun", "跑步", [], ["rest"], []),
+      )
+      const others = [
+        w("sprint", s("verb", "衝刺")),
+        w("Walk", s("verb", "走")),
+        w("rest", s("verb", "休息")),
+        w("swim", s("verb", "游泳")),
+      ]
+      expect(draft(build(run, "cloze", others)).distractors).toEqual(["swim"])
     })
 
     it("zh_to_word: drops synonyms of the target and words sharing the question's definition", () => {
@@ -326,6 +408,9 @@ describe("findCorrectOption (R7.3)", () => {
         "small",
       ]),
     ).toBe("Slow")
+    expect(
+      findCorrectOption("cloze", word, sense, ["slow", "FAST", "big", "small"]),
+    ).toBe("FAST")
     expect(
       findCorrectOption("zh_to_word", word, sense, [
         "slow",

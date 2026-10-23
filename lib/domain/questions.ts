@@ -7,8 +7,12 @@ export const QUESTION_TYPES = [
   "word_to_synonym",
   "word_to_antonym",
   "zh_to_word",
+  "cloze",
 ] as const
 export type QuestionType = (typeof QUESTION_TYPES)[number]
+
+/** The blank that replaces the word in a cloze prompt (design §8). */
+export const CLOZE_BLANK = "___"
 
 /** Number of distractors per question (R6.2). */
 export const DISTRACTOR_COUNT = 3
@@ -19,6 +23,7 @@ export type QuestionSense = {
   def_zh: string
   synonyms: string[]
   antonyms: string[]
+  examples: string[]
 }
 
 export type QuestionWord = { id: string; text: string; senses: QuestionSense[] }
@@ -50,13 +55,42 @@ export function isQuestionType(value: unknown): value is QuestionType {
   return QUESTION_TYPES.includes(value as QuestionType)
 }
 
-/** R6.1: no word_to_synonym for a sense without synonyms, and no word_to_antonym for one without antonyms. */
-export function availableTypes(sense: QuestionSense): QuestionType[] {
+/**
+ * R6.1: no word_to_synonym for a sense without synonyms, no word_to_antonym for one without antonyms,
+ * and no cloze without an example that contains the word.
+ */
+export function availableTypes(
+  word: Pick<QuestionWord, "text">,
+  sense: QuestionSense,
+): QuestionType[] {
   return QUESTION_TYPES.filter((type) => {
     if (type === "word_to_synonym") return sense.synonyms.length > 0
     if (type === "word_to_antonym") return sense.antonyms.length > 0
+    if (type === "cloze") return clozeExamples(word.text, sense).length > 0
     return true
   })
+}
+
+/**
+ * R6.1, D27: replaces every whole-word, case-insensitive occurrence of text in the example with CLOZE_BLANK.
+ * Spaces inside a phrase match any run of whitespace. Returns null when the word does not occur in exactly this form.
+ */
+export function clozeSentence(example: string, text: string): string | null {
+  const words = text.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return null
+  const body = words
+    .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("\\s+")
+  // Letters or hyphens on either side mean the match is part of another word (run in running, well-known)
+  const pattern = new RegExp(`(?<![A-Za-z-])${body}(?![A-Za-z-])`, "gi")
+  const blanked = example.replace(pattern, CLOZE_BLANK)
+  return blanked === example ? null : blanked
+}
+
+function clozeExamples(text: string, sense: QuestionSense): string[] {
+  return sense.examples
+    .map((example) => clozeSentence(example, text))
+    .filter((s) => s !== null)
 }
 
 /**
@@ -72,7 +106,7 @@ export function buildQuestion(
 ): { question: Question } | { needsAi: QuestionDraft } {
   const others = pool.filter((w) => w.id !== target.id)
   const answer = correctAnswer(target, sense, type, rng)
-  const prompt = type === "zh_to_word" ? sense.def_zh : target.text
+  const prompt = questionPrompt(target, sense, type, rng)
   const excluded = exclusions(target, sense, type, answer, others)
 
   const candidates = shuffle(libraryCandidates(type, others), rng)
@@ -162,7 +196,27 @@ function acceptedAnswers(
     case "word_to_antonym":
       return sense.antonyms
     case "zh_to_word":
+    case "cloze":
       return [word.text]
+  }
+}
+
+function questionPrompt(
+  target: QuestionWord,
+  sense: QuestionSense,
+  type: QuestionType,
+  rng: Rng,
+): string {
+  switch (type) {
+    case "zh_to_word":
+      return sense.def_zh
+    case "cloze": {
+      const sentence = pick(clozeExamples(target.text, sense), rng)
+      if (sentence === undefined) throw new Error("sense has no cloze example")
+      return sentence
+    }
+    default:
+      return target.text
   }
 }
 
@@ -176,6 +230,7 @@ function correctAnswer(
     case "word_to_zh":
       return sense.def_zh
     case "zh_to_word":
+    case "cloze":
       return target.text
     case "word_to_synonym": {
       const synonym = pick(sense.synonyms, rng)
@@ -213,6 +268,7 @@ function libraryCandidates(
         ),
       )
     case "zh_to_word":
+    case "cloze":
       return others.map((w) => ({
         text: w.text,
         pos: new Set(w.senses.map((s) => s.pos)),
@@ -236,8 +292,9 @@ function exclusions(
   if (type === "word_to_zh") {
     keys.push(...target.senses.map((s) => s.def_zh))
   }
-  if (type === "word_to_antonym") {
-    // Exclude the antonyms of every sense so exactly one option matches when checking the answer (D25)
+  if (type === "word_to_antonym" || type === "cloze") {
+    // Exclude the antonyms of every sense: for antonym questions so exactly one option matches (D25),
+    // for cloze because an antonym often fits the same sentence (D28)
     keys.push(...target.senses.flatMap((s) => s.antonyms))
   }
   if (type === "zh_to_word") {

@@ -101,7 +101,7 @@ async function questionFor(
 ): Promise<Question | null> {
   const sense = pick(word.senses, rng)
   if (!sense) return null
-  for (const type of shuffle(availableTypes(sense), rng)) {
+  for (const type of shuffle(availableTypes(word, sense), rng)) {
     const built = buildQuestion(word, sense, type, pool, rng)
     if ("question" in built) return built.question
     try {

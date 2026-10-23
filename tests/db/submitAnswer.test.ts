@@ -174,22 +174,24 @@ describe("submitAnswer (R7.3, R7.4)", () => {
       "Sluggish",
     ],
     ["zh_to_word", ["slow", "big", "small", "WORDZ"], "slow", "WORDZ"],
+    ["cloze", ["slow", "big", "small", "WORDZ"], "WORDZ", "WORDZ"],
   ])(
     "checks %s answers on the server",
     async (questionType, options, selected, correctOption) => {
       const w = await setupWord()
       const opts =
-        questionType === "zh_to_word"
+        questionType === "zh_to_word" || questionType === "cloze"
           ? options.map((o) => (o === "WORDZ" ? w.text.toUpperCase() : o))
           : options
+      const pick = selected === "WORDZ" ? w.text.toUpperCase() : selected
       const result = await submit(
-        answer(w, { questionType, options: opts, selected }),
+        answer(w, { questionType, options: opts, selected: pick }),
       )
       const expected =
         correctOption === "WORDZ" ? w.text.toUpperCase() : correctOption
       expect(result).toMatchObject({
         ok: true,
-        isCorrect: selected === expected,
+        isCorrect: pick === expected,
         correctOption: expected,
       })
     },

@@ -35,7 +35,7 @@ describe("completeWithDistractors (R6.5)", () => {
     const { id } = await createWord(u, text, [sense({ def_zh: defZh })])
     const { data, error } = await u.client
       .from("senses")
-      .select("id, pos, def_zh, synonyms, antonyms")
+      .select("id, pos, def_zh, synonyms, antonyms, examples")
       .eq("word_id", id)
       .single()
     if (error) throw error
