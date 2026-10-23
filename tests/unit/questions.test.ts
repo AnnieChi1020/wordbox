@@ -21,8 +21,9 @@ function s(
   pos: PartOfSpeech,
   def_zh: string,
   synonyms: string[] = [],
+  antonyms: string[] = [],
 ): QuestionSense {
-  return { id: `s${nextId++}`, pos, def_zh, synonyms }
+  return { id: `s${nextId++}`, pos, def_zh, synonyms, antonyms }
 }
 
 function w(text: string, ...senses: QuestionSense[]): QuestionWord {
@@ -58,6 +59,20 @@ describe("availableTypes (R6.1)", () => {
       "word_to_synonym",
       "zh_to_word",
     ])
+  })
+
+  it("offers word_to_antonym when the sense has antonyms", () => {
+    expect(availableTypes(s("adjective", "熱的", [], ["cold"]))).toEqual([
+      "word_to_zh",
+      "word_to_antonym",
+      "zh_to_word",
+    ])
+  })
+
+  it("excludes word_to_antonym when the sense has no antonyms (R7 AC)", () => {
+    expect(availableTypes(s("verb", "跑", ["sprint"]))).not.toContain(
+      "word_to_antonym",
+    )
   })
 
   it("excludes word_to_synonym when the sense has no synonyms (R7 AC)", () => {
@@ -105,6 +120,19 @@ describe("buildQuestion", () => {
     const q = question(build(fast, "word_to_synonym", [fast, ...pool]))
     expect(["quick", "rapid"]).toContain(q.answer)
     expect(q.prompt).toBe("fast")
+  })
+
+  it("builds word_to_antonym with one of the sense's antonyms as the answer", () => {
+    const hot = w("hot", s("adjective", "熱的", ["warm"], ["cold", "cool"]))
+    const others = [
+      w("big", s("adjective", "大的", [], ["small"])),
+      w("fast", s("adjective", "快的", [], ["slow"])),
+      w("up", s("adverb", "向上", [], ["down"])),
+    ]
+    const q = question(build(hot, "word_to_antonym", [hot, ...others]))
+    expect(q).toMatchObject({ type: "word_to_antonym", prompt: "hot" })
+    expect(["cold", "cool"]).toContain(q.answer)
+    expect(distractorsOf(q).sort()).toEqual(["down", "slow", "small"])
   })
 
   it("shuffles option order by rng", () => {
@@ -164,6 +192,22 @@ describe("buildQuestion", () => {
       expect(
         draft(build(fast, "word_to_synonym", others)).distractors.sort(),
       ).toEqual(["famished", "rapid"])
+    })
+
+    it("word_to_antonym: drops the target word and all of its synonyms and antonyms", () => {
+      const light = w(
+        "light",
+        s("adjective", "輕的", ["weightless"], ["heavy"]),
+        s("noun", "光", ["glow"], ["darkness"]),
+      )
+      const others = [
+        w("bright", s("adjective", "明亮的", [], ["Darkness", "LIGHT", "dim"])),
+        w("dark", s("adjective", "暗的", [], ["glow", "weightless"])),
+        w("full", s("adjective", "滿的", [], ["heavy ", "empty"])),
+      ]
+      expect(
+        draft(build(light, "word_to_antonym", others)).distractors.sort(),
+      ).toEqual(["dim", "empty"])
     })
 
     it("zh_to_word: drops synonyms of the target and words sharing the question's definition", () => {
@@ -251,7 +295,11 @@ describe("filterDistractors", () => {
 
 describe("findCorrectOption (R7.3)", () => {
   const word = { text: "fast" }
-  const sense = { def_zh: "快的", synonyms: ["quick", "rapid"] }
+  const sense = {
+    def_zh: "快的",
+    synonyms: ["quick", "rapid"],
+    antonyms: ["slow", "sluggish"],
+  }
 
   it("finds the answer for each question type", () => {
     expect(
@@ -270,6 +318,14 @@ describe("findCorrectOption (R7.3)", () => {
         "small",
       ]),
     ).toBe("Rapid")
+    expect(
+      findCorrectOption("word_to_antonym", word, sense, [
+        "quick",
+        "Slow",
+        "big",
+        "small",
+      ]),
+    ).toBe("Slow")
     expect(
       findCorrectOption("zh_to_word", word, sense, [
         "slow",
@@ -293,6 +349,14 @@ describe("findCorrectOption (R7.3)", () => {
       findCorrectOption("word_to_synonym", word, sense, [
         "quick",
         "rapid",
+        "big",
+        "small",
+      ]),
+    ).toBeNull()
+    expect(
+      findCorrectOption("word_to_antonym", word, sense, [
+        "slow",
+        "sluggish",
         "big",
         "small",
       ]),

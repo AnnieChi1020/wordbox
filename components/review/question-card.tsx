@@ -29,6 +29,8 @@ function questionText(type: QuestionType): [before: string, after: string] {
       return ["", "的中文意思是？"]
     case "word_to_synonym":
       return ["哪一個是", "的同義詞？"]
+    case "word_to_antonym":
+      return ["哪一個是", "的反義詞？"]
     case "zh_to_word":
       return ["", "的英文是？"]
   }

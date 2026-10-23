@@ -77,7 +77,9 @@ async function tryApply(
 ): Promise<AnswerResult | "conflict"> {
   const { data: word, error } = await db
     .from("words")
-    .select("text, box, next_due_on, is_important, senses(def_zh, synonyms)")
+    .select(
+      "text, box, next_due_on, is_important, senses(def_zh, synonyms, antonyms)",
+    )
     .eq("id", input.wordId)
     .eq("senses.id", input.senseId)
     .maybeSingle()

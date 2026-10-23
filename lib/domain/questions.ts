@@ -5,6 +5,7 @@ import { pick, shuffle, type Rng } from "./random"
 export const QUESTION_TYPES = [
   "word_to_zh",
   "word_to_synonym",
+  "word_to_antonym",
   "zh_to_word",
 ] as const
 export type QuestionType = (typeof QUESTION_TYPES)[number]
@@ -17,6 +18,7 @@ export type QuestionSense = {
   pos: PartOfSpeech
   def_zh: string
   synonyms: string[]
+  antonyms: string[]
 }
 
 export type QuestionWord = { id: string; text: string; senses: QuestionSense[] }
@@ -46,11 +48,13 @@ export function isQuestionType(value: unknown): value is QuestionType {
   return QUESTION_TYPES.includes(value as QuestionType)
 }
 
-/** R6.1：沒有同義詞的義項不出 word_to_synonym。 */
+/** R6.1：沒有同義詞的義項不出 word_to_synonym，沒有反義詞的不出 word_to_antonym。 */
 export function availableTypes(sense: QuestionSense): QuestionType[] {
-  return QUESTION_TYPES.filter(
-    (type) => type !== "word_to_synonym" || sense.synonyms.length > 0,
-  )
+  return QUESTION_TYPES.filter((type) => {
+    if (type === "word_to_synonym") return sense.synonyms.length > 0
+    if (type === "word_to_antonym") return sense.antonyms.length > 0
+    return true
+  })
 }
 
 /**
@@ -129,24 +133,34 @@ export function filterDistractors(
 
 /**
  * R7.3：作答時依資料庫的內容找出選項中的正確答案（design §6）。
- * 干擾選項已排除所有同義詞，因此應恰好一個符合；否則回傳 null（選項遭竄改或內容已變動）。
+ * 干擾選項已排除所有同義詞（反義詞題另排除所有反義詞），因此應恰好一個符合；否則回傳 null（選項遭竄改或內容已變動）。
  */
 export function findCorrectOption(
   type: QuestionType,
   word: { text: string },
-  sense: { def_zh: string; synonyms: string[] },
+  sense: { def_zh: string; synonyms: string[]; antonyms: string[] },
   options: readonly string[],
 ): string | null {
-  const accepted = new Set(
-    (type === "word_to_zh"
-      ? [sense.def_zh]
-      : type === "word_to_synonym"
-        ? sense.synonyms
-        : [word.text]
-    ).map(dedupeKey),
-  )
+  const accepted = new Set(acceptedAnswers(type, word, sense).map(dedupeKey))
   const matches = options.filter((o) => accepted.has(dedupeKey(o)))
   return matches.length === 1 ? matches[0] : null
+}
+
+function acceptedAnswers(
+  type: QuestionType,
+  word: { text: string },
+  sense: { def_zh: string; synonyms: string[]; antonyms: string[] },
+): string[] {
+  switch (type) {
+    case "word_to_zh":
+      return [sense.def_zh]
+    case "word_to_synonym":
+      return sense.synonyms
+    case "word_to_antonym":
+      return sense.antonyms
+    case "zh_to_word":
+      return [word.text]
+  }
 }
 
 function correctAnswer(
@@ -165,6 +179,11 @@ function correctAnswer(
       if (synonym === undefined) throw new Error("sense has no synonyms")
       return synonym
     }
+    case "word_to_antonym": {
+      const antonym = pick(sense.antonyms, rng)
+      if (antonym === undefined) throw new Error("sense has no antonyms")
+      return antonym
+    }
   }
 }
 
@@ -182,6 +201,12 @@ function libraryCandidates(
       return others.flatMap((w) =>
         w.senses.flatMap((s) =>
           s.synonyms.map((text) => ({ text, pos: new Set([s.pos]) })),
+        ),
+      )
+    case "word_to_antonym":
+      return others.flatMap((w) =>
+        w.senses.flatMap((s) =>
+          s.antonyms.map((text) => ({ text, pos: new Set([s.pos]) })),
         ),
       )
     case "zh_to_word":
@@ -207,6 +232,10 @@ function exclusions(
   ]
   if (type === "word_to_zh") {
     keys.push(...target.senses.map((s) => s.def_zh))
+  }
+  if (type === "word_to_antonym") {
+    // 排除所有義項的反義詞，作答判定才會恰好一個符合（D25）
+    keys.push(...target.senses.flatMap((s) => s.antonyms))
   }
   if (type === "zh_to_word") {
     const question = dedupeKey(sense.def_zh)

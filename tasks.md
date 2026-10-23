@@ -263,7 +263,7 @@
   - 本地以 `supabase migration up` 套用，不 reset
   - 完成條件（`tests/db`）：`apply_review` 與 `ai_distractors` 可寫入 `word_to_antonym`；其他字串仍被拒絕
 
-- [ ] **T5.2 `questions.ts` 反義詞題型** — R6.1、R6.4、R7.3
+- [x] **T5.2 `questions.ts` 反義詞題型** — R6.1、R6.4、R7.3
   - `QuestionSense` 加入 `antonyms`；`availableTypes`、`buildQuestion`、`findCorrectOption` 支援 `word_to_antonym`（design §7.5、D25）
   - 出題與作答判定讀取 `antonyms`（`listReviewWords`、`submitAnswer`）
   - 完成條件：

@@ -35,13 +35,17 @@ describe("submitAnswer (R7.3, R7.4)", () => {
 
   let wordCount = 0
 
-  /** 建立一個字（中文解釋「答案」、同義詞 quick / rapid），並設定複習狀態 */
+  /** 建立一個字（中文解釋「答案」、同義詞 quick / rapid、反義詞 slow / sluggish），並設定複習狀態 */
   async function setupWord(
     state: { box?: number; nextDueOn?: string; important?: boolean } = {},
   ) {
     const text = `word${"abcdefghijklmnopqrstuvwxyz"[wordCount++]}`
     const { id } = await createWord(u, text, [
-      sense({ def_zh: "答案", synonyms: ["quick", "rapid"] }),
+      sense({
+        def_zh: "答案",
+        synonyms: ["quick", "rapid"],
+        antonyms: ["slow", "sluggish"],
+      }),
     ])
     const { error } = await adminClient()
       .from("words")
@@ -163,6 +167,12 @@ describe("submitAnswer (R7.3, R7.4)", () => {
 
   it.each<[QuestionType, string[], string, string]>([
     ["word_to_synonym", ["slow", "Rapid", "big", "small"], "Rapid", "Rapid"],
+    [
+      "word_to_antonym",
+      ["quick", "Sluggish", "big", "small"],
+      "big",
+      "Sluggish",
+    ],
     ["zh_to_word", ["slow", "big", "small", "WORDZ"], "slow", "WORDZ"],
   ])(
     "checks %s answers on the server",
