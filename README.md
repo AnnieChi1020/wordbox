@@ -25,6 +25,57 @@ Live: https://wordbox-omega.vercel.app
 | Testing | Vitest (unit, db), Playwright (E2E, performance, PWA) |
 | Hosting | Vercel + Supabase Cloud |
 
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph Browser["Browser (PWA)"]
+    UI["Client Components<br/>components/"]
+    SW["Service worker<br/>public/sw.js"]
+    Speech["Web Speech API<br/>(pronunciation)"]
+  end
+
+  subgraph Vercel["Vercel: Next.js server"]
+    Proxy["proxy.ts<br/>session refresh, sign-in redirect"]
+    Pages["Server Components<br/>app/ (reads)"]
+    Actions["Server Actions<br/>lib/actions (writes)"]
+    Flows["Flows<br/>lib/words, lib/review"]
+    Domain["Pure functions<br/>lib/domain"]
+    AI["AI layer<br/>lib/ai"]
+    DB["Supabase client<br/>lib/db"]
+  end
+
+  subgraph Supabase["Supabase"]
+    Auth["Auth<br/>(Google OAuth)"]
+    PG[("Postgres<br/>RLS + RPCs")]
+  end
+
+  OpenAI["OpenAI API<br/>(structured outputs)"]
+
+  UI -- "page requests" --> Proxy --> Pages
+  UI -- "Server Actions" --> Actions
+  UI -. "sign-in" .-> Auth
+  UI --- Speech
+  SW -. "offline page" .- UI
+  Pages --> DB
+  Pages --> Domain
+  Actions --> Flows
+  Flows --> Domain
+  Flows --> AI
+  Flows --> DB
+  AI --> OpenAI
+  DB --> PG
+  Proxy -. "session cookie" .-> Auth
+```
+
+- **Business logic** (Leitner scheduling, word selection, question building, normalization) lives in pure functions in `lib/domain`, with no database or network access, so unit tests cover it directly.
+- **Reads and writes**: Server Components read data; every write goes through a Server Action. The browser talks to Supabase only to sign in.
+- **Database**: multi-step writes (adding a word, applying an answer) run as Postgres RPCs in a single transaction. Row Level Security limits each user to their own rows, even if server code has a bug.
+- **AI**: responses are validated with Zod. With `AI_MOCK=1`, `lib/ai` returns the fixtures in `lib/ai/fixtures` instead of calling OpenAI.
+- **Answers are checked on the server**: questions sent to the browser carry no correct answer, and the server recomputes it from the database.
+
+See [`design.md`](design.md) for the full design.
+
 ## Documents
 
 Development is spec-driven. The specs are in English; the app's interface is in Traditional Chinese:
