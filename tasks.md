@@ -1,6 +1,6 @@
 # 英文單字記憶 App — Tasks
 
-> 版本：v0.9（2026-10-22）・對應 `requirements.md` v0.4、`design.md` v0.9
+> 版本：v1.0（2026-10-23）・對應 `requirements.md` v0.5、`design.md` v1.0
 > 每個任務都標註對應需求；完成條件以該需求的 AC 為準。
 > 依序實作；一個任務完成（含測試通過）後才開始下一個。
 
@@ -253,3 +253,33 @@
   - Vercel 重新部署（沒有 migration）
   - 完成條件：正式網址在 iOS 的淺色與深色系統設定下都正確顯示
   - 結果（2026-10-22）：iOS Safari 實機通過
+
+---
+
+## Phase 5 — 反義詞題型
+
+- [ ] **T5.1 資料庫：題型限制** — R6.1
+  - Migration：`review_logs`、`ai_distractors` 的 `question_type` check 加入 `word_to_antonym`（design §4.1）
+  - 本地以 `supabase migration up` 套用，不 reset
+  - 完成條件（`tests/db`）：`apply_review` 與 `ai_distractors` 可寫入 `word_to_antonym`；其他字串仍被拒絕
+
+- [ ] **T5.2 `questions.ts` 反義詞題型** — R6.1、R6.4、R7.3
+  - `QuestionSense` 加入 `antonyms`；`availableTypes`、`buildQuestion`、`findCorrectOption` 支援 `word_to_antonym`（design §7.5、D25）
+  - 出題與作答判定讀取 `antonyms`（`listReviewWords`、`submitAnswer`）
+  - 完成條件：
+    - 沒有反義詞的義項不出 `word_to_antonym`（R7 AC）
+    - 正確答案是該義項的反義詞之一；候選來自其他單字的反義詞，排除目標字本身與所有義項的同義詞、反義詞
+    - `findCorrectOption` 接受反義詞（不分大小寫），多個選項符合時回傳 null
+    - db：`submitAnswer` 判定反義詞題
+
+- [ ] **T5.3 AI 干擾選項** — R6.5
+  - prompt 加入題型說明與反義詞清單（design §5.3）；mock 加入 `distractors_word_to_antonym`
+  - 完成條件（unit）：user message 含反義詞清單；request name 為 `distractors_word_to_antonym`
+
+- [ ] **T5.4 複習 UI 與 E2E** — R6.1、R7 AC
+  - `QuestionCard` 題目敘述：「哪一個是 X 的反義詞？」
+  - 完成條件：E2E（`AI_MOCK=1`）可完成含反義詞題的一輪；既有 E2E 通過
+
+- [ ] **T5.5 部署**
+  - `supabase db push` 推送 T5.1 的 migration，Vercel 重新部署
+  - 完成條件：正式網址可出現並作答反義詞題

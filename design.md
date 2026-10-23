@@ -1,6 +1,8 @@
 # 英文單字記憶 App — Design
 
-> 版本：v0.9（2026-10-22）・對應 `requirements.md` v0.4
+> 版本：v1.0（2026-10-23）・對應 `requirements.md` v0.5
+>
+> v1.0 變更：反義詞題型 `word_to_antonym`（§4.1、§5.3、§6、§7.5、D25）。
 >
 > v0.9 變更：深色模式（§8.4、D23、D24）。
 > v0.8 變更：品牌色擴大到主要按鈕、導覽列與焦點外框，背景維持白色（§8.3、D22，取代 D21）。
@@ -182,7 +184,7 @@ create table review_logs (
   word_id uuid references words on delete set null,   -- 刪字保留紀錄（R4.7）
   sense_id uuid references senses on delete set null, -- 重新生成保留紀錄（R4.5）
   question_type text not null
-    check (question_type in ('word_to_zh','word_to_synonym','zh_to_word')),
+    check (question_type in ('word_to_zh','word_to_synonym','word_to_antonym','zh_to_word')),
   is_correct boolean not null,
   was_due boolean not null,
   box_before smallint not null,
@@ -195,7 +197,7 @@ create index review_logs_user_date_idx on review_logs (user_id, local_date);
 create table ai_distractors (                                             -- R6.5
   sense_id uuid not null references senses on delete cascade,
   question_type text not null
-    check (question_type in ('word_to_zh','word_to_synonym','zh_to_word')),
+    check (question_type in ('word_to_zh','word_to_synonym','word_to_antonym','zh_to_word')),
   options text[] not null check (cardinality(options) = 3),
   created_at timestamptz not null default now(),
   primary key (sense_id, question_type)
@@ -304,7 +306,7 @@ System prompt（`lib/ai/prompts.ts`）需涵蓋：
 const DistractorsSchema = z.object({ options: z.array(z.string()).length(3) });
 ```
 
-輸入：題型、題目、正確答案、目標字的同義詞清單。要求：與正確答案同語言、同格式、同詞性，看起來合理但確定錯誤，且不可為同義詞。回傳的 3 個選項需互不重複，否則視為格式錯誤；之後與字庫候選合併、以 R6.4 的規則過濾，仍湊不到 3 個干擾選項即視為失敗（R6.6）。
+輸入：題型、題目、正確答案、目標字的同義詞與反義詞清單。要求：與正確答案同語言、同格式、同詞性，看起來合理但確定錯誤，且不可為同義詞；`word_to_antonym` 也不可為反義詞。回傳的 3 個選項需互不重複，否則視為格式錯誤；之後與字庫候選合併、以 R6.4 的規則過濾，仍湊不到 3 個干擾選項即視為失敗（R6.6）。
 
 快取的使用（`lib/review/distractors.ts`）：
 - AI 一律生成 3 個，快取存 3 個；出題時先用字庫候選，不足的部分從快取（或 AI 結果）依序補上。
@@ -390,9 +392,10 @@ countDueWords(): Promise<number>            // ReviewIntro 與結算畫面（R7.
 
 ### submitAnswer 的伺服器端判定（R7.3）
 
-伺服器不保存 session 狀態；作答時依資料庫重新計算正確選項（干擾選項已排除所有同義詞，因此 4 個選項中恰好一個符合）：
+伺服器不保存 session 狀態；作答時依資料庫重新計算正確選項（干擾選項已排除所有同義詞，`word_to_antonym` 也排除所有反義詞，因此 4 個選項中恰好一個符合）：
 - `word_to_zh`：等於 `sense.def_zh`
 - `word_to_synonym`：屬於 `sense.synonyms`（不分大小寫）
+- `word_to_antonym`：屬於 `sense.antonyms`（不分大小寫）
 - `zh_to_word`：等於 `word.text`（不分大小寫）
 
 `isCorrect = selected === correctOption`。
@@ -459,9 +462,9 @@ orderSessionCandidates(words: WordState[], today: string, rng: Rng): WordState[]
 ### 7.5 questions.ts（R6）
 
 ```ts
-type QuestionType = 'word_to_zh' | 'word_to_synonym' | 'zh_to_word';
+type QuestionType = 'word_to_zh' | 'word_to_synonym' | 'word_to_antonym' | 'zh_to_word';
 
-availableTypes(sense): QuestionType[]     // 同義詞為空時排除 word_to_synonym
+availableTypes(sense): QuestionType[]     // 同義詞為空時排除 word_to_synonym；反義詞為空時排除 word_to_antonym
 
 buildQuestion(target, sense, type, pool, rng):
   { question: Question } | { needsAi: QuestionDraft }
@@ -480,6 +483,7 @@ findCorrectOption(type, word, sense, options): string | null   // submitAnswer �
 |---|---|---|
 | `word_to_zh` | 各義項的 `def_zh` | 等於目標字任一義項的 `def_zh` |
 | `word_to_synonym` | 各義項的 `synonyms` | 目標字本身、目標字所有義項的同義詞 |
+| `word_to_antonym` | 各義項的 `antonyms` | 目標字本身、目標字所有義項的同義詞與反義詞 |
 | `zh_to_word` | 各單字的 `text` | 屬於目標字同義詞的單字；任一義項 `def_zh` 等於題目的單字 |
 
 共同規則：比較時一律 trim 加小寫，去除重複，排除正確答案。排序：同詞性的候選優先，其餘隨機；取前 3 個。不足時回傳 `needsAi`，由 action 層讀取 `ai_distractors` 快取，沒有快取才呼叫 AI。
@@ -624,3 +628,4 @@ buildHeatmapGrid(counts: Map<string, number>, today: string): Cell[][]
 | D22 | 品牌色擴大到主要按鈕、導覽列選取狀態與焦點外框；背景維持白色 | 使用者要求套用品牌色；cream 當頁面背景試過後認為不適合，改回白色 |
 | D23 | 深色模式以自寫的 inline script 與 `localStorage` 實作，不使用 next-themes | 需求只有三種選項與防閃爍，自寫約 30 行即可，不必多一個依賴，也能完全掌握 script 的執行時機 |
 | D24 | 深色模式的主要色改為 brand-300 淺藍底、深色字 | brand-900 在深色背景上對比不足（2.93:1） |
+| D25 | 反義詞題的干擾候選只取其他單字的反義詞，並排除目標字所有義項的反義詞 | 與同義詞題對稱；排除所有義項的反義詞才能保證 4 個選項中恰好一個符合（§6 判定）。同義詞仍依 R6.4 排除，雖然是明確的錯誤答案，但維持單一規則較單純 |
