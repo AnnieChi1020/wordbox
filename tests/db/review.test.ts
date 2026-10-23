@@ -236,6 +236,25 @@ describe("question_type check (R6.1)", () => {
     expect(cacheError).toBeNull()
   })
 
+  it("accepts cloze in review_logs and ai_distractors (Phase 7)", async () => {
+    const { id } = await createWord(u, "warm")
+    const [senseId] = await senseIds(u, id)
+
+    const { error } = await applyReview(u, {
+      wordId: id,
+      senseId,
+      questionType: "cloze",
+    })
+    expect(error).toBeNull()
+
+    const { error: cacheError } = await u.client.from("ai_distractors").insert({
+      sense_id: senseId,
+      question_type: "cloze",
+      options: ["decoy alpha", "decoy bravo", "decoy charlie"],
+    })
+    expect(cacheError).toBeNull()
+  })
+
   it("rejects unknown question types", async () => {
     const { id } = await createWord(u, "cold")
     const [senseId] = await senseIds(u, id)

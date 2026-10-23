@@ -313,7 +313,7 @@
 
 ## Phase 7 — Cloze questions
 
-- [ ] **T7.1 Database: question type constraint** — R6.1
+- [x] **T7.1 Database: question type constraint** — R6.1
   - Migration: add `cloze` to the `question_type` check on `review_logs` and `ai_distractors` (design §4.1)
   - Applied locally with `supabase migration up`, without a reset
   - Done when (`tests/db`): `apply_review` and `ai_distractors` accept `cloze`
