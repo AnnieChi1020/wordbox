@@ -8,6 +8,7 @@ import { AddWordForm } from "@/components/words/add-word-form"
 import { WordFilters } from "@/components/words/word-filters"
 import { WordDialog } from "@/components/words/word-dialog"
 import { WordList, WordListSkeleton } from "@/components/words/word-list"
+import { WordSearch } from "@/components/words/word-search"
 import { WordStateProvider } from "@/components/words/word-state"
 import { createClient } from "@/lib/db/server"
 import { getWordDetail, hasAnyWord, listWords } from "@/lib/db/words"
@@ -66,6 +67,7 @@ async function WordListSection({
   const listQuery = serializeListParams(params)
   return (
     <section aria-label="單字列表區" className="space-y-3">
+      <WordSearch params={params} />
       <WordFilters params={params} />
       {words.length === 0 ? (
         // R3.8

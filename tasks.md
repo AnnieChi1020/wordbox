@@ -298,7 +298,7 @@
     - unit: parsing and serializing `q` (normalized, lowercased, at most 64 characters, omitted when empty); `likePattern` escapes `\`, `%`, and `_`
     - db: substring and case-insensitive matches; combined with the star filter; `%` and `_` match literally
 
-- [ ] **T6.2 Search UI and E2E** — R3.8, R3.9, NFR5
+- [x] **T6.2 Search UI and E2E** — R3.8, R3.9, NFR5
   - `WordSearch` above the filters: 300ms debounce with `router.replace`, clear button, `role="search"` (design §7.7)
   - 「清除篩選」 also clears the search; the popup keeps the search when opened and closed
   - Done when (E2E): the R3 search AC pass; typing does not add history entries; the clear button works from the keyboard; existing E2E pass
