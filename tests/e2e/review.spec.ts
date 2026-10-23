@@ -5,6 +5,7 @@ import {
   reviewLogs,
   wrongOption,
 } from "./review-helpers"
+import { adminClient } from "../support/local-supabase"
 
 test.describe("複習 UI（R7.1、R7.2）", () => {
   test.beforeEach(async ({ signedIn }) => {
@@ -130,5 +131,54 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
     await expect
       .poll(async () => (await reviewLogs(signedIn.id)).length)
       .toBe(1)
+  })
+})
+
+test.describe("反義詞題（R6.1、Phase 5）", () => {
+  test("有反義詞的字會出反義詞題，並以反義詞判定對錯", async ({
+    page,
+    signedIn,
+  }) => {
+    const antonymOf: Record<string, string> = { hot: "cold", big: "small" }
+    await seedWords(signedIn.id, [
+      { text: "hot", antonyms: ["cold"] },
+      { text: "big", antonyms: ["small"] },
+    ])
+    await page.goto("/review")
+    await page.getByRole("button", { name: "開始複習" }).click()
+
+    // 題型隨機（每題 1/3），反覆作答直到出現反義詞題
+    const heading = page.getByRole("heading", { level: 2 })
+    for (let round = 0; round < 20; round++) {
+      for (const n of [1, 2]) {
+        await expect(page.getByText(`${n} / 2`)).toBeVisible()
+        if ((await heading.textContent())!.includes("的反義詞")) {
+          const prompt = (await heading.locator("span").first().textContent())!
+          const answer = antonymOf[prompt.trim()]
+          await expect(
+            page.getByRole("list", { name: "選項" }).getByRole("button"),
+          ).toHaveCount(4)
+          await option(page, answer).click()
+          await expect(page.getByText("答對了！")).toBeVisible()
+          await expect
+            .poll(async () => {
+              const { data } = await adminClient()
+                .from("review_logs")
+                .select("question_type, is_correct")
+                .eq("user_id", signedIn.id)
+                .eq("question_type", "word_to_antonym")
+              return data
+            })
+            .toEqual([{ question_type: "word_to_antonym", is_correct: true }])
+          return
+        }
+        await page.keyboard.press("1")
+        await page
+          .getByRole("button", { name: n === 2 ? "看結果" : "下一題" })
+          .click()
+      }
+      await page.getByRole("button", { name: "再來一輪" }).click()
+    }
+    throw new Error("no antonym question in 20 rounds")
   })
 })

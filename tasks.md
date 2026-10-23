@@ -276,7 +276,7 @@
   - prompt 加入題型說明與反義詞清單（design §5.3）；mock 加入 `distractors_word_to_antonym`
   - 完成條件（unit）：user message 含反義詞清單；request name 為 `distractors_word_to_antonym`
 
-- [ ] **T5.4 複習 UI 與 E2E** — R6.1、R7 AC
+- [x] **T5.4 複習 UI 與 E2E** — R6.1、R7 AC
   - `QuestionCard` 題目敘述：「哪一個是 X 的反義詞？」
   - 完成條件：E2E（`AI_MOCK=1`）可完成含反義詞題的一輪；既有 E2E 通過
 

@@ -99,6 +99,8 @@ export type SeedWord = {
   /** 新增時間；預設依陣列順序每個字間隔 1 分鐘 */
   createdAt?: string
   pos?: string[]
+  /** 每個義項的反義詞；預設沒有 */
+  antonyms?: string[]
 }
 
 /** 直接寫入資料庫建立單字（不經過 AI），回傳依輸入順序的 id。 */
@@ -129,6 +131,7 @@ export async function seedWords(userId: string, words: SeedWord[]) {
       pos,
       def_en: `definition of ${w.text}`,
       def_zh: `${w.text} 的解釋`,
+      antonyms: w.antonyms ?? [],
       examples: [`An example with ${w.text}.`],
     })),
   )
