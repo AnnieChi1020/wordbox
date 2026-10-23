@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test"
 
 import { expect, seedWords, test } from "../e2e/fixtures"
 
-/** 等 service worker 啟用並控制目前頁面 */
+/** Waits until the service worker is active and controls the current page */
 async function waitForServiceWorker(page: Page) {
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready
@@ -34,7 +34,7 @@ test.describe("Service worker 與離線頁（R9.2）", () => {
     await expect(
       page.getByRole("heading", { name: "需要網路連線" }),
     ).toBeVisible()
-    // 離線頁的樣式也來自快取
+    // The offline page's styles also come from the cache
     const centered = await page
       .getByRole("main")
       .evaluate((el) => getComputedStyle(el).alignItems)
@@ -47,7 +47,7 @@ test.describe("Service worker 與離線頁（R9.2）", () => {
   })
 
   test("只快取靜態資源與離線頁", async ({ page }) => {
-    // 瀏覽幾個頁面，讓可能被快取的請求都發生過
+    // Visit a few pages so every request that might be cached has happened
     await page.goto("/review")
     await page.goto("/dashboard")
     await page.goto("/words")

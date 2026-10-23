@@ -14,7 +14,7 @@ import {
 const WORD_COUNT = 2000
 const BUDGET_MS = 1000 // T2.6
 
-/** 2,000 個字，各自有不同的中文解釋與同義詞，出題不需要 AI。 */
+/** 2,000 words, each with its own Chinese definition and synonym, so questions need no AI. */
 async function seed(userId: string) {
   const admin = adminClient()
   const letters = (n: number) =>
@@ -65,7 +65,7 @@ describe(`startReviewSession with ${WORD_COUNT} words`, () => {
         generate,
         now: new Date("2026-10-20T12:00:00Z"),
       })
-    await run() // 暖機
+    await run() // warm-up
 
     const started = performance.now()
     const result = await run()

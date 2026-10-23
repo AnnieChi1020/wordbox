@@ -15,25 +15,25 @@ import { Stars } from "./stars"
 import { useDeletedWords, useImportant } from "./word-state"
 
 type Props = {
-  /** 伺服器端查詢的第一頁 */
+  /** The first page, queried on the server */
   initialWords: WordListItem[]
   total: number
-  /** 目前的篩選與排序；載入下一頁與開啟 popup 時沿用（R3.4） */
+  /** The current filters and sort order; reused when loading the next page and opening the popup (R3.4) */
   listQuery: string
 }
 
-/** R3.1：單字列表；捲動到底時載入下一頁（design D11）。 */
+/** R3.1: the word list; loads the next page when scrolled to the bottom (design D11). */
 export function WordList({ initialWords, total, listQuery }: Props) {
   const [words, setWords] = useState(initialWords)
   const [source, setSource] = useState(initialWords)
   const [failed, setFailed] = useState(false)
   const [loading, setLoading] = useState(false)
   const sentinel = useRef<HTMLDivElement>(null)
-  // 同步的載入狀態：避免捲動與按鈕同時觸發而重複載入同一頁
+  // Synchronous loading flag: keeps scrolling and the button from loading the same page twice
   const inFlight = useRef(false)
   const loaded = useRef(initialWords)
 
-  // 篩選、排序或資料變動後伺服器重新渲染第一頁 → 重設列表
+  // After filters, sort order, or data change, the server re-renders the first page → reset the list
   if (source !== initialWords) {
     setSource(initialWords)
     setWords(initialWords)
@@ -55,7 +55,7 @@ export function WordList({ initialWords, total, listQuery }: Props) {
     const base = loaded.current
     try {
       const page = await loadMoreWords(listQuery, base.length)
-      // 載入期間列表已重設（篩選改變等）→ 丟棄這次結果
+      // The list was reset while loading (filters changed, etc.) → discard this result
       if (loaded.current !== base) return
       const seen = new Set(base.map((w) => w.id))
       const next = [...base, ...page.words.filter((w) => !seen.has(w.id))]
@@ -70,7 +70,7 @@ export function WordList({ initialWords, total, listQuery }: Props) {
     }
   }
 
-  // 每次渲染後重新觀察：載入完成時若底部仍在可視範圍內，會繼續載入
+  // Observe again after every render: if the bottom is still in view when loading finishes, keep loading
   useEffect(() => {
     const el = sentinel.current
     if (!el || !hasMore || failed) return
@@ -96,7 +96,7 @@ export function WordList({ initialWords, total, listQuery }: Props) {
       </ul>
       {hasMore && (
         <div ref={sentinel} className="flex justify-center">
-          {/* 自動載入之外，也可用鍵盤操作（NFR5） */}
+          {/* Besides automatic loading, also operable with the keyboard (NFR5) */}
           <Button
             variant="outline"
             size="sm"
@@ -126,14 +126,14 @@ function WordRow({
   params.set("word", word.id)
   return (
     <li className="flex items-center gap-1 pr-1.5">
-      {/* R3.6：點擊單字列開啟 popup */}
+      {/* R3.6: clicking a word row opens the popup */}
       <Link
         href={`/words?${params}`}
         scroll={false}
         prefetch={false}
         className="hover:bg-muted/50 focus-visible:ring-ring/50 flex min-w-0 flex-1 items-center gap-3 rounded-l-lg px-3 py-3 outline-none focus-visible:ring-3"
       >
-        {/* 單字與詞性在剩餘寬度內換行，星等固定在右側不被擠壓 */}
+        {/* The word and parts of speech wrap within the remaining width; the stars stay fixed on the right without being squeezed */}
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
           <span className="min-w-0 font-medium wrap-break-word">
             {word.text}

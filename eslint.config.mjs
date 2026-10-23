@@ -8,7 +8,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   prettier,
   {
-    // Playwright fixture 的 `use` 參數不是 React hook
+    // The `use` parameter of Playwright fixtures is not a React hook
     files: ["tests/e2e/**"],
     rules: { "react-hooks/rules-of-hooks": "off" },
   },

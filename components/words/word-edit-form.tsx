@@ -22,7 +22,7 @@ import {
 const MAX_SENSES = 3
 
 type FormSense = {
-  /** React key；新增的義項沒有 id */
+  /** React key; newly added senses have no id */
   key: string
   id?: string
   pos: PartOfSpeech
@@ -64,7 +64,7 @@ function toInput(ipa: string, senses: FormSense[]): EditWordInput {
   }
 }
 
-/** R4.3、R4.4：編輯 IPA 與義項；單字本身不可修改。 */
+/** R4.3, R4.4: edit the IPA and the senses; the word itself cannot be changed. */
 export function WordEditForm({
   word,
   onCancel,
@@ -92,7 +92,7 @@ export function WordEditForm({
 
   function showErrors(next: Record<string, string>) {
     setErrors(next)
-    // 焦點移到第一個錯誤欄位
+    // Move focus to the first invalid field
     requestAnimationFrame(() => {
       formRef.current
         ?.querySelector<HTMLElement>("[aria-invalid=true]")
@@ -124,7 +124,7 @@ export function WordEditForm({
     })
   }
 
-  /** 欄位的錯誤訊息與無障礙屬性 */
+  /** A field's error message and accessibility attributes */
   function errorProps(path: string) {
     const error = errors[path]
     return {

@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react"
 
 import { setTheme } from "@/lib/theme"
 
-/** 監聽 <html> 的 class 變化，讓開關狀態與實際外觀一致。 */
+/** Watches the class on <html> so the switch state matches the actual appearance. */
 function subscribe(onChange: () => void) {
   const observer = new MutationObserver(onChange)
   observer.observe(document.documentElement, { attributeFilter: ["class"] })
@@ -15,15 +15,15 @@ function subscribe(onChange: () => void) {
 const isDark = () => document.documentElement.classList.contains("dark")
 
 /**
- * R10.2：深色模式開關（開 = 深色）。初始狀態由根 layout 的 script 決定；
- * 伺服器端一律視為關閉，hydration 後再讀取實際狀態（design §8.4）。
- * 外觀以 dark: 樣式決定，hydration 前就與實際外觀一致。
+ * R10.2: dark mode switch (on = dark). The initial state is decided by the script in the root layout;
+ * the server always renders it as off, and the actual state is read after hydration (design §8.4).
+ * Its look is driven by dark: styles, so it matches the actual appearance even before hydration.
  */
 export function ThemeToggle() {
   const dark = useSyncExternalStore(subscribe, isDark, () => false)
   return (
     <label className="flex cursor-pointer items-center gap-2">
-      {/* 圖示依目前外觀顯示：淺色為太陽、深色為月亮；以 dark: 樣式切換，hydration 前就正確 */}
+      {/* The icon follows the current appearance: a sun in light mode and a moon in dark mode; switched with dark: styles so it is right before hydration */}
       <Sun aria-hidden className="text-muted-foreground size-4 dark:hidden" />
       <Moon
         aria-hidden

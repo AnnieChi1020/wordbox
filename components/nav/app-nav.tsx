@@ -19,7 +19,7 @@ function useIsActive() {
   return (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 }
 
-/** 桌面版頂部導覽（NFR1）。 */
+/** Desktop top navigation (NFR1). */
 export function TopNav() {
   const isActive = useIsActive()
   return (
@@ -45,7 +45,7 @@ export function TopNav() {
   )
 }
 
-/** 手機版底部分頁列（NFR1）。 */
+/** Phone bottom tab bar (NFR1). */
 export function BottomNav() {
   const isActive = useIsActive()
   return (

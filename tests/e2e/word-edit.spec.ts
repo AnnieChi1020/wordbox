@@ -41,7 +41,7 @@ test.describe("編輯模式（R4.3、R4.4）", () => {
     await expect(form).toHaveCount(0)
     await expect(dialog).toContainText("brightness")
 
-    // 重新開啟
+    // Reopen
     await page.keyboard.press("Escape")
     await page
       .getByRole("list", { name: "單字列表" })
@@ -52,7 +52,7 @@ test.describe("編輯模式（R4.3、R4.4）", () => {
     for (const w of ["brightness", "glow", "radiance"]) {
       await expect(reopened).toContainText(w)
     }
-    // 原地更新，義項 id 不變（design D9）
+    // Updated in place, so sense ids are unchanged (design D9)
     const after = await senses(wordId)
     expect(after[0]).toMatchObject({
       id: before[0].id,
@@ -93,7 +93,7 @@ test.describe("編輯模式（R4.3、R4.4）", () => {
     await expect(add).toBeDisabled()
     await expect(form.getByRole("group")).toHaveCount(3)
 
-    // 移除第 3 個，填寫第 2 個為動詞
+    // Remove the 3rd and fill in the 2nd as a verb
     await form.getByRole("button", { name: "移除義項 3" }).click()
     await field(form, "詞性", 1).selectOption("verb")
     await field(form, "中文解釋", 1).fill("點燃")

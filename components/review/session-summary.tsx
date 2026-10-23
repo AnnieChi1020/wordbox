@@ -11,21 +11,21 @@ import type { ClientQuestion } from "@/lib/review/startSession"
 
 import type { AnsweredResult } from "./question-card"
 
-/** 一題的結果；略過（判定失敗）的題目 result 為 null。 */
+/** The result of one question; null for a skipped question (checking failed). */
 export type SessionOutcome = {
   question: ClientQuestion
   result: AnsweredResult | null
 }
 
-/** 題目中的英文單字：zh_to_word 的單字是正確答案，略過時只能顯示題目。 */
+/** The English word in the question: for zh_to_word the word is the correct answer, so a skipped question can only show the prompt. */
 function wordLabel({ question, result }: SessionOutcome): string {
   if (question.type !== "zh_to_word") return question.prompt
   return result?.correctOption ?? question.prompt
 }
 
 /**
- * R7.5：答對題數、每個字的對錯與星數變化，以及「再來一輪」和「回單字列表」。
- * 已沒有到期的字時顯示「今天到期的字都複習完了」。
+ * R7.5: the number of correct answers, each word's result and star change, and 「再來一輪」 (Another round) and 「回單字列表」 (Back to word list).
+ * Shows 「今天到期的字都複習完了」 (All of today's due words are reviewed) when no words are due anymore.
  */
 export function SessionSummary({
   outcomes,

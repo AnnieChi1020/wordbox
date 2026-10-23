@@ -13,7 +13,7 @@ import {
   type AnswerResult,
 } from "@/lib/review/submitAnswer"
 
-/** R5、R6：開始一輪複習。 */
+/** R5, R6: start a review session. */
 export async function startReviewSession(): Promise<StartSessionResult> {
   return startSessionWith({
     db: await createClient(),
@@ -21,12 +21,12 @@ export async function startReviewSession(): Promise<StartSessionResult> {
   })
 }
 
-/** R7.5：今天到期的單字數。 */
+/** R7.5: the number of words due today. */
 export async function countDueWords(): Promise<number> {
   return countDueWith(await createClient())
 }
 
-/** R7.3：作答；client 原樣帶回 questionId 與選項（D15）。 */
+/** R7.3: answer a question; the client sends questionId and the options back unchanged (D15). */
 export async function submitAnswer(input: AnswerInput): Promise<AnswerResult> {
   return submitAnswerWith({ db: await createClient() }, input)
 }

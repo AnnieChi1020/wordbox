@@ -71,11 +71,11 @@ describe("canonicalText (R2.7)", () => {
   })
 
   it.each([
-    ["ran", "run", "ran"], // AI 改成原形
-    ["colour", "color", "colour"], // 改拼字
-    ["give up", "give-up", "give up"], // 改符號
-    ["Apple", null, "apple"], // 沒有 headword
-    ["Apple", "Apple!", "apple"], // 格式無效
+    ["ran", "run", "ran"], // the AI changed it to the base form
+    ["colour", "color", "colour"], // changed spelling
+    ["give up", "give-up", "give up"], // changed punctuation
+    ["Apple", null, "apple"], // no headword
+    ["Apple", "Apple!", "apple"], // invalid format
     ["Apple", "", "apple"],
   ])(
     "falls back to lowercase: %j with headword %j → %j",

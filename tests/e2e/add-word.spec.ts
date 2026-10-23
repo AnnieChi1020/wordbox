@@ -32,13 +32,13 @@ test("新增單字後以 ?word=<id> 開啟（R2.1、R2.2、R2.8）", async ({
   const words = await getWords(signedIn.id)
   expect(words).toHaveLength(1)
   expect(words[0]).toMatchObject({
-    text: "give up", // R2.7：字典標準寫法
+    text: "give up", // R2.7: dictionary headword spelling
     box: 0,
     is_important: false,
   })
   expect(page.url()).toContain(words[0].id)
 
-  // R2.8：開啟新字的 popup；關閉後輸入框已清空
+  // R2.8: the new word's popup opens; after closing it, the input is cleared
   await expect(page.getByRole("dialog", { name: "give up" })).toBeVisible()
   await page.keyboard.press("Escape")
   await expect(addWordForm(page).input).toHaveValue("")
@@ -62,7 +62,7 @@ test("格式不符時不送出並顯示錯誤（R2.3）", async ({ page, signedI
   }
   await expect(page).toHaveURL("/words")
 
-  // 修改輸入後錯誤消失
+  // The error disappears after changing the input
   await input.fill("apple")
   await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0)
   expect(await getWords(signedIn.id)).toHaveLength(0)
@@ -107,14 +107,14 @@ test("AI 生成中顯示載入狀態並停用送出（R2.9）；逾時顯示錯�
   await expect(submit).toBeDisabled()
   await expect(page.getByText("正在用 AI 整理「mock timeout」…")).toBeVisible()
 
-  // E2E 的 AI_TIMEOUT_MS 為 1 秒
+  // AI_TIMEOUT_MS is 1 second in E2E
   const retry = page.getByRole("button", { name: "重試" })
   await expect(retry).toBeVisible()
   await expect(page.getByRole("main")).toContainText("AI 回應逾時，請重試")
   await expect(submit).toBeEnabled()
   expect(await getWords(signedIn.id)).toHaveLength(0)
 
-  // 重試會再次送出同一個字
+  // Retry submits the same word again
   await retry.click()
   await expect(submit).toBeDisabled()
   await expect(retry).toBeVisible()

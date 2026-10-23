@@ -7,7 +7,7 @@ import { BottomNav, TopNav } from "@/components/nav/app-nav"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { createClient } from "@/lib/db/server"
 
-/** profile.timezone 尚未初始化時，掛上回報瀏覽器時區的元件（R1.3）。 */
+/** While profile.timezone is not initialized, mount the component that reports the browser time zone (R1.3). */
 async function TimezoneGate() {
   const supabase = await createClient()
   const { data } = await supabase.from("profiles").select("timezone").single()

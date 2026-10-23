@@ -1,9 +1,9 @@
-/** 回傳 [0, 1) 的亂數；所有隨機行為都以參數注入，測試以固定 seed 重現（design §7.5）。 */
+/** Returns a random number in [0, 1); all randomness is injected as a parameter so tests can reproduce it with a fixed seed (design §7.5). */
 export type Rng = () => number
 
 export const defaultRng: Rng = Math.random
 
-/** 可設定 seed 的 rng（mulberry32）。 */
+/** A seedable rng (mulberry32). */
 export function seededRng(seed: number): Rng {
   let a = seed >>> 0
   return () => {
@@ -15,17 +15,17 @@ export function seededRng(seed: number): Rng {
   }
 }
 
-/** 0 到 n - 1 的隨機整數。 */
+/** A random integer from 0 to n - 1. */
 export function randomInt(n: number, rng: Rng): number {
   return Math.floor(rng() * n)
 }
 
-/** 隨機取一個元素；空陣列回傳 undefined。 */
+/** Picks a random element; undefined for an empty array. */
 export function pick<T>(items: readonly T[], rng: Rng): T | undefined {
   return items.length === 0 ? undefined : items[randomInt(items.length, rng)]
 }
 
-/** 回傳打亂後的新陣列（Fisher–Yates），不修改原陣列。 */
+/** Returns a shuffled copy (Fisher–Yates) without modifying the original array. */
 export function shuffle<T>(items: readonly T[], rng: Rng): T[] {
   const result = [...items]
   for (let i = result.length - 1; i > 0; i--) {

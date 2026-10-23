@@ -264,7 +264,7 @@ describe("completeQuestion (R6.5, R6.6)", () => {
   })
 
   it("filters AI options with the same R6.4 rules", () => {
-    // 正確答案、重複、與字庫候選相同的都不能用
+    // The correct answer, duplicates, and options equal to candidates from the user's words cannot be used
     const q = completeQuestion(
       partial(),
       ["蘋果", "梨子", "香蕉", "香蕉", "葡萄"],

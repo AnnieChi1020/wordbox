@@ -20,7 +20,7 @@ type Outcome =
   | { kind: "invalid"; text: string; suggestions: string[] }
   | { kind: "error"; text: string; message: string }
 
-/** R2.1：單字列表頂端的新增輸入框。 */
+/** R2.1: the add-word input at the top of the word list. */
 export function AddWordForm() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -31,7 +31,7 @@ export function AddWordForm() {
   const [pendingText, setPendingText] = useState("")
   const [pending, startTransition] = useTransition()
 
-  /** 以 ?word=<id> 開啟 popup；用 push 讓「上一頁」可以關閉（R4.8）。 */
+  /** Opens the popup with ?word=<id>; uses push so the back button can close it (R4.8). */
   function openWord(wordId: string) {
     const params = new URLSearchParams(window.location.search)
     params.set("word", wordId)
@@ -39,7 +39,7 @@ export function AddWordForm() {
   }
 
   function submit(raw: string) {
-    // R2.2、R2.3：正規化後不合格就不送出
+    // R2.2, R2.3: do not submit if the normalized input is invalid
     const text = normalizeInput(raw)
     if (!isValidInput(text)) {
       setFormatError(true)
@@ -101,7 +101,7 @@ export function AddWordForm() {
           enterKeyHint="go"
           className="h-10"
         />
-        {/* R2.9：生成中停用送出 */}
+        {/* R2.9: disable submit while generating */}
         <Button type="submit" disabled={pending} className="h-10 shrink-0">
           {pending ? (
             <Loader2 aria-hidden className="animate-spin" />

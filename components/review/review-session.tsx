@@ -24,8 +24,8 @@ type Phase =
 const START_FAILED = "出題失敗，請重試"
 
 /**
- * /review 的流程：ReviewIntro → QuestionCard → SessionSummary（design §8）。
- * 題目只存在 client state；每題作答時已寫入資料庫，中途離開不影響已作答的結果（R7.3）。
+ * The /review flow: ReviewIntro → QuestionCard → SessionSummary (design §8).
+ * Questions live only in client state; each answer is written to the database as it is given, so leaving mid-session keeps the answers so far (R7.3).
  */
 export function ReviewSession({
   initialDueCount,

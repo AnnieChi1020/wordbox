@@ -1,8 +1,8 @@
 import { Stars } from "@/components/words/stars"
 
 /**
- * R8.2：0–5 星各有幾個字。單一系列，所有長條同色；數量直接標在每列右側（不需圖例）。
- * 螢幕閱讀器依序讀到「熟悉度 n / 5」與「m 個字」。
+ * R8.2: how many words have 0–5 stars. One series, so all bars share a color; counts are labeled at the right of each row (no legend needed).
+ * Screen readers read 「熟悉度 n / 5」 (Familiarity n / 5) followed by 「m 個字」 (m words).
  */
 export function StarDistribution({ byBox }: { byBox: number[] }) {
   const max = Math.max(...byBox, 1)

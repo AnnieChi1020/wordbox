@@ -3,7 +3,7 @@ import { isUuid } from "@/lib/domain/ids"
 
 import { NOT_FOUND, type WordActionResult } from "./regenerateWord"
 
-/** R4.7：刪除單字與其義項；複習紀錄保留（Phase 2：word_id set null）。 */
+/** R4.7: delete a word and its senses; review logs are kept (Phase 2: word_id set null). */
 export async function deleteWordWith(
   db: Db,
   wordId: string,

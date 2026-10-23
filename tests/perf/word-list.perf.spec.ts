@@ -3,7 +3,7 @@ import { expect, seedWords, test } from "../e2e/fixtures"
 const WORD_COUNT = 2000
 const BUDGET_MS = 300 // NFR4
 
-/** 依 seed 規則計算符合條件的字數 */
+/** Counts the matching words from the seed rules */
 function countWhere(predicate: (i: number) => boolean) {
   return Array.from({ length: WORD_COUNT }, (_, i) => i).filter(predicate)
     .length
@@ -13,7 +13,7 @@ test(`${WORD_COUNT} 個字時篩選與排序在 ${BUDGET_MS}ms 內完成（NFR4�
   page,
   signedIn,
 }, info) => {
-  // 10 位數的字母編碼確保 2,000 個字都不重複
+  // A 10-letter code keeps all 2,000 words distinct
   const code = (i: number) =>
     Array.from(
       { length: 10 },

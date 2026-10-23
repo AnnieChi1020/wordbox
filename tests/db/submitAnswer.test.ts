@@ -19,7 +19,7 @@ import {
   type TestUser,
 } from "./helpers"
 
-// profile.timezone 為 null → UTC 的 2026-10-20
+// profile.timezone is null → 2026-10-20 in UTC
 const NOW = new Date("2026-10-20T12:00:00Z")
 const TODAY = "2026-10-20"
 
@@ -35,7 +35,7 @@ describe("submitAnswer (R7.3, R7.4)", () => {
 
   let wordCount = 0
 
-  /** 建立一個字（中文解釋「答案」、同義詞 quick / rapid、反義詞 slow / sluggish），並設定複習狀態 */
+  /** Creates a word (Chinese definition 「答案」, synonyms quick / rapid, antonyms slow / sluggish) and sets its review state */
   async function setupWord(
     state: { box?: number; nextDueOn?: string; important?: boolean } = {},
   ) {
@@ -201,7 +201,7 @@ describe("submitAnswer (R7.3, R7.4)", () => {
 
     const first = await submit(input)
     const again = await submit(input)
-    // 即使重送時選了不同的選項，也回傳第一次的結果
+    // Even if the resubmission picks a different option, the first result is returned
     const changed = await submit({ ...input, selected: "錯一" })
 
     expect(again).toEqual(first)
@@ -213,7 +213,7 @@ describe("submitAnswer (R7.3, R7.4)", () => {
   it("re-reads and retries once when another tab answered first (D13)", async () => {
     const w = await setupWord({ box: 2 })
     let interfered = false
-    // 第一次寫入前，模擬另一個分頁已把這個字答錯（box 2 → 1）
+    // Before the first write, simulate another tab answering this word wrong (box 2 → 1)
     const racingDb = new Proxy(db, {
       get(target, prop, receiver) {
         if (prop !== "rpc") return Reflect.get(target, prop, receiver)
@@ -231,14 +231,14 @@ describe("submitAnswer (R7.3, R7.4)", () => {
     })
 
     const result = await submitAnswerWith({ db: racingDb, now: NOW }, answer(w))
-    // 重讀後以 box 1、未到期的狀態判定：補位字答對不變
+    // After rereading, the answer is checked against box 1 and not due: a filler word answered correctly does not change
     expect(result).toMatchObject({ ok: true, boxBefore: 1, boxAfter: 1 })
     expect(await state(w.wordId)).toEqual({ box: 1, next_due_on: "2026-10-21" })
     expect(await logsFor(w.wordId)).toHaveLength(1)
   })
 
   it("uses the profile time zone for local_date and due checks (R8.6)", async () => {
-    // Kiritimati (UTC+14)：UTC 2026-10-20 12:00 是當地 2026-10-21
+    // Kiritimati (UTC+14): 2026-10-20 12:00 UTC is 2026-10-21 locally
     await u.client
       .from("profiles")
       .update({ timezone: "Pacific/Kiritimati" })

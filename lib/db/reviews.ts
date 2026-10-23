@@ -3,7 +3,7 @@ import type { WordState } from "@/lib/domain/selection"
 
 import type { Db } from "./words"
 
-/** R6.5：同一義項、同一題型的 AI 干擾選項快取；沒有時為 null。 */
+/** R6.5: the AI distractor cache for one sense and question type; null when there is none. */
 export async function getCachedDistractors(
   db: Db,
   senseId: string,
@@ -19,7 +19,7 @@ export async function getCachedDistractors(
   return data?.options ?? null
 }
 
-/** 寫入或覆寫快取（design §5.3）。 */
+/** Writes or overwrites the cache (design §5.3). */
 export async function saveCachedDistractors(
   db: Db,
   senseId: string,
@@ -34,10 +34,10 @@ export async function saveCachedDistractors(
 
 export type ReviewWord = QuestionWord & WordState
 
-/** PostgREST 單次回傳上限（supabase/config.toml 的 max_rows）。 */
+/** PostgREST's per-request row limit (max_rows in supabase/config.toml). */
 const MAX_ROWS = 1000
 
-/** 出題用：所有單字的複習狀態與義項（選字與干擾候選共用，design §6）。 */
+/** For building questions: every word's review state and senses (shared by word selection and distractor candidates, design §6). */
 export async function listReviewWords(db: Db): Promise<ReviewWord[]> {
   const words: ReviewWord[] = []
   for (let offset = 0; ; offset += MAX_ROWS) {
@@ -56,7 +56,7 @@ export async function listReviewWords(db: Db): Promise<ReviewWord[]> {
   }
 }
 
-/** 到期（next_due_on ≤ 當地今天）的單字數（R7.5）。 */
+/** The number of due words (next_due_on ≤ local today) (R7.5). */
 export async function countDueWords(db: Db, today: string): Promise<number> {
   const { count, error } = await db
     .from("words")

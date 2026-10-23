@@ -13,8 +13,8 @@ export type GenerateDistractors = (
 ) => Promise<GenerateDistractorsResult>
 
 /**
- * R6.5：字庫候選不足時補足干擾選項（design §5.3）。
- * 先用快取；快取過濾後不夠時才呼叫 AI 並覆寫快取。無法補足時回傳 null（R6.6）。
+ * R6.5: fills in distractors when the user's words yield too few candidates (design §5.3).
+ * Uses the cache first; calls the AI and overwrites the cache only if the cache falls short after filtering. Returns null when it cannot fill the gap (R6.6).
  */
 export async function completeWithDistractors(
   { db, generate }: { db: Db; generate: GenerateDistractors },
@@ -40,7 +40,7 @@ export async function completeWithDistractors(
       generated.options,
     )
   } catch (error) {
-    // 快取寫入失敗不影響這次出題
+    // A cache write failure does not affect this question
     console.error("failed to cache distractors", error)
   }
   return question

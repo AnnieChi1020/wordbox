@@ -24,7 +24,7 @@ function setup(client: AiClient = mockClient) {
   }
 }
 
-/** 回傳固定 JSON 的假 client */
+/** A fake client that returns fixed JSON */
 const returning = (raw: unknown): AiClient => ({
   completeJson: async () => raw,
 })
@@ -99,11 +99,11 @@ describe("generateWord with fixtures", () => {
   })
 
   it.each([
-    ["Conventional", "conventional"], // 沒有 fixture → 通用條目，小寫
+    ["Conventional", "conventional"], // no fixture → generic entry, lowercase
     ["APPLE", "apple"],
     ["Give Up", "give up"],
-    ["monday", "Monday"], // 英文本身需要大寫
-    ["ran", "ran"], // AI 改成原形 run → 不採用
+    ["monday", "Monday"], // English requires a capital
+    ["ran", "ran"], // the AI changed it to the base form run → not accepted
   ])("stores %j as the dictionary headword %j (R2.7)", async (input, text) => {
     const result = await setup().run(input)
     expect(result).toMatchObject({ status: "valid", text })

@@ -5,7 +5,7 @@ import type { Page } from "@playwright/test"
 import { adminClient } from "../support/local-supabase"
 import { expect, seedWords, test } from "./fixtures"
 
-/** 測試使用者的 timezone 為 null → 以 UTC 計算今天 */
+/** The test user's timezone is null → today is computed in UTC */
 const utcDate = (offsetDays = 0) =>
   new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10)
 
@@ -65,7 +65,7 @@ test.describe("Dashboard（R8）", () => {
       await expect(starRow(page, box)).toContainText(String(count))
     }
 
-    // R8 AC：今天答 10 題 → 第 3 級（level 2）
+    // R8 AC: 10 answers today → the third level (level 2)
     await expect(cell(page, today)).toHaveAttribute("data-level", "2")
     await expect(cell(page, yesterday)).toHaveAttribute("data-level", "1")
     await expect(page.getByRole("gridcell")).toHaveCount(
@@ -85,19 +85,19 @@ test.describe("Dashboard（R8）", () => {
 
   test("可以用鍵盤在格子間移動（NFR5）", async ({ page }) => {
     await page.goto("/dashboard")
-    // 整張圖只有一個 Tab 停點，預設在今天
+    // The whole chart is a single Tab stop, on today by default
     await cell(page, today).focus()
     await expect(cell(page, today)).toBeFocused()
     await expect(cell(page, today)).toHaveAttribute("aria-label", /：10 題$/)
     await expect(page.locator('[role="gridcell"][tabindex="0"]')).toHaveCount(1)
 
-    // 今天是週日時，往上沒有格子；改用左右鍵驗證
+    // When today is a Sunday there is no cell above; use the left and right keys instead
     await page.keyboard.press("ArrowLeft")
     const lastWeek = utcDate(-7)
     await expect(cell(page, lastWeek)).toBeFocused()
     await page.keyboard.press("End")
     await expect(cell(page, today)).toBeFocused()
-    // 今天之後的格子不存在，焦點不動
+    // Cells after today do not exist, so focus does not move
     await page.keyboard.press("ArrowRight")
     await expect(cell(page, today)).toBeFocused()
   })

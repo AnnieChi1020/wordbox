@@ -3,7 +3,7 @@ import { Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MAX_STARS, starsFromBox, starsLabel } from "@/lib/domain/stars"
 
-/** 熟悉度星數（唯讀）；以 aria-label 提供文字替代（NFR5）。 */
+/** Familiarity stars (read-only), with a text alternative through aria-label (NFR5). */
 export function Stars({ box, className }: { box: number; className?: string }) {
   const { filled } = starsFromBox(box)
   return (

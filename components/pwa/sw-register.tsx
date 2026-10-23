@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 
-/** R9.2：註冊 service worker；只在 production 註冊，避免開發時的快取干擾 HMR（D20）。 */
+/** R9.2: registers the service worker, in production only, so caching does not interfere with HMR during development (D20). */
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return

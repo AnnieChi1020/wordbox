@@ -36,7 +36,7 @@ describe("setWordImportant (R3.5)", () => {
   it("sets and clears the flag on the owner's word", async () => {
     expect(await setWordImportant(a.client as Db, wordId, true)).toBe(true)
     expect(await isImportant()).toBe(true)
-    // 傳入目標值：重複送出結果相同
+    // Takes the target value: a repeated submission gives the same result
     expect(await setWordImportant(a.client as Db, wordId, true)).toBe(true)
     expect(await isImportant()).toBe(true)
     expect(await setWordImportant(a.client as Db, wordId, false)).toBe(true)

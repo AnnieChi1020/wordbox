@@ -9,7 +9,7 @@ import {
   wrongOption,
 } from "./review-helpers"
 
-/** T2.10：Phase 2 完整流程與 R7 的 AC。 */
+/** T2.10: the complete Phase 2 flow and the R7 AC. */
 
 async function startRound(page: Page, total: number) {
   await page.goto("/review")
@@ -76,7 +76,7 @@ test("Phase 2 使用流程", async ({ page, signedIn }) => {
   await test.step("回單字列表，星數已更新", async () => {
     await page.getByRole("link", { name: "回單字列表" }).click()
     await expect(page).toHaveURL("/words")
-    // 新字答對 → 1 顆星，答錯 → 0 顆星（D16）
+    // New word answered correctly → 1 star, answered wrong → 0 stars (D16)
     const words = await getWords(signedIn.id)
     const correct = (await reviewLogs(signedIn.id)).filter(
       (l) => l.is_correct,
@@ -98,7 +98,7 @@ test("答對與答錯後列表的星數正確變化（R7.4）", async ({ page, s
   ])
   await startRound(page, 2)
 
-  // 第 1 題答對、第 2 題答錯
+  // Question 1 correct, question 2 wrong
   const right = await correctAnswer(page)
   await option(page, right).click()
   await next(page, false)
@@ -140,13 +140,13 @@ test("作答 3 題後離開頁面，前 3 題已寫入紀錄（R7 AC）", async 
     if (n < 3) await next(page, false)
   }
 
-  // 第 4 題前離開
+  // Leave before question 4
   await page.goto("/words")
   expect(await reviewLogs(signedIn.id)).toHaveLength(3)
   const { data } = await adminClient()
     .from("words")
     .select("text, next_due_on")
     .eq("user_id", signedIn.id)
-  // 作答過的字都改為明天到期；未作答的維持 seedWords 的日期
+  // Answered words are now due tomorrow; unanswered ones keep the date from seedWords
   expect(data!.filter((w) => w.next_due_on !== "2026-10-20")).toHaveLength(3)
 })

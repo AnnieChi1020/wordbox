@@ -2,7 +2,7 @@ import "server-only"
 
 import { getAiClient, type AiClient, type JsonRequest } from "./client"
 
-/** R2.10：20 秒逾時；AI_TIMEOUT_MS 只供 E2E 縮短等待時間。 */
+/** R2.10: 20-second timeout; AI_TIMEOUT_MS exists only to shorten waits in E2E tests. */
 export const AI_TIMEOUT_MS = 20_000
 
 export function defaultTimeoutMs() {
@@ -13,8 +13,8 @@ export function defaultTimeoutMs() {
 export type AiErrorReason = "timeout" | "format" | "api"
 
 /**
- * 呼叫模型並取得原始 JSON（design §5.4）：逾時以 AbortController 中斷，不自動重試。
- * 驗證由呼叫端以 Zod 處理。
+ * Calls the model and returns the raw JSON (design §5.4): a timeout aborts through AbortController, with no automatic retry.
+ * The caller validates the result with Zod.
  */
 export async function requestJson(
   request: Omit<JsonRequest, "signal">,
@@ -30,7 +30,7 @@ export async function requestJson(
     return { ok: true, raw }
   } catch (error) {
     if (controller.signal.aborted) return { ok: false, reason: "timeout" }
-    // JSON.parse 失敗代表輸出不完整（拒答、截斷）
+    // A JSON.parse failure means the output is incomplete (refusal, truncation)
     if (error instanceof SyntaxError) return { ok: false, reason: "format" }
     console.error("AI request failed", error)
     return { ok: false, reason: "api" }

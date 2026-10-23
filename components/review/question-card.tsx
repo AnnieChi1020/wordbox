@@ -22,7 +22,7 @@ type Status =
 
 const FAILED_MESSAGE = "連線失敗，請重試"
 
-/** R6.1：各題型的題目敘述。 */
+/** R6.1: the prompt text for each question type. */
 function questionText(type: QuestionType): [before: string, after: string] {
   switch (type) {
     case "word_to_zh":
@@ -37,8 +37,8 @@ function questionText(type: QuestionType): [before: string, after: string] {
 }
 
 /**
- * R7.1、R7.2：一次一題。作答後立即送出判定（R7.3），鎖定選項並以顏色與圖示標示對錯。
- * 判定失敗時可重送同一個 questionId，或略過這題。
+ * R7.1, R7.2: one question at a time. The answer is sent for checking immediately (R7.3); options are then locked and marked right or wrong with color and icons.
+ * If checking fails, the same questionId can be resent, or the question skipped.
  */
 export function QuestionCard({
   question,
@@ -82,12 +82,12 @@ export function QuestionCard({
     }
   }
 
-  // 作答後把焦點移到「下一題」，Enter 即可繼續
+  // After answering, move focus to 「下一題」 (Next question) so Enter continues
   useEffect(() => {
     if (status.kind === "answered") nextRef.current?.focus()
   }, [status.kind])
 
-  // 數字鍵 1–4 作答（NFR5）
+  // Number keys 1–4 answer (NFR5)
   useEffect(() => {
     if (status.kind !== "idle") return
     function onKeyDown(e: KeyboardEvent) {
@@ -99,7 +99,7 @@ export function QuestionCard({
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- choose 只依賴 question
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- choose depends only on question
   }, [status.kind, question])
 
   const locked = status.kind !== "idle"

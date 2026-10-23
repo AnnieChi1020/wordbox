@@ -18,7 +18,7 @@ import {
   type GenerateDistractors,
 } from "./distractors"
 
-/** 傳給 client 的題目：不含正確答案（D15）。 */
+/** The question sent to the client: without the correct answer (D15). */
 export type ClientQuestion = Omit<Question, "answer"> & { questionId: string }
 
 export type StartSessionResult =
@@ -38,8 +38,8 @@ export const START_SESSION_MESSAGES = {
 } as const
 
 /**
- * R5、R6：開始一輪複習（design §6）。
- * 依候選序列取字出題；需要 AI 的題目平行處理（D14），無法出題的字略過並遞補（R6.6）。
+ * R5, R6: start a review session (design §6).
+ * Builds questions from words in the candidate sequence; questions that need the AI run in parallel (D14), and words that cannot get a question are skipped and replaced (R6.6).
  */
 export async function startSessionWith({
   db,
@@ -90,8 +90,8 @@ export async function startSessionWith({
 }
 
 /**
- * R6.1、R6.6：隨機選義項與題型；字庫不足時以快取或 AI 補足，失敗則換該義項的其他題型。
- * 所有題型都無法出題時回傳 null。
+ * R6.1, R6.6: pick a random sense and question type; when the user's words fall short, fill in from the cache or the AI, and on failure try the sense's other question types.
+ * Returns null when no question type works.
  */
 async function questionFor(
   word: ReviewWord,
@@ -114,7 +114,7 @@ async function questionFor(
   return null
 }
 
-/** R7.5：今天到期的單字數；ReviewIntro 與結算畫面使用。 */
+/** R7.5: the number of words due today; used by ReviewIntro and the summary screen. */
 export async function countDueWith(
   db: Db,
   now: Date = new Date(),

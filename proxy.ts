@@ -4,7 +4,7 @@ import { redirectWithSession, updateSession } from "@/lib/db/proxy"
 
 const HOME = "/words"
 
-/** 不需登入：登入流程與 PWA 檔案（R9；瀏覽器取得 manifest 時不帶 session 也要能讀到）。 */
+/** No sign-in needed: the sign-in flow and PWA files (R9; browsers fetch the manifest without a session and must still get it). */
 function isPublicPath(pathname: string) {
   return (
     pathname === "/login" ||
@@ -19,11 +19,11 @@ export async function proxy(request: NextRequest) {
   const { response, userId } = await updateSession(request)
   const { pathname } = request.nextUrl
 
-  // R1.1：未登入造訪應用頁面 → 登入頁
+  // R1.1: a signed-out visit to an app page → login page
   if (!userId && !isPublicPath(pathname)) {
     return redirectWithSession(request, response, "/login")
   }
-  // R1.6：已登入造訪登入頁或根路徑 → 單字列表
+  // R1.6: a signed-in visit to the login page or the root path → word list
   if (userId && (pathname === "/login" || pathname === "/")) {
     return redirectWithSession(request, response, HOME)
   }

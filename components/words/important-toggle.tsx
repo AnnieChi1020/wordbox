@@ -10,12 +10,12 @@ import { cn } from "@/lib/utils"
 type Props = {
   wordId: string
   important: boolean
-  /** 伺服器更新成功後通知父元件更新資料 */
+  /** Notifies the parent to update its data after the server update succeeds */
   onChange?: (important: boolean) => void
   className?: string
 }
 
-/** R3.5：切換 important；畫面立即反映，失敗時自動還原並提示（列表與 popup 共用）。 */
+/** R3.5: toggles important; the UI updates immediately and reverts with a message on failure (shared by the list and the popup). */
 export function ImportantToggle({
   wordId,
   important,

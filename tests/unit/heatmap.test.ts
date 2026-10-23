@@ -15,7 +15,7 @@ describe("heatLevel (R8.4)", () => {
     [1, 1],
     [8, 1],
     [9, 2],
-    [10, 2], // R8 AC：今天 10 題為第 3 級（level 2）
+    [10, 2], // R8 AC: 10 answers today is the third level (level 2)
     [16, 2],
     [17, 3],
     [32, 3],
@@ -28,7 +28,7 @@ describe("heatLevel (R8.4)", () => {
 
 describe("weekday", () => {
   it.each([
-    ["2026-10-18", 0], // 週日
+    ["2026-10-18", 0], // Sunday
     ["2026-10-22", 4],
     ["2026-10-24", 6],
     ["2024-02-29", 4],
@@ -39,7 +39,7 @@ describe("weekday", () => {
 
 describe("heatmapStart", () => {
   it("is the Sunday 52 weeks before the current week's Sunday", () => {
-    // 2026-10-22（週四）所在週的週日為 2026-10-18
+    // The Sunday of the week containing 2026-10-22 (Thursday) is 2026-10-18
     expect(heatmapStart("2026-10-22")).toBe("2025-10-19")
     expect(weekday(heatmapStart("2026-10-22"))).toBe(0)
   })
@@ -52,7 +52,7 @@ describe("heatmapStart", () => {
 })
 
 describe("buildHeatmapGrid (R8.3)", () => {
-  const today = "2026-10-22" // 週四
+  const today = "2026-10-22" // Thursday
 
   const cells = (grid: (HeatmapCell | null)[][]) =>
     grid.flat().filter((c): c is HeatmapCell => c !== null)
@@ -110,7 +110,7 @@ describe("buildHeatmapGrid (R8.3)", () => {
       [today, 10],
       ["2026-01-01", 40],
       ["2025-10-19", 1],
-      ["2025-10-18", 99], // 早於第一格，不顯示
+      ["2025-10-18", 99], // before the first cell, not shown
     ])
     const byDate = new Map(
       cells(buildHeatmapGrid(counts, today)).map((c) => [c.date, c]),

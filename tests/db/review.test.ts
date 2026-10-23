@@ -25,7 +25,7 @@ type ReviewArgs = {
   dueAfter?: string
 }
 
-/** 以新字（box 0、今天到期）答對為預設：box 0 → 1、明天到期。 */
+/** Defaults to a new word (box 0, due today) answered correctly: box 0 → 1, due tomorrow. */
 function applyReview(user: TestUser, args: ReviewArgs) {
   return user.client.rpc("apply_review", {
     p_question_id: args.questionId ?? randomUUID(),
@@ -131,7 +131,7 @@ describe("apply_review", () => {
     const questionId = randomUUID()
 
     const first = await applyReview(u, { questionId, wordId: id, senseId })
-    // 重送時即使內容不同，也回傳第一次的結果，不再更新
+    // A resubmission returns the first result and updates nothing, even with different content
     const second = await applyReview(u, {
       questionId,
       wordId: id,
@@ -204,7 +204,7 @@ describe("apply_review", () => {
       .eq("question_id", questionId)
     expect(data).toEqual([{ word_id: null, sense_id: null, is_correct: true }])
 
-    // 字已刪除後重送仍回傳第一次的結果
+    // Resubmitting after the word is deleted still returns the first result
     const resend = await applyReview(u, { questionId, wordId: id, senseId })
     expect(resend.data).toMatchObject({ duplicate: true })
   })
@@ -304,7 +304,7 @@ describe("ai_distractors invalidation (R6.5, D9)", () => {
     expect(error).toBeNull()
     expect(await cachedSenseIds(u)).toEqual([noun.id])
 
-    // 同義詞變動也算內容變動
+    // A synonym change also counts as a content change
     const { error: e2 } = await u.client.rpc("update_word_content", {
       p_word_id: id,
       p_ipa: null,

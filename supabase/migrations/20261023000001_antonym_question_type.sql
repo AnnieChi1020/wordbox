@@ -1,4 +1,4 @@
--- Phase 5：反義詞題型 word_to_antonym（R6.1；design §4.1）
+-- Phase 5: antonym question type word_to_antonym (R6.1; design §4.1)
 
 alter table public.review_logs
   drop constraint review_logs_question_type_check,

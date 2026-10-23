@@ -2,9 +2,9 @@ import type { Db } from "./words"
 
 export type DashboardStats = {
   total: number
-  /** index = box（0–5 星） */
+  /** index = box (0–5 stars) */
   byBox: number[]
-  /** local_date → 答題數；只含有作答的日期 */
+  /** local_date → answer count; only dates with answers */
   daily: Map<string, number>
 }
 
@@ -14,7 +14,7 @@ type StatsRow = {
   daily: { date: string; count: number }[]
 }
 
-/** R8.1、R8.2、R8.6：Dashboard 統計；daily 只含 since 之後（design §4.3、D17）。 */
+/** R8.1, R8.2, R8.6: dashboard stats; daily covers only dates from since (design §4.3, D17). */
 export async function getDashboardStats(
   db: Db,
   since: string,

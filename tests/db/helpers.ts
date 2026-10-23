@@ -8,7 +8,7 @@ export { adminClient, anonClient }
 
 export type TestUser = { id: string; client: SupabaseClient }
 
-/** 建立一個測試使用者並回傳以其身分登入的 client。 */
+/** Creates a test user and returns a client signed in as that user. */
 export async function createTestUser(): Promise<TestUser> {
   const email = `test-${randomUUID()}@example.com`
   const password = randomUUID()

@@ -2,12 +2,12 @@ import { z } from "zod"
 
 import { POS_VALUES } from "@/lib/domain/pos"
 
-/** R4.3、R4.4：編輯單字內容的規則（前端與伺服器共用）。 */
+/** R4.3, R4.4: rules for edited word content (shared by the UI and the server). */
 
 const word = z.string().trim().min(1)
 
 export const EditSenseSchema = z.object({
-  /** 既有義項的 id；新增的義項沒有 id（design §4.3 update_word_content） */
+  /** The id of an existing sense; newly added senses have no id (design §4.3 update_word_content) */
   id: z.uuid().optional(),
   pos: z.enum(POS_VALUES, { error: "請選擇詞性" }),
   def_en: z.string().trim().min(1, "請輸入英文解釋").max(300, "英文解釋太長"),
@@ -33,12 +33,12 @@ export const EditWordSchema = z.object({
 export type EditWordInput = z.input<typeof EditWordSchema>
 export type EditWord = z.output<typeof EditWordSchema>
 
-/** 以逗號（含全形、頓號）分隔的清單；去除空白與重複（不分大小寫）。 */
+/** A list separated by commas (including full-width commas and 、); whitespace and duplicates (case-insensitive) removed. */
 export function splitList(text: string): string[] {
   return dedupe(text.split(/[,，、]/))
 }
 
-/** 每行一句。 */
+/** One sentence per line. */
 export function splitLines(text: string): string[] {
   return dedupe(text.split(/\r?\n/))
 }
@@ -55,7 +55,7 @@ function dedupe(items: string[]): string[] {
     })
 }
 
-/** 驗證錯誤 → { "senses.0.def_zh": "請輸入中文解釋", ... } */
+/** Validation errors → { "senses.0.def_zh": "請輸入中文解釋", ... } */
 export function fieldErrors(error: z.ZodError): Record<string, string> {
   const errors: Record<string, string> = {}
   for (const issue of error.issues) {

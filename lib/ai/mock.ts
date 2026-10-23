@@ -11,10 +11,10 @@ import monday from "./fixtures/monday.json"
 import ran from "./fixtures/ran.json"
 import run from "./fixtures/run.json"
 
-/** 觸發特殊情境的輸入（皆符合 R2.3，可從 UI 輸入）。 */
+/** Inputs that trigger special cases (all satisfy R2.3, so they can be typed in the UI). */
 export const MOCK_TIMEOUT_INPUT = "mock timeout"
 export const MOCK_MALFORMED_INPUT = "mock malformed"
-/** 以這個字出題時，干擾選項生成失敗（R6.6） */
+/** Building a question for this word makes distractor generation fail (R6.6) */
 export const MOCK_DISTRACTOR_FAIL_INPUT = "mock distractor fail"
 
 const WORD_FIXTURES: Record<string, unknown> = {
@@ -27,7 +27,7 @@ const WORD_FIXTURES: Record<string, unknown> = {
   [MOCK_MALFORMED_INPUT]: malformed,
 }
 
-/** 沒有 fixture 的字一律視為有效，產生一個可辨識的通用條目，方便 E2E 大量新增。 */
+/** Words without a fixture are always valid and get a recognizable generic entry, so E2E tests can add many words. */
 function genericEntry(input: string) {
   const text = input.toLowerCase()
   return {
@@ -56,7 +56,7 @@ function waitForAbort(signal: AbortSignal): Promise<never> {
   })
 }
 
-/** 可辨識、且不會與真實單字或中文解釋衝突的干擾選項（R6.4）。 */
+/** Recognizable distractors that never collide with real words or Chinese definitions (R6.4). */
 const MOCK_DISTRACTORS: Record<string, string[]> = {
   distractors_word_to_zh: ["干擾選項甲", "干擾選項乙", "干擾選項丙"],
   distractors_word_to_synonym: ["decoy alpha", "decoy bravo", "decoy charlie"],

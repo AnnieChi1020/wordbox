@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/db/server"
 import { isValidTimeZone } from "@/lib/domain/dates"
 
-/** R1.5：登出並導向登入頁。 */
+/** R1.5: sign out and redirect to the login page. */
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
@@ -13,8 +13,8 @@ export async function signOut() {
 }
 
 /**
- * R1.3：以瀏覽器回報的時區初始化 profile。
- * 只在 timezone 仍為 null 時寫入，之後不會覆寫（design §4.4）。
+ * R1.3: initialize the profile with the time zone reported by the browser.
+ * Writes only while timezone is still null and never overwrites it afterward (design §4.4).
  */
 export async function initProfileTimezone(timezone: string) {
   if (!isValidTimeZone(timezone)) return

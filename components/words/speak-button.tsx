@@ -11,11 +11,11 @@ function useSpeechSupported() {
   return useSyncExternalStore(
     noopSubscribe,
     () => "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
-    () => false, // 伺服器端不渲染，避免 hydration 不一致
+    () => false, // not rendered on the server, to avoid a hydration mismatch
   )
 }
 
-/** R4.2：以瀏覽器語音合成（en-US）朗讀；不支援時不顯示。 */
+/** R4.2: reads the word aloud with the browser's speech synthesis (en-US); hidden when unsupported. */
 export function SpeakButton({ text }: { text: string }) {
   const supported = useSpeechSupported()
   if (!supported) return null

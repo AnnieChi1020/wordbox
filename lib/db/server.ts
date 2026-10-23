@@ -7,9 +7,9 @@ import { connection } from "next/server"
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./env"
 import type { Database } from "./types"
 
-/** 每個 request 建立一個新的 client（Server Components、Server Actions、Route Handlers）。 */
+/** Creates a new client per request (Server Components, Server Actions, Route Handlers). */
 export async function createClient() {
-  // session 驗證會用到目前時間，必須在 request 時執行，不能進入 prerender
+  // Session verification uses the current time, so it must run at request time and cannot be prerendered
   await connection()
   const cookieStore = await cookies()
   return createServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -21,14 +21,14 @@ export async function createClient() {
             cookieStore.set(name, value, options),
           )
         } catch {
-          // Server Component 無法寫入 cookie；session 由 proxy.ts 負責更新
+          // Server Components cannot write cookies; proxy.ts refreshes the session
         }
       },
     },
   })
 }
 
-/** 回傳目前登入的使用者 id；未登入回傳 null。 */
+/** Returns the signed-in user's id, or null when signed out. */
 export async function getUserId(): Promise<string | null> {
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()

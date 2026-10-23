@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./env"
 import type { Database } from "./types"
 
-/** 更新 session cookie 並回傳目前使用者 id。 */
+/** Refreshes the session cookie and returns the current user id. */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
 
@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
   return { response, userId: data?.claims.sub ?? null }
 }
 
-/** 導向時帶上 updateSession 更新過的 cookie 與 cache headers。 */
+/** Redirects with the cookies and cache headers updated by updateSession. */
 export function redirectWithSession(
   request: NextRequest,
   sessionResponse: NextResponse,

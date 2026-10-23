@@ -30,7 +30,7 @@ describe("completeWithDistractors (R6.5)", () => {
   })
   afterAll(() => deleteTestUser(u))
 
-  /** 建立一個字並以空字庫出題，三個干擾選項都需要補足 */
+  /** Creates a word and builds a question with no other words, so all three distractors must be filled in */
   async function draftFor(text: string, defZh: string): Promise<QuestionDraft> {
     const { id } = await createWord(u, text, [sense({ def_zh: defZh })])
     const { data, error } = await u.client
@@ -91,7 +91,7 @@ describe("completeWithDistractors (R6.5)", () => {
 
   it("regenerates and overwrites a cache that no longer passes R6.4", async () => {
     const draft = await draftFor("lemon", "檸檬")
-    // 快取中有一個選項等於正確答案（例如義項改過但快取未失效的舊資料）
+    // One cached option equals the correct answer (e.g. stale data from a sense that changed without invalidating the cache)
     await u.client.from("ai_distractors").insert({
       sense_id: draft.senseId,
       question_type: "word_to_zh",

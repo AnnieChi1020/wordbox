@@ -14,7 +14,7 @@ import {
   type TestUser,
 } from "./helpers"
 
-/** 以 service role 寫入複習紀錄（不經過 apply_review，方便指定日期） */
+/** Writes review logs with the service role (bypassing apply_review so dates can be set) */
 async function seedLogs(
   user: TestUser,
   wordId: string | null,
@@ -59,13 +59,13 @@ describe("get_dashboard_stats (R8.1, R8.2, R8.6)", () => {
       if (text === "lemon") doomedId = id
     }
     await seedLogs(a, doomedId, {
-      "2025-10-18": 4, // 早於 since
+      "2025-10-18": 4, // before since
       "2025-10-19": 1,
       "2026-01-01": 10,
       "2026-10-22": 3,
     })
 
-    // B 的資料不應計入 A
+    // B's data must not count toward A
     const { id: bWord } = await createWord(b, "apple")
     await seedLogs(b, bWord, { "2026-10-22": 7 })
   })

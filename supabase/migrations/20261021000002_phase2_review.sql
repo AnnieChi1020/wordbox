@@ -1,13 +1,13 @@
--- Phase 2 schema 與 RPC（design §4.1–§4.3）
+-- Phase 2 schema and RPCs (design §4.1–§4.3)
 
 -- review_logs（R7.3、R8.6） ---------------------------------------------------------
 
 create table public.review_logs (
   id bigint generated always as identity primary key,
   user_id uuid not null default auth.uid() references auth.users on delete cascade,
-  question_id uuid not null unique,                          -- 冪等（R7.3）
-  word_id uuid references public.words on delete set null,   -- 刪字保留紀錄（R4.7）
-  sense_id uuid references public.senses on delete set null, -- 重新生成保留紀錄（R4.5）
+  question_id uuid not null unique,                          -- idempotency (R7.3)
+  word_id uuid references public.words on delete set null,   -- logs survive word deletion (R4.7)
+  sense_id uuid references public.senses on delete set null, -- logs survive regeneration (R4.5)
   question_type text not null
     check (question_type in ('word_to_zh','word_to_synonym','zh_to_word')),
   is_correct boolean not null,
@@ -18,7 +18,7 @@ create table public.review_logs (
   local_date date not null                                   -- R8.6
 );
 create index review_logs_user_date_idx on public.review_logs (user_id, local_date);
--- 刪除單字或義項時 set null 需要以這兩欄查詢
+-- Setting null when a word or sense is deleted looks rows up by these two columns
 create index review_logs_word_idx on public.review_logs (word_id);
 create index review_logs_sense_idx on public.review_logs (sense_id);
 
@@ -33,7 +33,7 @@ create table public.ai_distractors (
   primary key (sense_id, question_type)
 );
 
--- 權限與 RLS（R1.4） ----------------------------------------------------------------
+-- Permissions and RLS (R1.4) ----------------------------------------------------------------
 
 revoke all on public.review_logs, public.ai_distractors from anon, authenticated;
 grant select, insert on public.review_logs to authenticated;
@@ -54,8 +54,8 @@ create policy own on public.ai_distractors
     where s.id = sense_id and w.user_id = (select auth.uid())
   ));
 
--- 義項內容變動時讓干擾快取失效（R6.5、D9） -------------------------------------------
--- update_word_content 會更新清單中的每個義項；只改 position 的不算變動。
+-- Invalidate the distractor cache when a sense's content changes (R6.5, D9) -------------------------------------------
+-- update_word_content updates every sense in the list; a change to position alone does not count.
 
 create function private.invalidate_sense_distractors()
 returns trigger
@@ -79,7 +79,7 @@ create trigger senses_invalidate_distractors
 grant execute on function private.invalidate_sense_distractors() to authenticated;
 
 -- apply_review（R7.3、R7.4；design §4.3、D13） ------------------------------------
--- Leitner 規則由呼叫端計算；這裡只負責原子寫入、冪等與樂觀鎖。
+-- The caller computes the Leitner rules; this only handles atomic writes, idempotency, and the optimistic lock.
 
 create function public.apply_review(
   p_question_id uuid,
@@ -107,7 +107,7 @@ begin
     raise exception 'not authenticated' using errcode = '42501';
   end if;
 
-  -- 重送：回傳第一次的結果（字已被刪除也一樣）
+  -- Resubmission: return the first result (even if the word has been deleted)
   select * into v_log from public.review_logs where question_id = p_question_id;
   if found then
     return private.review_result(v_log, true);
@@ -115,7 +115,7 @@ begin
 
   perform private.lock_own_word(p_word_id);
 
-  -- 同一題併發送出：取得鎖之後再檢查一次
+  -- The same question submitted concurrently: check again after acquiring the lock
   select * into v_log from public.review_logs where question_id = p_question_id;
   if found then
     return private.review_result(v_log, true);

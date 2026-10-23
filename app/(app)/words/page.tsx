@@ -47,7 +47,7 @@ async function WordListSection({
   const db = await createClient()
   const { words, total } = await listWords(db, params)
 
-  // R3.7：完全沒有單字時只顯示空狀態
+  // R3.7: with no words at all, show only the empty state
   if (
     words.length === 0 &&
     !(hasActiveFilters(params) && (await hasAnyWord(db)))
@@ -86,7 +86,7 @@ async function WordListSection({
   )
 }
 
-/** R4.9：?word=<id> 開啟 popup；重新整理後仍開啟。找不到（已刪除或別人的字）時不顯示。 */
+/** R4.9: ?word=<id> opens the popup and keeps it open after a reload. Nothing is shown when the word is not found (deleted or another user's). */
 async function WordDialogSection({
   searchParams,
 }: {
@@ -95,6 +95,6 @@ async function WordDialogSection({
   const { word: wordId } = await searchParams
   if (!isUuid(wordId)) return null
   const word = await getWordDetail(await createClient(), wordId)
-  // key：切換到另一個字時重設 popup 狀態
+  // key: reset the popup state when switching to another word
   return word ? <WordDialog key={word.id} word={word} /> : null
 }

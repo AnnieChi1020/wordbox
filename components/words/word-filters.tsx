@@ -17,12 +17,12 @@ import {
 
 const STAR_LEVELS = [0, 1, 2, 3, 4, 5]
 
-/** R3.2–R3.4：篩選與排序；狀態寫入 URL，重新整理後保留。 */
+/** R3.2–R3.4: filters and sorting; the state is written to the URL and survives a reload. */
 export function WordFilters({ params }: { params: ListParams }) {
   const router = useRouter()
   const sortId = useId()
   const [pending, startTransition] = useTransition()
-  // 立即反映點擊，資料在背景載入
+  // Reflect the click immediately while the data loads in the background
   const [current, setCurrent] = useOptimistic(params)
 
   function apply(next: ListParams) {

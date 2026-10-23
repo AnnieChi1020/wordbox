@@ -3,8 +3,8 @@ import type { Page } from "@playwright/test"
 import { expect, getWords, test } from "./fixtures"
 
 /**
- * T1.14：Phase 1 完整流程。
- * 登入 → 新增（有效 / 拼錯 / 重複）→ 列表篩選排序 → popup 編輯 → 重新生成 → 刪除
+ * T1.14: the complete Phase 1 flow.
+ * Sign in → add (valid / misspelled / duplicate) → filter and sort the list → edit in the popup → regenerate → delete
  */
 
 const list = (page: Page) => page.getByRole("list", { name: "單字列表" })

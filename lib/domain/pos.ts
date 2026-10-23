@@ -1,4 +1,4 @@
-/** R2.11 詞性；順序與資料庫 enum part_of_speech 相同。 */
+/** R2.11 parts of speech, in the same order as the database enum part_of_speech. */
 export const POS_VALUES = [
   "noun",
   "verb",
@@ -31,7 +31,7 @@ export function isPartOfSpeech(value: unknown): value is PartOfSpeech {
   return (POS_VALUES as readonly unknown[]).includes(value)
 }
 
-/** R3.1：各義項詞性去除重複，依義項順序，以縮寫顯示。 */
+/** R3.1: the senses' parts of speech, deduplicated in sense order, shown as abbreviations. */
 export function posTags(senses: readonly { pos: PartOfSpeech }[]): string[] {
   return [...new Set(senses.map((s) => s.pos))].map((pos) => POS_ABBR[pos])
 }

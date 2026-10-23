@@ -50,7 +50,7 @@ test.describe("重新生成（R4.5、R4.6）", () => {
   })
 
   test("失敗時保留原內容並顯示錯誤", async ({ page, signedIn }) => {
-    // mock：這個字會讓 AI 逾時（E2E 為 1 秒）
+    // mock: this word makes the AI time out (1 second in E2E)
     const [id] = await seedWords(signedIn.id, [{ text: "mock timeout" }])
     await page.goto(`/words?word=${id}`)
     const dialog = page.getByRole("dialog", { name: "mock timeout" })

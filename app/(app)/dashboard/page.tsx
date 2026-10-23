@@ -26,7 +26,7 @@ export default function DashboardPage() {
   )
 }
 
-/** design §8.1：依 profile 時區算出今天，一次查詢取得所有統計（D17）。 */
+/** design §8.1: compute today in the profile time zone and fetch all stats in one query (D17). */
 async function DashboardSection() {
   const db = await createClient()
   const profile = await getProfile(db)
@@ -51,7 +51,7 @@ async function DashboardSection() {
 
   return (
     <div className="space-y-8">
-      {/* R8.1：單一數字，以數字本身呈現 */}
+      {/* R8.1: a single number, shown as the number itself */}
       <section aria-labelledby="total-words" className="space-y-1">
         <h2 id="total-words" className="text-muted-foreground text-sm">
           總單字數

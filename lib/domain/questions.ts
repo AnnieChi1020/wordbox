@@ -10,7 +10,7 @@ export const QUESTION_TYPES = [
 ] as const
 export type QuestionType = (typeof QUESTION_TYPES)[number]
 
-/** 每題的干擾選項數（R6.2）。 */
+/** Number of distractors per question (R6.2). */
 export const DISTRACTOR_COUNT = 3
 
 export type QuestionSense = {
@@ -23,7 +23,7 @@ export type QuestionSense = {
 
 export type QuestionWord = { id: string; text: string; senses: QuestionSense[] }
 
-/** 完整的題目；`answer` 只留在伺服器，傳給 client 前移除（D15）。 */
+/** A complete question; `answer` stays on the server and is removed before sending to the client (D15). */
 export type Question = {
   type: QuestionType
   wordId: string
@@ -34,15 +34,15 @@ export type Question = {
   options: string[]
 }
 
-/** 字庫候選不足時的草稿，由 AI 或快取補足（R6.5）。 */
+/** A draft for when the user's words yield too few candidates, completed by the AI or the cache (R6.5). */
 export type QuestionDraft = Omit<Question, "options"> & {
-  /** 目標字的同義詞（所有義項），提供給 AI 避開 */
+  /** The quiz word's synonyms (all senses), given to the AI to avoid */
   synonyms: string[]
-  /** 目標字的反義詞（所有義項），word_to_antonym 提供給 AI 避開 */
+  /** The quiz word's antonyms (all senses), given to the AI to avoid for word_to_antonym */
   antonyms: string[]
   distractors: string[]
   missing: number
-  /** R6.4 排除的選項，以 dedupeKey 比較 */
+  /** Options excluded by R6.4, compared by dedupeKey */
   excluded: ReadonlySet<string>
 }
 
@@ -50,7 +50,7 @@ export function isQuestionType(value: unknown): value is QuestionType {
   return QUESTION_TYPES.includes(value as QuestionType)
 }
 
-/** R6.1：沒有同義詞的義項不出 word_to_synonym，沒有反義詞的不出 word_to_antonym。 */
+/** R6.1: no word_to_synonym for a sense without synonyms, and no word_to_antonym for one without antonyms. */
 export function availableTypes(sense: QuestionSense): QuestionType[] {
   return QUESTION_TYPES.filter((type) => {
     if (type === "word_to_synonym") return sense.synonyms.length > 0
@@ -60,8 +60,8 @@ export function availableTypes(sense: QuestionSense): QuestionType[] {
 }
 
 /**
- * R6.1–R6.4：以字庫出題（design §7.5）。
- * 候選足夠時回傳完整題目；不足時回傳草稿與已找到的部分候選，交由 completeQuestion 補足。
+ * R6.1–R6.4: build a question from the user's words (design §7.5).
+ * Returns a complete question when there are enough candidates; otherwise returns a draft with the partial candidates found, for completeQuestion to fill in.
  */
 export function buildQuestion(
   target: QuestionWord,
@@ -76,7 +76,7 @@ export function buildQuestion(
   const excluded = exclusions(target, sense, type, answer, others)
 
   const candidates = shuffle(libraryCandidates(type, others), rng)
-    // 穩定排序：同詞性優先，其餘維持隨機順序（R6.3）
+    // Stable sort: same part of speech first, everything else keeps its random order (R6.3)
     .sort((a, b) => Number(b.pos.has(sense.pos)) - Number(a.pos.has(sense.pos)))
     .map((c) => c.text)
   const distractors = filterDistractors(candidates, excluded).slice(
@@ -102,7 +102,7 @@ export function buildQuestion(
 }
 
 /**
- * 以 AI 或快取的選項補足草稿；過濾後仍不足時回傳 null（R6.6）。
+ * Completes a draft with cached or AI options; returns null if it is still short after filtering (R6.6).
  */
 export function completeQuestion(
   draft: QuestionDraft,
@@ -117,7 +117,7 @@ export function completeQuestion(
   return toQuestion(draft, distractors, rng)
 }
 
-/** R6.4：去除空字串、重複（不分大小寫）與排除清單中的選項，保留順序。 */
+/** R6.4: drops blanks, duplicates (case-insensitive), and excluded options, keeping the order. */
 export function filterDistractors(
   candidates: readonly string[],
   excluded: ReadonlySet<string>,
@@ -135,8 +135,8 @@ export function filterDistractors(
 }
 
 /**
- * R7.3：作答時依資料庫的內容找出選項中的正確答案（design §6）。
- * 干擾選項已排除所有同義詞（反義詞題另排除所有反義詞），因此應恰好一個符合；否則回傳 null（選項遭竄改或內容已變動）。
+ * R7.3: when answering, find the correct option among the options from the database content (design §6).
+ * Distractors exclude every synonym (and every antonym for antonym questions), so exactly one should match; otherwise returns null (options were tampered with or the content changed).
  */
 export function findCorrectOption(
   type: QuestionType,
@@ -190,7 +190,7 @@ function correctAnswer(
   }
 }
 
-/** design §7.5 的候選來源；pos 為候選所屬義項的詞性，用於同詞性優先。 */
+/** Candidate sources from design §7.5; pos is the part of speech of the candidate's sense, used to prefer the same part of speech. */
 function libraryCandidates(
   type: QuestionType,
   others: readonly QuestionWord[],
@@ -220,7 +220,7 @@ function libraryCandidates(
   }
 }
 
-/** R6.4 與 design §7.5 的排除規則。 */
+/** Exclusion rules from R6.4 and design §7.5. */
 function exclusions(
   target: QuestionWord,
   sense: QuestionSense,
@@ -237,7 +237,7 @@ function exclusions(
     keys.push(...target.senses.map((s) => s.def_zh))
   }
   if (type === "word_to_antonym") {
-    // 排除所有義項的反義詞，作答判定才會恰好一個符合（D25）
+    // Exclude the antonyms of every sense so exactly one option matches when checking the answer (D25)
     keys.push(...target.senses.flatMap((s) => s.antonyms))
   }
   if (type === "zh_to_word") {

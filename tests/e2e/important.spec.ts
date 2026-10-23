@@ -56,7 +56,7 @@ test.describe("important 切換（R3.5）", () => {
   })
 
   test("更新失敗時還原並顯示錯誤", async ({ page }) => {
-    // 讓 server action 請求失敗
+    // Make the server action request fail
     await page.route("**/words", (route) =>
       route.request().method() === "POST" ? route.abort() : route.continue(),
     )

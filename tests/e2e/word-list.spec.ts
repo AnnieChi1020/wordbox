@@ -33,9 +33,9 @@ test("每列顯示單字、詞性 tag、星數與 important（R3.1）", async ({
   await page.goto("/words")
   const row = rows(page).first()
   await expect(row).toContainText("run")
-  // 詞性去除重複並依義項順序
+  // Parts of speech are deduplicated in sense order
   await expect(row.getByText(/^(v\.|n\.)$/)).toHaveText(["v.", "n."])
-  // AC：box 3 → 3 顆實心、2 顆空心
+  // AC: box 3 → 3 filled, 2 empty
   const stars = row.getByRole("img", { name: "熟悉度 3 / 5" })
   await expect(stars).toBeVisible()
   await expect(stars.locator("[data-filled]")).toHaveCount(3)
@@ -69,7 +69,7 @@ test("單字太長時換行，星數維持在右側同一位置", async ({ page,
   expect(long.x).toBeCloseTo(short.x, 0)
   expect(long.width).toBeCloseTo(short.width, 0)
 
-  // 長片語換行，該列比短單字的列高
+  // A long phrase wraps, so its row is taller than a short word's row
   const shortRow = (await row("run").boundingBox())!
   const longRow = (await row("bring home").boundingBox())!
   expect(longRow.height).toBeGreaterThan(shortRow.height)
@@ -93,7 +93,7 @@ test("新增的單字會出現在列表最上方", async ({ page, signedIn }) =>
 
 test.describe("篩選與排序", () => {
   test.beforeEach(async ({ page, signedIn }) => {
-    // 依新增時間由舊到新
+    // By date added, oldest to newest
     await seedWords(signedIn.id, [
       { text: "banana", box: 0 },
       { text: "Apple", box: 1, important: true },
@@ -116,7 +116,7 @@ test.describe("篩選與排序", () => {
     ["created_asc", ["banana", "Apple", "cherry", "date", "Elder", "fig"]],
     ["alpha_asc", ["Apple", "banana", "cherry", "date", "Elder", "fig"]],
     ["alpha_desc", ["fig", "Elder", "date", "cherry", "banana", "Apple"]],
-    // 同星數依新增日期新→舊
+    // Same star count: by date added, newest first
     ["stars_asc", ["date", "banana", "Elder", "Apple", "cherry", "fig"]],
     ["stars_desc", ["fig", "cherry", "Elder", "Apple", "date", "banana"]],
   ] as const
@@ -157,7 +157,7 @@ test.describe("篩選與排序", () => {
       "true",
     )
 
-    // 重新整理後保留
+    // Kept after a reload
     await page.reload()
     await expect.poll(() => visibleTexts(page)).toEqual(["date", "Apple"])
     await expect(
@@ -171,7 +171,7 @@ test.describe("篩選與排序", () => {
     await expect(page.getByText("沒有符合條件的單字")).toBeVisible()
 
     await page.getByRole("main").getByRole("link", { name: "清除篩選" }).click()
-    // 清除篩選但保留排序
+    // Clear the filters but keep the sort order
     await expect(page).toHaveURL("/words?sort=alpha_asc")
     await expect.poll(() => visibleTexts(page)).toHaveLength(6)
   })
@@ -201,11 +201,11 @@ test("超過 100 個字時捲動或按鈕載入下一頁，並沿用排序（des
   await expect(page.getByText("230 個單字")).toBeVisible()
   await expect(rows(page)).toHaveCount(100)
 
-  // 捲到底自動載入
+  // Scrolling to the bottom loads more automatically
   await page.getByRole("button", { name: /載入更多/ }).scrollIntoViewIfNeeded()
   await expect(rows(page)).toHaveCount(200)
 
-  // 也可以用鍵盤按按鈕
+  // The button also works from the keyboard
   const more = page.getByRole("button", { name: "載入更多（還有 30 個）" })
   await more.focus()
   await page.keyboard.press("Enter")

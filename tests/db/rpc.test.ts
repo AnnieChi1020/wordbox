@@ -157,7 +157,7 @@ describe("update_word_content", () => {
     const before = await getWord(u, id)
     const [noun, , verb] = before.senses
 
-    // 刪除第 2 個、把第 3 個移到最前面並修改、新增一個
+    // Delete the 2nd, move the 3rd to the front and edit it, and add a new one
     const { error } = await u.client.rpc("update_word_content", {
       p_word_id: id,
       p_ipa: "/laɪt/",

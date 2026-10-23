@@ -15,18 +15,18 @@ import {
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  /** 觸發按鈕的內容 */
+  /** Content of the trigger button */
   children: ReactNode
   title: string
   description: string
   confirmLabel: string
   destructive?: boolean
   disabled?: boolean
-  /** 確認後執行；結束後關閉對話框 */
+  /** Runs after confirming; the dialog closes when it finishes */
   onConfirm: () => Promise<void>
 }
 
-/** 需要使用者確認的操作（R4.5、R4.7）。 */
+/** An action that needs the user's confirmation (R4.5, R4.7). */
 export function ConfirmAction({
   children,
   title,

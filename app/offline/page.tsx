@@ -6,8 +6,8 @@ import { ReloadButton } from "@/components/pwa/reload-button"
 export const metadata: Metadata = { title: "需要網路連線 | Wordbox" }
 
 /**
- * R9.2：離線時由 service worker 回傳的頁面。
- * 不需登入、不讀取資料，建置時即產生靜態 HTML，可預先快取。
+ * R9.2: the page the service worker returns while offline.
+ * Needs no sign-in and reads no data, so it is static HTML generated at build time and can be precached.
  */
 export default function OfflinePage() {
   return (

@@ -7,8 +7,8 @@ export type WordActionResult = { ok: true } | { ok: false; message: string }
 export const NOT_FOUND = { ok: false, message: "找不到這個單字" } as const
 
 /**
- * R4.5、R4.6：以 AI 重新生成 IPA 與所有義項並取代舊內容。
- * box、next_due_on、is_important 與單字本身不變；失敗時不寫入任何資料。
+ * R4.5, R4.6: regenerate the IPA and all senses with the AI, replacing the old content.
+ * box, next_due_on, is_important, and the word itself are unchanged; nothing is written on failure.
  */
 export async function regenerateWordWith(
   db: Db,
@@ -38,7 +38,7 @@ export async function regenerateWordWith(
       return { ok: false, message }
     }
 
-    // headword 不採用：重新生成不改變單字本身（R4.3、R4.5）
+    // headword is not used: regeneration does not change the word itself (R4.3, R4.5)
     const replaced = await replaceWordContent(db, wordId, {
       ipa: generated.ipa,
       senses: generated.senses,

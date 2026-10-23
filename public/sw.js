@@ -1,6 +1,6 @@
 // Wordbox service worker（R9.2；design §8.2、D19）
-// 只快取靜態資源與離線頁；頁面、RSC、Server Actions 與 Supabase 一律走網路。
-// 修改快取規則時遞增 VERSION，activate 時會刪除舊快取。
+// Caches only static assets and the offline page; pages, RSC, Server Actions, and Supabase always go to the network.
+// Bump VERSION when changing the caching rules; old caches are deleted on activate.
 
 const VERSION = "v1"
 const CACHE = `wordbox-static-${VERSION}`
@@ -11,7 +11,7 @@ const isStatic = (url) =>
   url.pathname.startsWith("/_next/static/") ||
   url.pathname.startsWith("/icons/")
 
-/** 快取離線頁，以及它引用的 /_next/static 資源，離線時才能完整顯示。 */
+/** Caches the offline page and the /_next/static assets it references, so it displays fully while offline. */
 async function precache() {
   const cache = await caches.open(CACHE)
   const res = await fetch(OFFLINE_URL, { cache: "reload" })
@@ -47,7 +47,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
 
-  // 頁面導覽：一律走網路，失敗時顯示離線頁
+  // Page navigations: always network, showing the offline page on failure
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request).catch(async () => {
@@ -58,7 +58,7 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // 檔名含 hash 的靜態資源：cache-first
+  // Static assets with hashed file names: cache-first
   if (isStatic(url)) {
     event.respondWith(
       caches.match(request).then(
@@ -74,5 +74,5 @@ self.addEventListener("fetch", (event) => {
       ),
     )
   }
-  // 其他請求不攔截
+  // Other requests are not intercepted
 })

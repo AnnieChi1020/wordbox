@@ -15,7 +15,7 @@ describe("isValidTimeZone", () => {
 })
 
 describe("localToday (R8.6)", () => {
-  // 2026-10-21 06:30 UTC = 台北 14:30 (10/21) = Boise 00:30 (10/21, MDT)
+  // 2026-10-21 06:30 UTC = 14:30 in Taipei (10/21) = 00:30 in Boise (10/21, MDT)
   const instant = new Date("2026-10-21T06:30:00Z")
 
   it("uses the user's time zone", () => {
@@ -58,16 +58,16 @@ describe("addDays", () => {
     expect(addDays(date, n)).toBe(expected)
   })
 
-  // 伺服器時區有夏令時間時也只做日曆運算
+  // Only calendar math, even when the server time zone has daylight saving time
   it.each(["America/Boise", "America/Santiago", "Asia/Taipei", "UTC"])(
     "is unaffected by DST when the process runs in %s",
     (tz) => {
       process.env.TZ = tz
-      expect(addDays("2026-03-07", 1)).toBe("2026-03-08") // 美國 DST 開始前
+      expect(addDays("2026-03-07", 1)).toBe("2026-03-08") // just before US DST starts
       expect(addDays("2026-03-08", 1)).toBe("2026-03-09")
-      expect(addDays("2026-10-31", 2)).toBe("2026-11-02") // 美國 DST 結束
+      expect(addDays("2026-10-31", 2)).toBe("2026-11-02") // US DST ends
       expect(addDays("2026-11-01", 16)).toBe("2026-11-17")
-      expect(addDays("2026-09-05", 1)).toBe("2026-09-06") // 智利 DST：當地沒有 00:00
+      expect(addDays("2026-09-05", 1)).toBe("2026-09-06") // Chile DST: there is no local 00:00
       expect(addDays("2026-09-06", 1)).toBe("2026-09-07")
     },
   )

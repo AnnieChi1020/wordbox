@@ -77,7 +77,7 @@ test.describe("首次登入時區", () => {
     await page.goto("/words")
     await expect.poll(() => getProfileTimezone(user.id)).toBe("America/Boise")
 
-    // 換一個時區的瀏覽器再登入，不應改變
+    // Signing in again from a browser in another time zone must not change it
     const taipei = await browser.newContext({ timezoneId: "Asia/Taipei" })
     await signIn(taipei, user, baseURL!)
     const page2 = await taipei.newPage()

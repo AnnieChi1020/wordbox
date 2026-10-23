@@ -24,14 +24,14 @@ type Deps = {
   timeoutMs?: number
 }
 
-/** 題目中的英文單字：zh_to_word 的正確答案，其他題型的題目。 */
+/** The English word in the question: the correct answer for zh_to_word, the prompt for the other types. */
 export function quizWord(request: DistractorRequest): string {
   return request.type === "zh_to_word" ? request.answer : request.prompt
 }
 
 /**
- * R6.5：以 AI 生成 3 個干擾選項（design §5.3）。
- * 逾時、API 失敗、格式不符或選項重複時回傳 error；R6.4 的過濾由呼叫端處理。
+ * R6.5: generate 3 distractors with the AI (design §5.3).
+ * Returns an error on timeout, API failure, invalid format, or duplicate options; the R6.4 filtering is up to the caller.
  */
 export async function generateDistractors(
   request: DistractorRequest,
@@ -46,7 +46,7 @@ export async function generateDistractors(
       success: result.status === "ok",
     })
   } catch (error) {
-    // 紀錄失敗不影響出題
+    // A logging failure does not affect building questions
     console.error("failed to log AI call", error)
   }
   return result
@@ -60,7 +60,7 @@ async function callModel(
 ): Promise<GenerateDistractorsResult> {
   const response = await requestJson(
     {
-      // mock 依題型產生不同語言的選項
+      // The mock produces options in a different language per question type
       name: `distractors_${request.type}`,
       schema: DistractorsSchema,
       system: DISTRACTORS_SYSTEM_PROMPT,

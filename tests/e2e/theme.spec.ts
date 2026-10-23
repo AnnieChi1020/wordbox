@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test"
 
 import { expect, test } from "./fixtures"
 
-/** 記錄 HTML 剛解析完（hydration 前）時 <html> 是否已有 .dark，用來確認不閃爍（R10.3） */
+/** Records whether <html> already has .dark right after the HTML is parsed (before hydration), to confirm there is no flash (R10.3) */
 async function recordInitialTheme(page: Page) {
   await page.addInitScript(() => {
     document.addEventListener("DOMContentLoaded", () => {

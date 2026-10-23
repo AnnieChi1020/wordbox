@@ -6,7 +6,7 @@ const PAGES = [
   { label: "統計", path: "/dashboard" },
 ]
 
-// NFR1：手機以底部分頁列導覽，桌面以頂部導覽
+// NFR1: phones navigate with a bottom tab bar, desktop with a top navigation bar
 test("導覽列依螢幕寬度切換，並可切換頁面", async ({
   page,
   signedIn,
@@ -16,7 +16,7 @@ test("導覽列依螢幕寬度切換，並可切換頁面", async ({
   await page.goto("/words")
 
   const nav = page.getByRole("navigation", { name: "主要導覽" })
-  await expect(nav).toHaveCount(1) // 另一個導覽列被隱藏，不在 accessibility tree
+  await expect(nav).toHaveCount(1) // the other navigation is hidden and not in the accessibility tree
   const box = (await nav.boundingBox())!
   const viewport = page.viewportSize()!
   if (isMobile) {
@@ -49,7 +49,7 @@ test("導覽可以只用鍵盤操作", async ({ page, signedIn }) => {
   await expect(page).toHaveURL("/review")
 })
 
-// NFR1：360px–1440px 都不出現水平捲動
+// NFR1: no horizontal scrolling anywhere from 360px to 1440px
 for (const width of [360, 1440]) {
   test(`${width}px 寬度沒有水平捲動`, async ({ page, signedIn }) => {
     void signedIn

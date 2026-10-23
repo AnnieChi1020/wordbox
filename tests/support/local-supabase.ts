@@ -6,10 +6,10 @@ type LocalEnv = { url: string; anonKey: string; serviceRoleKey: string }
 
 let cached: LocalEnv | undefined
 
-/** 讀取 `supabase status` 的本地連線資訊；需要先執行 `npm run db:start`。 */
+/** Reads the local connection info from `supabase status`; run `npm run db:start` first. */
 export function localEnv(): LocalEnv {
   if (cached) return cached
-  // Playwright globalSetup 會先讀好放在環境變數，避免每個 worker 各自呼叫 CLI
+  // Playwright globalSetup reads it once into environment variables so each worker does not call the CLI
   if (process.env.E2E_SUPABASE_ENV) {
     cached = JSON.parse(process.env.E2E_SUPABASE_ENV) as LocalEnv
     return cached

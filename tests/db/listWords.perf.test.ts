@@ -13,7 +13,7 @@ import {
 const WORD_COUNT = 2000
 const BUDGET_MS = 300 // NFR4
 
-/** 建立 2,000 個字（每字 1–3 個義項）。 */
+/** Creates 2,000 words (1–3 senses each). */
 async function seed2000(userId: string) {
   const admin = adminClient()
   const words = Array.from({ length: WORD_COUNT }, (_, i) => ({
@@ -51,7 +51,7 @@ describe(`listWords with ${WORD_COUNT} words (NFR4)`, () => {
   beforeAll(async () => {
     u = await createTestUser()
     await seed2000(u.id)
-    // 暖機：剛大量寫入後的前幾次查詢會比較慢，不代表實際使用的效能
+    // Warm-up: the first few queries right after a bulk write are slower and do not reflect real-world performance
     for (const [, params] of cases) await listWords(u.client as Db, params)
   }, 60_000)
   afterAll(() => deleteTestUser(u))
@@ -102,7 +102,7 @@ describe(`listWords with ${WORD_COUNT} words (NFR4)`, () => {
 
   it.each(cases)(`%s completes within ${BUDGET_MS}ms`, async (_, params) => {
     const db = u.client as Db
-    // 暖機：剛大量寫入後的第一次查詢可能較慢
+    // Warm-up: the first query right after a bulk write may be slower
     await listWords(db, params)
     await listWords(db, params)
     const timings: number[] = []

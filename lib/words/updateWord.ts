@@ -7,7 +7,7 @@ export type UpdateWordResult =
   | { ok: true }
   | { ok: false; message: string; fieldErrors?: Record<string, string> }
 
-/** R4.3、R4.4：驗證後以 update_word_content 原地更新（design D9）。 */
+/** R4.3, R4.4: validate, then update in place with update_word_content (design D9). */
 export async function updateWordWith(
   db: Db,
   wordId: string,
@@ -15,7 +15,7 @@ export async function updateWordWith(
 ): Promise<UpdateWordResult> {
   if (!isUuid(wordId)) return { ok: false, message: "找不到這個單字" }
 
-  // 伺服器端再驗證一次，不信任 client
+  // Validate again on the server; do not trust the client
   const parsed = EditWordSchema.safeParse(input)
   if (!parsed.success) {
     return {

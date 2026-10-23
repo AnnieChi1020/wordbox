@@ -1,11 +1,11 @@
--- Phase 1 triggers 與交易性 RPC（design §4.3、§4.4）
+-- Phase 1 triggers and transactional RPCs (design §4.3, §4.4)
 
--- 輔助函式放在 private schema，不經由 API 公開 ------------------------------
+-- Helper functions live in the private schema and are not exposed through the API ------------------------------
 
 create schema if not exists private;
 grant usage on schema private to authenticated;
 
--- jsonb 字串陣列 → text[]，保留順序；null 視為空陣列
+-- jsonb string array → text[], keeping the order; null is treated as an empty array
 create function private.jsonb_text_array(j jsonb)
 returns text[]
 language sql immutable
@@ -18,7 +18,7 @@ as $$
   )
 $$;
 
--- 義項數量必須為 1–3（R2.7、R4.4）
+-- The number of senses must be 1–3 (R2.7, R4.4)
 create function private.assert_sense_count(p_senses jsonb)
 returns void
 language plpgsql immutable
@@ -33,7 +33,7 @@ begin
 end;
 $$;
 
--- 依陣列順序新增義項（position 1..n）
+-- Insert senses in array order (position 1..n)
 create function private.insert_senses(p_word_id uuid, p_senses jsonb)
 returns void
 language sql
@@ -47,7 +47,7 @@ as $$
   from jsonb_array_elements(p_senses) with ordinality as t(s, ord)
 $$;
 
--- 鎖定使用者自己的 word；RLS 下別人的 word 視為不存在
+-- Lock the user's own word; under RLS, other users' words do not exist
 create function private.lock_own_word(p_word_id uuid)
 returns void
 language plpgsql
@@ -63,7 +63,7 @@ $$;
 
 grant execute on all functions in schema private to authenticated;
 
--- profiles：auth.users 新增時建立（design §4.4） ----------------------------
+-- profiles: created when a row is added to auth.users (design §4.4) ----------------------------
 
 create function private.handle_new_user()
 returns trigger
@@ -100,7 +100,7 @@ create trigger words_touch_updated_at
   for each row execute function private.touch_updated_at();
 
 -- create_word（R2.7、R2.8） ----------------------------------------------------
--- 回傳 {"id": uuid, "existed": boolean}；唯一索引衝突時回傳既有的 word（R2.4）
+-- Returns {"id": uuid, "existed": boolean}; returns the existing word on a unique index conflict (R2.4)
 
 create function public.create_word(p_text text, p_ipa text, p_senses jsonb, p_today date)
 returns jsonb
@@ -133,7 +133,7 @@ end;
 $$;
 
 -- update_word_content（R4.3；design §4.3、D9） --------------------------------
--- 編輯用。p_senses 依顯示順序排列：帶 id 者原地更新，沒有 id 者新增，不在清單中的刪除。
+-- For editing. p_senses is in display order: entries with an id are updated in place, entries without one are inserted, and senses not in the list are deleted.
 
 create function public.update_word_content(p_word_id uuid, p_ipa text, p_senses jsonb)
 returns void
@@ -192,7 +192,7 @@ end;
 $$;
 
 -- replace_word_content（R4.5） ----------------------------------------------------
--- 重新生成用：整批取代義項；box、next_due_on、is_important 不變。
+-- For regeneration: replaces all senses; box, next_due_on, and is_important are unchanged.
 
 create function public.replace_word_content(p_word_id uuid, p_ipa text, p_senses jsonb)
 returns void

@@ -3,8 +3,8 @@ import type { Page } from "@playwright/test"
 import { adminClient } from "../support/local-supabase"
 
 /**
- * seedWords 的中文解釋為「<word> 的解釋」且沒有同義詞，
- * 因此只會出 word_to_zh 或 zh_to_word，可由題目推得正確答案。
+ * seedWords gives each word the Chinese definition 「<word> 的解釋」 and no synonyms,
+ * so only word_to_zh or zh_to_word questions appear, and the correct answer can be derived from the prompt.
  */
 export async function correctAnswer(page: Page): Promise<string> {
   const heading = page.getByRole("heading", { level: 2 })

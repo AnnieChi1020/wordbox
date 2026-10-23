@@ -1,5 +1,5 @@
--- Dashboard 統計（R8.1、R8.2、R8.6；design §4.3、D17）
--- security invoker：受 RLS 約束，另外明確以 auth.uid() 篩選以使用索引。
+-- Dashboard stats (R8.1, R8.2, R8.6; design §4.3, D17)
+-- security invoker: subject to RLS, and also filters by auth.uid() explicitly so the index is used.
 
 create function public.get_dashboard_stats(p_since date)
 returns jsonb

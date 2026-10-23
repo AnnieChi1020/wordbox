@@ -10,7 +10,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
-  // dev server 首次編譯路由可能超過預設的 5 秒
+  // The dev server's first compile of a route can exceed the default 5 seconds
   expect: { timeout: 10_000 },
   use: {
     baseURL,

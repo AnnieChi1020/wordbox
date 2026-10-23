@@ -39,8 +39,8 @@ export const SUBMIT_ANSWER_MESSAGES = {
 const MAX_OPTION_LENGTH = 200
 
 /**
- * R7.3、R7.4：伺服器端判定對錯並更新熟悉度（design §6）。
- * 同一個 questionId 重送時回傳第一次的結果。
+ * R7.3, R7.4: check the answer on the server and update familiarity (design §6).
+ * Resending the same questionId returns the first result.
  */
 export async function submitAnswerWith(
   { db, now = new Date() }: { db: Db; now?: Date },
@@ -56,7 +56,7 @@ export async function submitAnswerWith(
     }
     const today = localToday(profile.timezone, now)
 
-    // D13：作答狀態在讀取後被其他分頁改變時，重新讀取再試一次
+    // D13: if another tab changed the review state after it was read, read again and retry once
     for (let attempt = 0; ; attempt++) {
       const result = await tryApply(db, input, today)
       if (result !== "conflict") return result
@@ -129,7 +129,7 @@ async function tryApply(
   }
   if (rpcError) throw rpcError
 
-  // 重送時為第一次的結果
+  // On resubmission, this is the first result
   const applied = data as {
     is_correct: boolean
     box_before: number

@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test"
 const PORT = 3200
 const baseURL = `http://localhost:${PORT}`
 
-/** NFR4 效能測試：以 production build 量測，結果受機器影響，不納入一般 E2E。 */
+/** NFR4 performance tests: measured on a production build; results depend on the machine, so they are not part of the regular E2E run. */
 export default defineConfig({
   testDir: "tests/perf",
   globalSetup: "./tests/e2e/global-setup.ts",

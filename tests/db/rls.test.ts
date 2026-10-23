@@ -9,7 +9,7 @@ import {
   type TestUser,
 } from "./helpers"
 
-// R1.4：A 使用者無法以任何 Supabase client 查詢或修改 B 使用者的資料
+// R1.4: user A cannot query or modify user B's data through any Supabase client
 describe("row level security", () => {
   let a: TestUser
   let b: TestUser

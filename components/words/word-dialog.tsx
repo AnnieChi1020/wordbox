@@ -27,18 +27,18 @@ import { Stars } from "./stars"
 import { WordEditForm } from "./word-edit-form"
 import { useDeletedWords, useImportant } from "./word-state"
 
-/** R4：單字 popup（檢視）。開關完全由 URL 的 ?word=<id> 決定（R4.9）。 */
+/** R4: the word popup (view). Whether it is open is decided entirely by ?word=<id> in the URL (R4.9). */
 export function WordDialog({ word }: { word: WordDetail }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  // 以 URL 為準：上一頁、重新開啟同一個字都不會與本地狀態不一致
+  // The URL is the source of truth: going back or reopening the same word never disagrees with local state
   const open = searchParams.get("word") === word.id
   const [editing, setEditing] = useState(false)
   const [important, setImportant] = useImportant(word.id, word.is_important)
   const { markDeleted } = useDeletedWords()
   const [regenerating, setRegenerating] = useState(false)
 
-  /** R4.5、R4.6：失敗時保留原內容並顯示錯誤 */
+  /** R4.5, R4.6: on failure, keep the original content and show an error */
   async function regenerate() {
     setRegenerating(true)
     const result = await regenerateWord(word.id).catch(() => ({
@@ -54,7 +54,7 @@ export function WordDialog({ word }: { word: WordDetail }) {
     setRegenerating(false)
   }
 
-  /** R4.7：刪除後關閉 popup 並從列表移除 */
+  /** R4.7: after deleting, close the popup and remove the word from the list */
   async function remove() {
     const result = await deleteWord(word.id).catch(() => ({
       ok: false as const,
@@ -67,11 +67,11 @@ export function WordDialog({ word }: { word: WordDetail }) {
     toast.success(`已刪除「${word.text}」`)
     markDeleted(word.id)
     close()
-    // 更新總數與空狀態
+    // Update the total and the empty state
     router.refresh()
   }
 
-  /** R4.8：關閉按鈕、Esc、點擊背景；只改 URL，不需等待伺服器 */
+  /** R4.8: close button, Esc, backdrop click; only changes the URL, without waiting for the server */
   function close() {
     setEditing(false)
     const params = new URLSearchParams(window.location.search)
@@ -84,12 +84,12 @@ export function WordDialog({ word }: { word: WordDetail }) {
     <Dialog open={open} onOpenChange={(next) => !next && close()}>
       <DialogContent
         className={
-          // 手機寬度全螢幕（R4.8）；較寬時置中，內容超出時捲動
+          // Full screen at phone widths (R4.8); centered on wider screens, scrolling when the content overflows
           "flex flex-col gap-0 overflow-hidden p-0 max-sm:inset-0 max-sm:h-dvh max-sm:max-w-none max-sm:translate-0 max-sm:rounded-none sm:max-h-[85dvh] sm:max-w-lg"
         }
       >
         <DialogHeader className="gap-3 border-b p-4">
-          {/* 右側留給關閉按鈕 */}
+          {/* Leave room on the right for the close button */}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pr-8">
             <DialogTitle className="text-2xl font-semibold">
               {word.text}
@@ -108,7 +108,7 @@ export function WordDialog({ word }: { word: WordDetail }) {
               wordId={word.id}
               important={important}
               onChange={setImportant}
-              // 與上方的關閉按鈕靠右對齊
+              // Right-aligned with the close button above
               className="-mr-2 ml-auto"
             />
           </div>
@@ -123,7 +123,7 @@ export function WordDialog({ word }: { word: WordDetail }) {
             onCancel={() => setEditing(false)}
             onSaved={() => {
               setEditing(false)
-              // 重新載入 popup 與列表（詞性 tag 可能改變）
+              // Reload the popup and the list (part-of-speech tags may have changed)
               router.refresh()
             }}
           />
@@ -165,7 +165,7 @@ export function WordDialog({ word }: { word: WordDetail }) {
         )}
 
         {!editing && (
-          // 手機全螢幕時與頁面同為 16px 側邊距，底部避開 home 指示條（safe area）
+          // Full screen on phones: same 16px side gutter as the page, and the bottom clears the home indicator (safe area)
           <div className="flex items-center gap-2 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-3">
             {/* R4.7 */}
             <ConfirmAction
@@ -224,7 +224,7 @@ function WordGroup({ label, words }: { label: string; words: string[] }) {
   )
 }
 
-/** 例句中標示單字本身（不分大小寫）。 */
+/** Highlights the word itself in an example sentence (case-insensitive). */
 function Highlight({ text, term }: { text: string; term: string }) {
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   const parts = text.split(new RegExp(`(${escaped})`, "gi"))

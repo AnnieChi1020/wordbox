@@ -26,8 +26,8 @@ type Deps = {
 }
 
 /**
- * R2.5–R2.7、R2.10、R4.5：以 AI 驗證並生成單字內容。
- * 逾時、API 失敗或格式不符時回傳 error，不自動重試（design §5.4）。
+ * R2.5–R2.7, R2.10, R4.5: validate a word and generate its content with the AI.
+ * Returns an error on timeout, API failure, or invalid format, without retrying automatically (design §5.4).
  */
 export async function generateWord(
   input: string,
@@ -42,7 +42,7 @@ export async function generateWord(
   try {
     await log({ kind, input, success: result.status !== "error" })
   } catch (error) {
-    // 紀錄失敗不影響使用者操作
+    // A logging failure does not affect the user's action
     console.error("failed to log AI call", error)
   }
   return result
@@ -58,7 +58,7 @@ async function callModel(
       name: "word_entry",
       schema: GenerateWordSchema,
       system: GENERATE_WORD_SYSTEM_PROMPT,
-      // 一律以小寫詢問：結果不受使用者輸入的大小寫影響（例如 Apple 被當成專有名詞）
+      // Always ask in lowercase so the result does not depend on the user's casing (e.g. Apple being treated as a proper noun)
       user: generateWordUserMessage(input.toLowerCase()),
       input,
     },
@@ -86,7 +86,7 @@ async function callModel(
   }
 }
 
-/** 建議必須是可直接重新送出的有效輸入（R2.6），去除重複與原輸入本身。 */
+/** Suggestions must be valid inputs that can be resubmitted directly (R2.6), with duplicates and the original input removed. */
 function cleanSuggestions(suggestions: string[], input: string): string[] {
   const seen = new Set([dedupeKey(input)])
   const result: string[] = []
@@ -99,7 +99,7 @@ function cleanSuggestions(suggestions: string[], input: string): string[] {
   return result.slice(0, 3)
 }
 
-/** 同義詞與反義詞不分大小寫去除重複，並排除單字本身。 */
+/** Deduplicate synonyms and antonyms case-insensitively and drop the word itself. */
 function cleanSense(sense: Sense, input: string): Sense {
   const self = dedupeKey(input)
   const uniqueWords = (words: string[]) => {

@@ -21,7 +21,7 @@ import {
   type TestUser,
 } from "./helpers"
 
-// profile.timezone 為 null → UTC 的 2026-10-20
+// profile.timezone is null → 2026-10-20 in UTC
 const NOW = new Date("2026-10-20T12:00:00Z")
 
 describe("startReviewSession (R5, R6)", () => {
@@ -34,7 +34,7 @@ describe("startReviewSession (R5, R6)", () => {
   })
   afterEach(() => deleteTestUser(u))
 
-  /** 以 mock AI 生成干擾選項，並以測試使用者身分寫入 log */
+  /** Generates distractors with the mock AI and writes logs as the test user */
   const mockGenerate: GenerateDistractors = (draft) =>
     generateDistractors(draft, {
       client: mockClient,
@@ -100,10 +100,10 @@ describe("startReviewSession (R5, R6)", () => {
       const text = `word${"abcdefghij"[i]}`
       ids.push((await createWord(u, text, [sense({ def_zh: `解釋${i}` })])).id)
     }
-    // 前 2 個未到期且 box 較高，應被排除
+    // The first 2 are not due and have a higher box, so they should be left out
     await setDue(ids[0], "2026-10-25", 4)
     await setDue(ids[1], "2026-10-30", 5)
-    await setDue(ids[2], "2026-10-01") // 最舊，應排第一
+    await setDue(ids[2], "2026-10-01") // oldest, should come first
 
     const qs = await questions()
     expect(qs).toHaveLength(8)
@@ -112,7 +112,7 @@ describe("startReviewSession (R5, R6)", () => {
   })
 
   it("skips a word whose distractors fail and fills from the next candidate (R6.6)", async () => {
-    // 所有字的中文解釋相同 → 字庫沒有可用的候選，每一題都需要 AI
+    // Every word has the same Chinese definition → no usable candidates in the user's words, so every question needs the AI
     const ids: Record<string, string> = {}
     for (const text of [
       "doomed",
@@ -130,7 +130,7 @@ describe("startReviewSession (R5, R6)", () => {
     const qs = await questions(generate)
     expect(qs).toHaveLength(8)
     expect(qs.map((q) => q.wordId)).not.toContain(ids.doomed)
-    // doomed 的兩種題型都試過
+    // Both question types were tried for doomed
     const doomedCalls = generate.mock.calls.filter(
       ([d]) => d.prompt === "doomed" || d.answer === "doomed",
     )

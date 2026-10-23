@@ -17,14 +17,14 @@ import {
   type TestUser,
 } from "./helpers"
 
-// 2026-10-20 12:00 UTC = Kiritimati (UTC+14) 的 2026-10-21
+// 2026-10-20 12:00 UTC = 2026-10-21 in Kiritimati (UTC+14)
 const NOW = new Date("2026-10-20T12:00:00Z")
 
 describe("addWord", () => {
   let u: TestUser
   let db: Db
 
-  /** 以 fixtures 生成，並以測試使用者的身分寫入 ai_generation_logs */
+  /** Generates from fixtures and writes ai_generation_logs as the test user */
   const generate = vi.fn((input: string) =>
     generateWord(input, {
       client: mockClient,
@@ -75,10 +75,10 @@ describe("addWord", () => {
       .eq("id", result.wordId)
       .single()
     expect(word).toMatchObject({
-      text: "give up", // R2.7：字典標準寫法
+      text: "give up", // R2.7: dictionary headword spelling
       box: 0,
       is_important: false,
-      next_due_on: "2026-10-21", // 使用者時區的今天，不是 UTC 的 10/20
+      next_due_on: "2026-10-21", // today in the user's time zone, not 10/20 in UTC
     })
     expect(word!.senses.length).toBeGreaterThanOrEqual(1)
     expect(word!.senses.every((s) => s.pos === "phrase")).toBe(true)
@@ -89,7 +89,7 @@ describe("addWord", () => {
 
   it.each([
     ["Conventional", "conventional"],
-    ["GIVE UP", null], // 已存在（上一個測試新增的 give up）
+    ["GIVE UP", null], // already exists (give up added by the previous test)
     ["monday", "Monday"],
   ])(
     "AC: stores %j with the dictionary headword (R2.7)",
@@ -176,7 +176,7 @@ describe("addWord", () => {
       input: string,
     ): Promise<GenerateWordResult> => {
       const result = await generate(input)
-      // AI 生成期間，另一個分頁先新增了同一個字
+      // While the AI is generating, another tab adds the same word first
       concurrentId = (await createWord(u, "Banana")).id
       return result
     }
@@ -190,7 +190,7 @@ describe("addWord", () => {
 
   it("error: a valid session whose user was deleted fails before calling AI", async () => {
     const ghost = await createTestUser()
-    await deleteTestUser(ghost) // 例如本地 db reset 或帳號被刪除，但瀏覽器的 JWT 尚未過期
+    await deleteTestUser(ghost) // e.g. a local db reset or a deleted account while the browser's JWT has not expired
     generate.mockClear()
     const result = await addWordWith(
       { db: ghost.client as Db, generate, now: NOW },

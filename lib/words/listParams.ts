@@ -1,4 +1,4 @@
-/** R3.2–R3.4：單字列表的篩選與排序，以 URL search params 表示。 */
+/** R3.2–R3.4: word list filters and sort order, represented as URL search params. */
 
 export const SORT_OPTIONS = [
   { value: "created_desc", label: "新增日期（新→舊）" },
@@ -14,7 +14,7 @@ export type SortKey = (typeof SORT_OPTIONS)[number]["value"]
 export const DEFAULT_SORT: SortKey = "created_desc"
 
 export type ListParams = {
-  /** 已排序、不重複的 0–5；空陣列 = 不篩選 */
+  /** Sorted, distinct values 0–5; an empty array = no filter */
   stars: number[]
   importantOnly: boolean
   sort: SortKey
@@ -32,7 +32,7 @@ function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
-/** 解析 URL；不合法的值一律忽略，不報錯。 */
+/** Parses the URL; invalid values are ignored without raising errors. */
 export function parseListParams(raw: RawParams): ListParams {
   const stars = (first(raw.stars) ?? "")
     .split(",")
@@ -48,7 +48,7 @@ export function parseListParams(raw: RawParams): ListParams {
   }
 }
 
-/** 轉成 query string；預設值省略，讓網址保持簡潔。 */
+/** Converts to a query string; defaults are omitted to keep the URL short. */
 export function serializeListParams(params: ListParams): string {
   const search = new URLSearchParams()
   if (params.stars.length > 0) search.set("stars", params.stars.join(","))

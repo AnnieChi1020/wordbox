@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 const CELL = 12
 const GAP = 3
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"]
-/** 左側只標示週日、二、四、六（design §8.1） */
+/** The left side labels only Sunday, Tuesday, Thursday, and Saturday (design §8.1) */
 const DAY_LABEL_ROWS = new Set([0, 2, 4, 6])
 const LEVEL_BG = [
   "bg-heat-0",
@@ -24,7 +24,7 @@ const LEVEL_BG = [
 const LEVEL_RANGES = ["0 題", "1–8 題", "9–16 題", "17–32 題", "33 題以上"]
 
 type Pos = { week: number; day: number }
-/** tooltip 的位置（可捲動內容中的座標）與對齊方式 */
+/** Tooltip position (coordinates within the scrollable content) and alignment */
 type Active = Pos & { x: number; y: number; transform: string }
 
 function formatDate(date: string): string {
@@ -36,13 +36,13 @@ function cellLabel(cell: HeatmapCell): string {
   return `${formatDate(cell.date)}：${cell.count} 題`
 }
 
-/** 每週有某月 1 日時，在該欄上方標示月份。 */
+/** Label the month above a week's column when that week contains the 1st of the month. */
 function monthLabels(grid: (HeatmapCell | null)[][]) {
   const labels: { week: number; text: string }[] = []
   grid.forEach((week, i) => {
     const first = week.find((c) => c?.date.endsWith("-01"))
     if (!first) return
-    // 與前一個標籤太近時略過，避免文字重疊
+    // Skip a label that is too close to the previous one so the text does not overlap
     if (labels.length && i - labels.at(-1)!.week < 3) return
     labels.push({ week: i, text: `${Number(first.date.slice(5, 7))}月` })
   })
@@ -50,8 +50,8 @@ function monthLabels(grid: (HeatmapCell | null)[][]) {
 }
 
 /**
- * R8.3–R8.5：最近 53 週的每日答題數。
- * hover、點擊或鍵盤焦點時顯示 tooltip；整張圖只有一個 Tab 停點，以方向鍵移動（NFR5）。
+ * R8.3–R8.5: daily answer counts for the last 53 weeks.
+ * Shows a tooltip on hover, tap, or keyboard focus; the whole chart is a single Tab stop navigated with arrow keys (NFR5).
  */
 export function Heatmap({
   daily,
@@ -71,7 +71,7 @@ export function Heatmap({
   const gridRef = useRef<HTMLDivElement>(null)
   const cellRefs = useRef(new Map<string, HTMLDivElement>())
 
-  // 手機寬度預設顯示最近幾週
+  // At phone widths, show the most recent weeks by default
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollLeft = el.scrollWidth
@@ -84,9 +84,9 @@ export function Heatmap({
   function activate(pos: Pos | null) {
     const el = pos && cellRefs.current.get(`${pos.week}-${pos.day}`)
     if (!pos || !el) return setActive(null)
-    // offsetParent 為 relative 的熱力圖容器（中間的 row、grid 是 display: contents）
+    // offsetParent is the relative heatmap container (the rows and grid in between are display: contents)
     const width = (el.offsetParent as HTMLElement | null)?.offsetWidth ?? 0
-    // 捲動容器會裁切超出的部分：靠近左右邊緣時改為靠邊對齊，前兩列顯示在格子下方
+    // The scroll container clips overflow: near the left or right edge, align to that edge; for the first two rows, show below the cell
     const edge = 120
     const [x, tx] =
       el.offsetLeft < edge
@@ -131,7 +131,7 @@ export function Heatmap({
     }
     if (!next) return
     e.preventDefault()
-    // 超出範圍或今天之後的格子不移動
+    // Do not move to cells out of range or after today
     if (grid[next.week]?.[next.day]) focusCell(next)
   }
 
@@ -167,7 +167,7 @@ export function Heatmap({
               {text}
             </span>
           ))}
-          {/* 左側標籤欄：一整條固定不捲動的底色，捲動時格子不會從縫隙露出 */}
+          {/* Left label column: a solid background that stays fixed while scrolling, so cells never show through the gap */}
           <div
             aria-hidden
             className="bg-background sticky left-0 z-[1] grid pr-1"

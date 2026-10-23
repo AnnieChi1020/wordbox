@@ -14,7 +14,7 @@ import {
 } from "@/lib/words/regenerateWord"
 import { updateWordWith, type UpdateWordResult } from "@/lib/words/updateWord"
 
-/** R2：新增單字。 */
+/** R2: add a word. */
 export async function addWord(input: string): Promise<AddWordResult> {
   if (typeof input !== "string") {
     return { status: "error", message: "輸入格式錯誤" }
@@ -25,7 +25,7 @@ export async function addWord(input: string): Promise<AddWordResult> {
   )
 }
 
-/** R3：列表捲動時載入下一頁。listQuery 為目前的篩選與排序（URL query string）。 */
+/** R3: load the next page while the list scrolls. listQuery is the current filters and sort order (URL query string). */
 export async function loadMoreWords(listQuery: string, offset: number) {
   if (
     typeof listQuery !== "string" ||
@@ -44,7 +44,7 @@ export async function loadMoreWords(listQuery: string, offset: number) {
 
 export type ActionResult = { ok: true } | { ok: false; message: string }
 
-/** R3.5：切換 important（前端 optimistic update）。傳入目標值，重複送出結果相同。 */
+/** R3.5: toggle important (optimistic update in the UI). Takes the target value, so a repeated submission gives the same result. */
 export async function setImportant(
   wordId: string,
   value: boolean,
@@ -61,7 +61,7 @@ export async function setImportant(
   }
 }
 
-/** R4.3：儲存編輯內容。 */
+/** R4.3: save edited content. */
 export async function updateWord(
   wordId: string,
   input: EditWordInput,
@@ -69,7 +69,7 @@ export async function updateWord(
   return updateWordWith(await createClient(), wordId, input)
 }
 
-/** R4.5：重新生成（AI 呼叫記錄為 regenerate）。 */
+/** R4.5: regenerate (the AI call is logged as regenerate). */
 export async function regenerateWord(
   wordId: string,
 ): Promise<WordActionResult> {
@@ -80,7 +80,7 @@ export async function regenerateWord(
   )
 }
 
-/** R4.7：刪除單字。 */
+/** R4.7: delete a word. */
 export async function deleteWord(wordId: string): Promise<WordActionResult> {
   return deleteWordWith(await createClient(), wordId)
 }

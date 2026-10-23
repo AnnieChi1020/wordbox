@@ -17,7 +17,7 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
     await expect(page.getByText("今天有 2 個字到期")).toBeVisible()
     await page.getByRole("button", { name: "開始複習" }).click()
 
-    // 第 1 題：答對
+    // Question 1: correct
     await expect(page.getByText("1 / 2")).toBeVisible()
     const answer1 = await correctAnswer(page)
     await option(page, answer1).click()
@@ -29,11 +29,11 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
       .all()) {
       await expect(button).toBeDisabled()
     }
-    // 焦點在「下一題」，Enter 繼續（NFR5）
+    // Focus is on 「下一題」 (Next question); Enter continues (NFR5)
     await expect(page.getByRole("button", { name: "下一題" })).toBeFocused()
     await page.keyboard.press("Enter")
 
-    // 第 2 題：答錯
+    // Question 2: wrong
     await expect(page.getByText("2 / 2")).toBeVisible()
     const answer2 = await correctAnswer(page)
     const wrong = await wrongOption(page, answer2)
@@ -50,7 +50,7 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
       )
       .toEqual([false, true])
 
-    // R7.5 結算
+    // R7.5 summary
     await page.getByRole("button", { name: "看結果" }).click()
     await expect(
       page.getByRole("heading", { name: "答對 1 / 2 題" }),
@@ -59,7 +59,7 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
     await expect(results.getByRole("listitem")).toHaveCount(2)
     await expect(results.getByText("答對")).toHaveCount(1)
     await expect(results.getByText("答錯")).toHaveCount(1)
-    // 新字 box 0：答對 → 1 顆星，答錯 → 維持 0 顆星（D16）
+    // New word in box 0: correct → 1 star, wrong → stays at 0 stars (D16)
     await expect(
       results.getByRole("img", { name: "熟悉度 0 / 5" }),
     ).toHaveCount(3)
@@ -68,7 +68,7 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
     ).toHaveCount(1)
     await expect(page.getByText("今天到期的字都複習完了")).toBeVisible()
 
-    // 再來一輪：沒有到期的字時以未到期的字補足
+    // Another round: with no due words, words that are not due fill the session
     await page.getByRole("button", { name: "再來一輪" }).click()
     await expect(page.getByText("1 / 2")).toBeVisible()
   })
@@ -111,7 +111,7 @@ test.describe("複習 UI（R7.1、R7.2）", () => {
     await page.getByRole("button", { name: "開始複習" }).click()
     await expect(page.getByText("1 / 2")).toBeVisible()
 
-    // 讓下一個 server action 請求失敗
+    // Make the next server action request fail
     let failed = false
     await page.route("**/review", async (route) => {
       if (!failed && route.request().method() === "POST") {
@@ -147,7 +147,7 @@ test.describe("反義詞題（R6.1、Phase 5）", () => {
     await page.goto("/review")
     await page.getByRole("button", { name: "開始複習" }).click()
 
-    // 題型隨機（每題 1/3），反覆作答直到出現反義詞題
+    // Question types are random (1/3 per question), so keep answering until an antonym question appears
     const heading = page.getByRole("heading", { level: 2 })
     for (let round = 0; round < 20; round++) {
       for (const n of [1, 2]) {

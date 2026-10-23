@@ -25,7 +25,7 @@ export default function ReviewPage() {
 
 async function ReviewSection() {
   const db = await createClient()
-  // R5.2：沒有任何單字時引導去新增
+  // R5.2: with no words at all, guide the user to add some
   if (!(await hasAnyWord(db))) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed px-4 py-12 text-center">

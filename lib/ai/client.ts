@@ -3,22 +3,22 @@ import "server-only"
 import type { z } from "zod"
 
 export type JsonRequest = {
-  /** structured output 的 schema 名稱，也用來挑選 mock fixture */
+  /** Schema name for structured output, also used to pick the mock fixture */
   name: string
   schema: z.ZodType
   system: string
   user: string
-  /** 使用者原始輸入；mock 依此挑選 fixture */
+  /** The user's original input; the mock picks a fixture by it */
   input: string
   signal: AbortSignal
 }
 
-/** 回傳模型產生的原始 JSON；驗證由呼叫端以 Zod 處理。 */
+/** Returns the raw JSON produced by the model; the caller validates it with Zod. */
 export interface AiClient {
   completeJson(request: JsonRequest): Promise<unknown>
 }
 
-/** NFR6：AI_MOCK=1 時使用 fixtures，不呼叫 OpenAI。 */
+/** NFR6: with AI_MOCK=1, use fixtures instead of calling OpenAI. */
 export async function getAiClient(): Promise<AiClient> {
   if (process.env.AI_MOCK === "1") {
     const { mockClient } = await import("./mock")

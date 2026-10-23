@@ -19,20 +19,20 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover", // 讓底部分頁列可以使用 safe-area-inset
-  themeColor: "#086288", // 品牌色（design §8.3）
+  viewportFit: "cover", // lets the bottom tab bar use safe-area-inset
+  themeColor: "#086288", // brand color (design §8.3)
 }
 
 export const metadata: Metadata = {
   title: "Wordbox",
   description: "用 AI 生成解釋、以 Leitner 盒子複習的英文單字本",
-  // R9.1：iOS 加入主畫面後以獨立視窗開啟
+  // R9.1: open in a standalone window after adding to the iOS home screen
   appleWebApp: { capable: true, title: "Wordbox", statusBarStyle: "default" },
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // .dark 由 head 的 script 在 hydration 前加上（R10.3）
+    // .dark is added by the script in head before hydration (R10.3)
     <html
       lang="zh-Hant"
       suppressHydrationWarning
@@ -43,7 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         {children}
-        {/* 放在上方，避免被手機底部分頁列擋住 */}
+        {/* Placed at the top so the bottom tab bar on phones does not cover it */}
         <Toaster position="top-center" richColors />
         <ServiceWorkerRegister />
       </body>

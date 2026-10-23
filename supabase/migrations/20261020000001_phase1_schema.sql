@@ -4,7 +4,7 @@
 
 create table public.profiles (
   id uuid primary key references auth.users on delete cascade,
-  timezone text,                  -- null = 尚未初始化（design §4.4）；計算日期時視為 'UTC'
+  timezone text,                  -- null = not initialized yet (design §4.4); treated as 'UTC' for date math
   created_at timestamptz not null default now()
 );
 
@@ -28,7 +28,7 @@ create table public.words (
 );
 create unique index words_user_text_uniq on public.words (user_id, lower(text));  -- R2.4
 create index words_user_due_idx on public.words (user_id, next_due_on);
-create index words_user_created_idx on public.words (user_id, created_at desc);     -- 預設排序（R3.3）
+create index words_user_created_idx on public.words (user_id, created_at desc);     -- default sort (R3.3)
 
 create table public.senses (
   id uuid primary key default gen_random_uuid(),
@@ -41,7 +41,7 @@ create table public.senses (
   antonyms text[] not null default '{}' check (cardinality(antonyms) <= 5),
   examples text[] not null default '{}' check (cardinality(examples) <= 2),
   constraint senses_word_position_uniq
-    unique (word_id, position) deferrable initially deferred  -- 編輯時重排 position（design §4.3）
+    unique (word_id, position) deferrable initially deferred  -- positions are reordered while editing (design §4.3)
 );
 
 -- ai_generation_logs（R2.12） ------------------------------------------------
@@ -57,7 +57,7 @@ create table public.ai_generation_logs (
 create index ai_generation_logs_user_created_idx
   on public.ai_generation_logs (user_id, created_at);
 
--- 權限：只開放給已登入使用者，資料範圍由 RLS 限制 --------------------------
+-- Permissions: granted only to signed-in users; RLS limits which rows they see --------------------------
 
 revoke all on public.profiles, public.words, public.senses, public.ai_generation_logs
   from anon, authenticated;

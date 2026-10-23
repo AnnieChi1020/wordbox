@@ -8,7 +8,7 @@ import type { Database } from "./types"
 
 export type Db = SupabaseClient<Database>
 
-/** 使用者自己的單字中，不分大小寫相同的那一個（R2.4）。RLS 限定只查得到自己的字。 */
+/** The user's own word that matches case-insensitively (R2.4). RLS limits the query to the user's own words. */
 export async function findWordIdByText(
   db: Db,
   text: string,
@@ -22,7 +22,7 @@ export async function findWordIdByText(
   return data?.id ?? null
 }
 
-/** 目前使用者的 profile；session 有效但使用者已被刪除時為 null。 */
+/** The current user's profile; null when the session is valid but the user has been deleted. */
 export async function getProfile(
   db: Db,
 ): Promise<{ timezone: string | null } | null> {
@@ -34,14 +34,14 @@ export async function getProfile(
   return data
 }
 
-/** create_word RPC；唯一索引衝突時回傳既有的字（design §4.3）。 */
+/** create_word RPC; returns the existing word on a unique index conflict (design §4.3). */
 export async function createWord(
   db: Db,
   word: { text: string; ipa: string | null; senses: Sense[]; today: string },
 ): Promise<{ id: string; existed: boolean }> {
   const { data, error } = await db.rpc("create_word", {
     p_text: word.text,
-    p_ipa: word.ipa as string, // RPC 參數接受 null；產生的型別未標示
+    p_ipa: word.ipa as string, // the RPC parameter accepts null; the generated type does not say so
     p_senses: word.senses,
     p_today: word.today,
   })
@@ -57,7 +57,7 @@ export type WordListItem = {
   senses: { pos: PartOfSpeech }[]
 }
 
-/** 排序欄位；同值時依新增日期新→舊（R3.3），最後以 id 確保順序穩定。 */
+/** Sort columns; ties are ordered by date added, newest first (R3.3), and finally by id for a stable order. */
 const SORT_COLUMNS: Record<SortKey, [column: string, ascending: boolean][]> = {
   created_desc: [["created_at", false]],
   created_asc: [["created_at", true]],
@@ -73,10 +73,10 @@ const SORT_COLUMNS: Record<SortKey, [column: string, ascending: boolean][]> = {
   ],
 }
 
-/** 列表每次載入的筆數（NFR4：控制傳輸量與渲染量）。 */
+/** Rows per list load (NFR4: limits how much is sent and rendered). */
 export const WORDS_PAGE_SIZE = 100
 
-/** R3.1–R3.3：列表查詢；篩選、排序與分頁在資料庫端完成（design §6、D11）。 */
+/** R3.1–R3.3: the list query; filtering, sorting, and pagination happen in the database (design §6, D11). */
 export async function listWords(
   db: Db,
   params: ListParams,
@@ -96,7 +96,7 @@ export async function listWords(
     query = query.order(column, { ascending })
   }
 
-  // 排序最後以 id 決定，分頁不會重複或遺漏
+  // The sort ends with id, so pages never repeat or skip rows
   const { data, count, error } = await query
     .order("id")
     .range(offset, offset + limit - 1)
@@ -104,7 +104,7 @@ export async function listWords(
   return { words: data, total: count ?? 0 }
 }
 
-/** 使用者是否有任何單字（區分 R3.7 空狀態與 R3.8 篩選無結果）。 */
+/** Whether the user has any words (tells the R3.7 empty state apart from R3.8 no filter results). */
 export async function hasAnyWord(db: Db): Promise<boolean> {
   const { count, error } = await db
     .from("words")
@@ -113,7 +113,7 @@ export async function hasAnyWord(db: Db): Promise<boolean> {
   return (count ?? 0) > 0
 }
 
-/** R3.5：設定 important；回傳是否有更新到（別人的字或不存在時為 false）。 */
+/** R3.5: set important; returns whether a row was updated (false for another user's word or a missing one). */
 export async function setWordImportant(
   db: Db,
   wordId: string,
@@ -146,7 +146,7 @@ export type WordDetail = {
   }[]
 }
 
-/** R4.1：popup 顯示的完整內容；別人的字或不存在時為 null。 */
+/** R4.1: the full content shown in the popup; null for another user's word or a missing one. */
 export async function getWordDetail(
   db: Db,
   wordId: string,
@@ -163,7 +163,7 @@ export async function getWordDetail(
   return data
 }
 
-/** update_word_content RPC（R4.3、design §4.3）；找不到字時回傳 false。 */
+/** update_word_content RPC (R4.3, design §4.3); returns false when the word is not found. */
 export async function updateWordContent(
   db: Db,
   wordId: string,
@@ -171,15 +171,15 @@ export async function updateWordContent(
 ): Promise<boolean> {
   const { error } = await db.rpc("update_word_content", {
     p_word_id: wordId,
-    p_ipa: content.ipa as string, // RPC 參數接受 null；產生的型別未標示
+    p_ipa: content.ipa as string, // the RPC parameter accepts null; the generated type does not say so
     p_senses: content.senses,
   })
-  if (error?.code === "P0002") return false // word not found / sense 不屬於此字
+  if (error?.code === "P0002") return false // word not found / sense does not belong to this word
   if (error) throw error
   return true
 }
 
-/** replace_word_content RPC（R4.5）；找不到字時回傳 false。 */
+/** replace_word_content RPC (R4.5); returns false when the word is not found. */
 export async function replaceWordContent(
   db: Db,
   wordId: string,
@@ -187,7 +187,7 @@ export async function replaceWordContent(
 ): Promise<boolean> {
   const { error } = await db.rpc("replace_word_content", {
     p_word_id: wordId,
-    p_ipa: content.ipa as string, // RPC 參數接受 null；產生的型別未標示
+    p_ipa: content.ipa as string, // the RPC parameter accepts null; the generated type does not say so
     p_senses: content.senses,
   })
   if (error?.code === "P0002") return false
@@ -195,7 +195,7 @@ export async function replaceWordContent(
   return true
 }
 
-/** R4.7：刪除單字（senses 隨之 cascade）；回傳是否有刪到。 */
+/** R4.7: delete a word (its senses cascade); returns whether anything was deleted. */
 export async function deleteWordById(db: Db, wordId: string): Promise<boolean> {
   const { data, error } = await db
     .from("words")

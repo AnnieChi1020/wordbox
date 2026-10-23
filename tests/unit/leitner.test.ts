@@ -70,7 +70,7 @@ describe("applyAnswer (R7.4)", () => {
     })
   })
 
-  // 其他情況
+  // Other cases
   it("new word (box 0) answered correctly → box 1, due tomorrow", () => {
     expect(applyAnswer(due(0), true, TODAY)).toEqual({
       box: 1,

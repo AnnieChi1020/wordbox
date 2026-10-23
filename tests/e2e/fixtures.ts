@@ -20,8 +20,8 @@ export async function createUser(): Promise<E2EUser> {
 }
 
 /**
- * 以測試帳號登入並把 session cookie 注入瀏覽器，不經過 Google（design §10）。
- * 以 @supabase/ssr 產生 cookie，確保格式與 app 相同。
+ * Signs in with a test account and injects the session cookie into the browser, without going through Google (design §10).
+ * The cookie is created with @supabase/ssr so its format matches the app.
  */
 export async function signIn(
   context: BrowserContext,
@@ -62,7 +62,7 @@ export async function getProfileTimezone(userId: string) {
 type Fixtures = { user: E2EUser; signedIn: E2EUser }
 
 export const test = base.extend<Fixtures>({
-  // 每個測試一個新使用者，結束後刪除
+  // A new user per test, deleted afterward
   user: async ({}, use) => {
     const user = await createUser()
     await use(user)
@@ -96,14 +96,14 @@ export type SeedWord = {
   text: string
   box?: number
   important?: boolean
-  /** 新增時間；預設依陣列順序每個字間隔 1 分鐘 */
+  /** Date added; by default one minute apart per word in array order */
   createdAt?: string
   pos?: string[]
-  /** 每個義項的反義詞；預設沒有 */
+  /** Antonyms for each sense; none by default */
   antonyms?: string[]
 }
 
-/** 直接寫入資料庫建立單字（不經過 AI），回傳依輸入順序的 id。 */
+/** Creates words by writing to the database directly (without the AI); returns ids in input order. */
 export async function seedWords(userId: string, words: SeedWord[]) {
   const admin = adminClient()
   const base = Date.parse("2026-10-01T00:00:00Z")

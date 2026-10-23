@@ -59,7 +59,7 @@ test.describe("關閉 popup（R4.8）", () => {
 
   const closed = async (page: Page) => {
     await expect(page.getByRole("dialog")).toHaveCount(0)
-    // 關閉後保留篩選與排序
+    // Filters and sort order are kept after closing
     await expect(page).toHaveURL("/words?sort=alpha_asc")
   }
 
@@ -92,7 +92,7 @@ test("AC：375px 寬度下 popup 全螢幕且可捲動（R4.8）", async ({
   void signedIn
   await page.setViewportSize({ width: 375, height: 500 })
   const dialog = await addRun(page)
-  // 等開啟動畫（zoom-in）結束
+  // Wait for the opening animation (zoom-in) to finish
   await expect
     .poll(async () => {
       const box = (await dialog.boundingBox())!
@@ -113,14 +113,14 @@ test("AC：375px 寬度下 popup 全螢幕且可捲動（R4.8）", async ({
 test("popup 開啟時焦點鎖定在其中（NFR5）", async ({ page, signedIn }) => {
   void signedIn
   const dialog = await addRun(page)
-  // popup 開啟後焦點才會移入（下一個 tick）；之後才開始按 Tab
+  // Focus moves into the popup only after it opens (next tick); start pressing Tab after that
   await expect
     .poll(() => dialog.evaluate((el) => el.contains(document.activeElement)))
     .toBe(true)
   const visited = new Set<string>()
   for (let i = 0; i < 10; i++) {
     await page.keyboard.press("Tab")
-    // Base UI 的焦點守衛在下一個畫面才把焦點拉回 popup；以接近真人的按鍵間隔操作
+    // Base UI's focus guard pulls focus back into the popup on the next frame; press keys at a human-like pace
     await page.waitForTimeout(50)
     const where = await page.evaluate(() => {
       const active = document.activeElement
@@ -131,7 +131,7 @@ test("popup 開啟時焦點鎖定在其中（NFR5）", async ({ page, signedIn }
           active!.textContent?.trim() ??
           ""
         )
-      // 背後頁面的任何元素（輸入框、導覽、列表）都不應取得焦點
+      // No element in the page behind (input, navigation, list) may receive focus
       const page = document.querySelectorAll("header, main, nav")
       return [...page].some((el) => el.contains(active))
         ? `LEAKED ${active!.tagName} ${active!.textContent?.trim().slice(0, 20)}`
@@ -140,7 +140,7 @@ test("popup 開啟時焦點鎖定在其中（NFR5）", async ({ page, signedIn }
     expect(where).not.toMatch(/^LEAKED/)
     visited.add(where)
   }
-  // 焦點在 popup 內的控制項之間循環
+  // Focus cycles through the controls inside the popup
   expect(visited).toContain("關閉")
   expect(visited).toContain("重要")
   await expect(dialog).toBeVisible()
@@ -201,7 +201,7 @@ test.describe("發音（R4.2）", () => {
   test("瀏覽器不支援語音合成時隱藏按鈕", async ({ page, signedIn }) => {
     void signedIn
     await page.addInitScript(() => {
-      // @ts-expect-error 模擬不支援的瀏覽器
+      // @ts-expect-error simulate an unsupported browser
       delete window.speechSynthesis
     })
     const dialog = await addRun(page)

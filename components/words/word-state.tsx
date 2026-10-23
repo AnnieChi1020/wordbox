@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useState } from "react"
 type WordState = {
   important: ReadonlyMap<string, boolean>
   setImportant: (wordId: string, value: boolean) => void
-  /** 已刪除的字；伺服器重新渲染前先從列表隱藏（R4.7） */
+  /** Deleted words, hidden from the list before the server re-renders (R4.7) */
   deleted: ReadonlySet<string>
   markDeleted: (wordId: string) => void
 }
@@ -13,8 +13,8 @@ type WordState = {
 const WordStateContext = createContext<WordState | null>(null)
 
 /**
- * 列表與 popup 共用的 important 狀態：在任一處切換後兩邊同步，
- * 不需要重新載入列表（保留已載入的頁面與捲動位置）。
+ * Important state shared by the list and the popup: toggling it in either place keeps both in sync
+ * without reloading the list (the loaded pages and scroll position are kept).
  */
 export function WordStateProvider({ children }: { children: React.ReactNode }) {
   const [important, setMap] = useState<ReadonlyMap<string, boolean>>(new Map())
@@ -43,7 +43,7 @@ export function useDeletedWords() {
   return { deleted, markDeleted }
 }
 
-/** 回傳目前的 important 值（本地更新優先於伺服器資料）與更新函式。 */
+/** Returns the current important value (local updates take precedence over server data) and an update function. */
 export function useImportant(wordId: string, serverValue: boolean) {
   const ctx = useContext(WordStateContext)
   if (!ctx)

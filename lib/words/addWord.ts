@@ -33,12 +33,12 @@ export type AddWordDeps = {
   now?: Date
 }
 
-/** design §6 addWord：正規化 → 查重 → AI → create_word（R2.2–R2.8）。 */
+/** design §6 addWord: normalize → duplicate check → AI → create_word (R2.2–R2.8). */
 export async function addWordWith(
   { db, generate, now = new Date() }: AddWordDeps,
   rawInput: string,
 ): Promise<AddWordResult> {
-  // 1. R2.2、R2.3（前端已檢查，這裡不信任 client）
+  // 1. R2.2, R2.3 (the UI already checks; the server does not trust the client)
   const text = normalizeInput(rawInput)
   if (!isValidInput(text)) {
     return { status: "error", message: ADD_WORD_MESSAGES.format }
@@ -50,13 +50,13 @@ export async function addWordWith(
   }
 
   try {
-    // JWT 可能仍有效但使用者已不存在（帳號刪除、本地 db reset）；在呼叫 AI 前擋下
+    // The JWT may still be valid after the user is gone (account deleted, local db reset); stop before calling the AI
     const profile = await getProfile(db)
     if (!profile) {
       return { status: "error", message: ADD_WORD_MESSAGES.unauthenticated }
     }
 
-    // 2. R2.4：已有相同的字就不呼叫 AI
+    // 2. R2.4: do not call the AI when the same word already exists
     const existingId = await findWordIdByText(db, text)
     if (existingId) return { status: "exists", wordId: existingId }
 
@@ -74,16 +74,16 @@ export async function addWordWith(
       return { status: "error", message }
     }
 
-    // 4. R2.7、R2.8：box、is_important 由資料庫預設；next_due_on = 當地今天
+    // 4. R2.7, R2.8: box and is_important use database defaults; next_due_on = local today
     const today = localToday(profile.timezone, now)
-    // R2.7：以字典標準寫法儲存
+    // R2.7: store the dictionary headword spelling
     const { id, existed } = await createWord(db, {
       text: generated.text,
       ipa: generated.ipa,
       senses: generated.senses,
       today,
     })
-    // AI 生成期間另一個請求已新增同一個字（唯一索引衝突）
+    // Another request added the same word while the AI was generating (unique index conflict)
     return existed
       ? { status: "exists", wordId: id }
       : { status: "created", wordId: id }

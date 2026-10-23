@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test"
 const PORT = 3300
 const baseURL = `http://localhost:${PORT}`
 
-/** R9 PWA 測試：service worker 只在 production 註冊（D20），因此以 production build 執行。 */
+/** R9 PWA tests: the service worker registers only in production (D20), so these run on a production build. */
 export default defineConfig({
   testDir: "tests/pwa",
   globalSetup: "./tests/e2e/global-setup.ts",

@@ -79,7 +79,7 @@ describe("regenerateWord (R4.5, R4.6)", () => {
 
   it("does not change the stored word even if the AI capitalizes differently", async () => {
     const { id } = await createWord(a, "Monday", [sense()])
-    await db.from("words").update({ text: "monday" }).eq("id", id) // 假設舊資料是小寫
+    await db.from("words").update({ text: "monday" }).eq("id", id) // pretend the old data was lowercase
     expect(await regenerateWordWith(db, regenerate, id)).toEqual({ ok: true })
     expect((await getWordDetail(db, id))!.text).toBe("monday")
   })
@@ -143,7 +143,7 @@ describe("deleteWord (R4.7)", () => {
     expect(
       (await admin.from("senses").select("id").eq("word_id", id)).data,
     ).toEqual([])
-    // 再刪一次 → 找不到
+    // Delete again → not found
     expect(await deleteWordWith(a.client as Db, id)).toEqual({
       ok: false,
       message: "找不到這個單字",

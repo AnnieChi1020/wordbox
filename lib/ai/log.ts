@@ -6,7 +6,7 @@ export type AiCallKind = "generate" | "regenerate" | "distractors"
 
 export type AiCallLog = { kind: AiCallKind; input: string; success: boolean }
 
-/** R2.12：記錄每次 AI 呼叫；user_id 由資料庫預設為 auth.uid()。 */
+/** R2.12: log every AI call; user_id defaults to auth.uid() in the database. */
 export async function logAiCall(entry: AiCallLog): Promise<void> {
   const supabase = await createClient()
   const { error } = await supabase.from("ai_generation_logs").insert(entry)
