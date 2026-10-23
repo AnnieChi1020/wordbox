@@ -62,6 +62,7 @@ const MOCK_DISTRACTORS: Record<string, string[]> = {
   distractors_word_to_synonym: ["decoy alpha", "decoy bravo", "decoy charlie"],
   distractors_word_to_antonym: ["decoy alpha", "decoy bravo", "decoy charlie"],
   distractors_zh_to_word: ["decoy alpha", "decoy bravo", "decoy charlie"],
+  distractors_cloze: ["decoy alpha", "decoy bravo", "decoy charlie"],
 }
 
 export const mockClient: AiClient = {

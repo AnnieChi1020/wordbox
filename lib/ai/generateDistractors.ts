@@ -24,9 +24,11 @@ type Deps = {
   timeoutMs?: number
 }
 
-/** The English word in the question: the correct answer for zh_to_word, the prompt for the other types. */
+/** The English word in the question: the correct answer for zh_to_word and cloze, the prompt for the other types. */
 export function quizWord(request: DistractorRequest): string {
-  return request.type === "zh_to_word" ? request.answer : request.prompt
+  return request.type === "zh_to_word" || request.type === "cloze"
+    ? request.answer
+    : request.prompt
 }
 
 /**

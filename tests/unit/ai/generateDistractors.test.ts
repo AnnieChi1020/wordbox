@@ -117,6 +117,37 @@ describe("generateDistractors (R6.5)", () => {
     })
   })
 
+  it("uses the word, not the sentence, as the quiz word for cloze", async () => {
+    const completeJson = vi.fn(async () => ({ options: ["a", "b", "c"] }))
+    const { run, logs } = setup({ completeJson })
+    await run({
+      ...wordToZh,
+      type: "cloze",
+      prompt: "I eat an ___ every day.",
+      answer: "apple",
+    })
+    const [request] = completeJson.mock.calls[0] as unknown as [
+      { name: string; user: string },
+    ]
+    expect(request.name).toBe("distractors_cloze")
+    expect(request.user).toContain("quiz word: apple")
+    expect(request.user).toContain("question shown: I eat an ___ every day.")
+    expect(logs[0].input).toBe("apple")
+  })
+
+  it("returns English mock options for cloze", async () => {
+    const result = await setup().run({
+      ...wordToZh,
+      type: "cloze",
+      prompt: "I eat an ___ every day.",
+      answer: "apple",
+    })
+    expect(result).toEqual({
+      status: "ok",
+      options: ["decoy alpha", "decoy bravo", "decoy charlie"],
+    })
+  })
+
   it("fails on timeout and logs the failure (R2.10)", async () => {
     const { run, logs } = setup()
     const result = await run({ ...wordToZh, prompt: MOCK_TIMEOUT_INPUT }, 50)

@@ -326,7 +326,7 @@
     - unit: a sense without a matching example never gets `cloze` (R7 AC); the prompt is a blanked example and the answer is the word; distractors exclude synonyms and antonyms
     - db: `submitAnswer` checks cloze answers
 
-- [ ] **T7.3 AI distractors** — R6.5
+- [x] **T7.3 AI distractors** — R6.5
   - Prompt describes `cloze` (design §5.3); `quizWord` uses the answer for `cloze`; the mock adds `distractors_cloze`
   - Done when (unit): the request name is `distractors_cloze` and the log input is the word, not the sentence
 
