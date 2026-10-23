@@ -38,6 +38,8 @@ export type Question = {
 export type QuestionDraft = Omit<Question, "options"> & {
   /** 目標字的同義詞（所有義項），提供給 AI 避開 */
   synonyms: string[]
+  /** 目標字的反義詞（所有義項），word_to_antonym 提供給 AI 避開 */
+  antonyms: string[]
   distractors: string[]
   missing: number
   /** R6.4 排除的選項，以 dedupeKey 比較 */
@@ -90,6 +92,7 @@ export function buildQuestion(
     pos: sense.pos,
     answer,
     synonyms: target.senses.flatMap((s) => s.synonyms),
+    antonyms: target.senses.flatMap((s) => s.antonyms),
     distractors,
     missing: DISTRACTOR_COUNT - distractors.length,
     excluded,

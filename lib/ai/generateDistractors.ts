@@ -11,7 +11,7 @@ import { DistractorsSchema } from "./schemas"
 
 export type DistractorRequest = Pick<
   QuestionDraft,
-  "type" | "prompt" | "pos" | "answer" | "synonyms"
+  "type" | "prompt" | "pos" | "answer" | "synonyms" | "antonyms"
 >
 
 export type GenerateDistractorsResult =

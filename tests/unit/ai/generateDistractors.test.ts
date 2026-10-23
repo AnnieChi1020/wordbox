@@ -34,6 +34,7 @@ const wordToZh: DistractorRequest = {
   pos: "noun",
   answer: "蘋果",
   synonyms: [],
+  antonyms: [],
 }
 
 describe("generateDistractors (R6.5)", () => {
@@ -57,6 +58,7 @@ describe("generateDistractors (R6.5)", () => {
       pos: "noun",
       answer: "apple",
       synonyms: [],
+      antonyms: [],
     })
     expect(result).toMatchObject({ status: "ok" })
     if (result.status === "ok") {
@@ -80,6 +82,39 @@ describe("generateDistractors (R6.5)", () => {
     expect(request.name).toBe("distractors_word_to_synonym")
     expect(request.user).toContain("quick, rapid")
     expect(request.user).toContain("correct answer: quick")
+  })
+
+  it("sends the antonyms for word_to_antonym", async () => {
+    const completeJson = vi.fn(async () => ({ options: ["a", "b", "c"] }))
+    await setup({ completeJson }).run({
+      ...wordToZh,
+      type: "word_to_antonym",
+      prompt: "hot",
+      pos: "adjective",
+      answer: "cold",
+      synonyms: ["warm"],
+      antonyms: ["cold", "cool"],
+    })
+    const [request] = completeJson.mock.calls[0] as unknown as [
+      { name: string; user: string },
+    ]
+    expect(request.name).toBe("distractors_word_to_antonym")
+    expect(request.user).toContain("antonyms of the quiz word: cold, cool")
+    expect(request.user).toContain("never use): warm")
+  })
+
+  it("returns English mock options for word_to_antonym", async () => {
+    const result = await setup().run({
+      ...wordToZh,
+      type: "word_to_antonym",
+      prompt: "hot",
+      answer: "cold",
+      antonyms: ["cold"],
+    })
+    expect(result).toEqual({
+      status: "ok",
+      options: ["decoy alpha", "decoy bravo", "decoy charlie"],
+    })
   })
 
   it("fails on timeout and logs the failure (R2.10)", async () => {

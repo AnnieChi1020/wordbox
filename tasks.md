@@ -272,7 +272,7 @@
     - `findCorrectOption` 接受反義詞（不分大小寫），多個選項符合時回傳 null
     - db：`submitAnswer` 判定反義詞題
 
-- [ ] **T5.3 AI 干擾選項** — R6.5
+- [x] **T5.3 AI 干擾選項** — R6.5
   - prompt 加入題型說明與反義詞清單（design §5.3）；mock 加入 `distractors_word_to_antonym`
   - 完成條件（unit）：user message 含反義詞清單；request name 為 `distractors_word_to_antonym`
 
