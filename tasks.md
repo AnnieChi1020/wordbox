@@ -1,6 +1,7 @@
 # Wordbox — Tasks
 
-> Version: v1.2 (2026-10-23) · matches `requirements.md` v0.7 and `design.md` v1.2
+> Version: v1.3 (2026-10-23) · matches `requirements.md` v0.8 and `design.md` v1.3
+> v1.3 changes: added Phase 7.
 > v1.2 changes: added Phase 6.
 > v1.1 changes: translated into English; content unchanged.
 > Each task lists the requirements it covers; it is done when those requirements' AC pass.
@@ -307,3 +308,32 @@
   - Redeploy Vercel (no migration)
   - Done when: search works on the production URL
   - Result (2026-10-23): confirmed on the production URL
+
+---
+
+## Phase 7 — Cloze questions
+
+- [ ] **T7.1 Database: question type constraint** — R6.1
+  - Migration: add `cloze` to the `question_type` check on `review_logs` and `ai_distractors` (design §4.1)
+  - Applied locally with `supabase migration up`, without a reset
+  - Done when (`tests/db`): `apply_review` and `ai_distractors` accept `cloze`
+
+- [ ] **T7.2 Cloze questions in `questions.ts`** — R6.1, R6.4, R7.3
+  - `clozeSentence`; `examples` in `QuestionSense`; `availableTypes`, `buildQuestion`, and `findCorrectOption` support `cloze` (design §7.5, D27, D28)
+  - `listReviewWords` reads `examples`
+  - Done when:
+    - unit: `clozeSentence` blanks every whole-word occurrence case-insensitively, matches phrases across extra whitespace, does not match inside other words (`run` in `running`, `brunch`), and returns null for inflected-only sentences
+    - unit: a sense without a matching example never gets `cloze` (R7 AC); the prompt is a blanked example and the answer is the word; distractors exclude synonyms and antonyms
+    - db: `submitAnswer` checks cloze answers
+
+- [ ] **T7.3 AI distractors** — R6.5
+  - Prompt describes `cloze` (design §5.3); `quizWord` uses the answer for `cloze`; the mock adds `distractors_cloze`
+  - Done when (unit): the request name is `distractors_cloze` and the log input is the word, not the sentence
+
+- [ ] **T7.4 Review UI and E2E** — R6.1, R7 AC
+  - `QuestionCard` cloze layout; summary label for skipped cloze questions (design §8)
+  - Done when: an E2E test (`AI_MOCK=1`) answers a cloze question; existing E2E pass
+
+- [ ] **T7.5 Deployment**
+  - Push the T7.1 migration with `supabase db push`, redeploy Vercel
+  - Done when: cloze questions appear and can be answered on the production URL

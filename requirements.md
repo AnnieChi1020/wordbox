@@ -1,6 +1,7 @@
 # Wordbox — Requirements
 
-> Version: v0.7 (2026-10-23)
+> Version: v0.8 (2026-10-23)
+> v0.8 changes: added Phase 7, the cloze question type `cloze` (§0.2, R6.1, R6.4, R7 AC).
 > v0.7 changes: added Phase 6, word list search (R3.9; R3.4, R3.8 updated; AC included).
 > v0.6 changes: translated into English; content unchanged.
 > v0.5 changes: added Phase 5, the antonym question type `word_to_antonym` (R6.1, R6.4, R7 AC).
@@ -8,7 +9,7 @@
 > v0.3 changes: R7.4 sets box to 0 on a wrong answer (was 1), so the star count resets to zero (AC included).
 > v0.2 changes: R2.7 stores new words in their dictionary headword spelling (AC included); R4.5 notes that the word itself does not change.
 > Format: requirements use EARS syntax (WHEN / IF / WHILE … THE SYSTEM SHALL …); each section ends with acceptance criteria (AC).
-> Phases: Phase 1 word management → Phase 2 review → Phase 3 dashboard and PWA → Phase 4 dark mode → Phase 5 antonym questions → Phase 6 word list search.
+> Phases: Phase 1 word management → Phase 2 review → Phase 3 dashboard and PWA → Phase 4 dark mode → Phase 5 antonym questions → Phase 6 word list search → Phase 7 cloze questions.
 > UI text: the interface is in Traditional Chinese (NFR2). UI strings are quoted in Chinese, followed by an English gloss in parentheses.
 
 ---
@@ -30,7 +31,7 @@ The user enters an English word or phrase, and the system uses AI to generate En
 
 ### 0.2 Out of scope
 
-Offline use, bulk adding, sign-in methods other than Google, AI usage limits (only logging is in place), cloze questions, OpenAI TTS, sharing and import/export, and a time zone settings page.
+Offline use, bulk adding, sign-in methods other than Google, AI usage limits (only logging is in place), OpenAI TTS, sharing and import/export, and a time zone settings page.
 
 ---
 
@@ -153,10 +154,11 @@ Offline use, bulk adding, sign-in methods other than Google, AI usage limits (on
   | `word_to_synonym` | The word (with part of speech) | One of the sense's synonyms | The sense has at least 1 synonym |
   | `word_to_antonym` | The word (with part of speech) | One of the sense's antonyms | The sense has at least 1 antonym (Phase 5) |
   | `zh_to_word` | The Chinese definition (with part of speech) | The word | Always |
+  | `cloze` | One of the sense's examples with the word replaced by a blank (with part of speech) | The word | At least one of the sense's examples contains the word in exactly its stored form, case-insensitively, as a whole word (Phase 7) |
 
 - **R6.2** THE SYSTEM SHALL give each question 4 options (1 correct, 3 distractors) in random order.
 - **R6.3** THE SYSTEM SHALL take distractors from the user's own words first, and SHOULD prefer candidates with the same part of speech as the question.
-- **R6.4** THE SYSTEM SHALL ensure that distractors are distinct from each other, are not equal to the correct option (case-insensitive), are not the quiz word itself, and are not a synonym of any of the quiz word's senses. Distractors for `word_to_antonym` also must not be an antonym of any of the quiz word's senses. Distractor words for `zh_to_word` must not have the same Chinese definition as the prompt.
+- **R6.4** THE SYSTEM SHALL ensure that distractors are distinct from each other, are not equal to the correct option (case-insensitive), are not the quiz word itself, and are not a synonym of any of the quiz word's senses. Distractors for `word_to_antonym` also must not be an antonym of any of the quiz word's senses. Distractor words for `zh_to_word` must not have the same Chinese definition as the prompt. Distractors for `cloze` also must not be an antonym of any of the quiz word's senses.
 - **R6.5** IF the user's words yield fewer than 3 candidates that satisfy R6.4, THE SYSTEM SHALL generate the missing distractors with the AI and cache them; later questions for the same sense and question type reuse the cache. WHEN the sense is edited or regenerated, THE SYSTEM SHALL invalidate the cache.
 - **R6.6** IF generating AI distractors for a question fails, THE SYSTEM SHALL try another question type for that word; IF no question type works, THE SYSTEM SHALL skip the word and take the next one according to R5.1.
 
@@ -194,6 +196,7 @@ Offline use, bulk adding, sign-in methods other than Google, AI usage limits (on
 - [ ] A filler word that is not due, answered correctly → box and next_due_on both unchanged.
 - [ ] A sense without synonyms never gets a `word_to_synonym` question.
 - [ ] A sense without antonyms never gets a `word_to_antonym` question; when it has antonyms, the correct option is one of the sense's antonyms and none of the other 3 options is an antonym of the quiz word.
+- [ ] A sense without an example containing the word never gets a `cloze` question (e.g. `run` with only "He ran to catch the bus."); when it has one, every occurrence of the word in the sentence is blanked, the correct option is the word, and none of the other 3 options is a synonym or antonym of it.
 - [ ] A session can be completed with only 2 words saved (the AI fills in the distractors).
 - [ ] Closing the page at question 4 keeps the logs of the first 3 answers.
 

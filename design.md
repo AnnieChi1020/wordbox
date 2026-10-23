@@ -1,7 +1,8 @@
 # Wordbox — Design
 
-> Version: v1.2 (2026-10-23) · matches `requirements.md` v0.7
+> Version: v1.3 (2026-10-23) · matches `requirements.md` v0.8
 >
+> v1.3 changes: cloze question type `cloze` (§4.1, §5.3, §6, §7.5, §8, D27, D28); D25 and D26 put back in order.
 > v1.2 changes: word list search (§3, §6, §7.7, D26).
 > v1.1 changes: translated into English. §8.3 no longer says dark mode is disabled (it shipped in v0.9, §8.4).
 > v1.0 changes: antonym question type `word_to_antonym` (§4.1, §5.3, §6, §7.5, D25).
@@ -187,7 +188,7 @@ create table review_logs (
   word_id uuid references words on delete set null,   -- logs survive word deletion (R4.7)
   sense_id uuid references senses on delete set null, -- logs survive regeneration (R4.5)
   question_type text not null
-    check (question_type in ('word_to_zh','word_to_synonym','word_to_antonym','zh_to_word')),
+    check (question_type in ('word_to_zh','word_to_synonym','word_to_antonym','zh_to_word','cloze')),
   is_correct boolean not null,
   was_due boolean not null,
   box_before smallint not null,
@@ -200,7 +201,7 @@ create index review_logs_user_date_idx on review_logs (user_id, local_date);
 create table ai_distractors (                                             -- R6.5
   sense_id uuid not null references senses on delete cascade,
   question_type text not null
-    check (question_type in ('word_to_zh','word_to_synonym','word_to_antonym','zh_to_word')),
+    check (question_type in ('word_to_zh','word_to_synonym','word_to_antonym','zh_to_word','cloze')),
   options text[] not null check (cardinality(options) = 3),
   created_at timestamptz not null default now(),
   primary key (sense_id, question_type)
@@ -309,7 +310,7 @@ The user's input goes only in the user message, explicitly labeled as 「要查�
 const DistractorsSchema = z.object({ options: z.array(z.string()).length(3) });
 ```
 
-Input: the question type, the prompt, the correct answer, and the quiz word's synonyms and antonyms. Requirements: same language, format, and part of speech as the correct answer; plausible but definitely wrong; never a synonym, and for `word_to_antonym` never an antonym either. The 3 returned options must be distinct, or the response counts as an invalid format. They are then merged with the candidates from the user's words and filtered by the R6.4 rules; if that still yields fewer than 3 distractors, generation counts as failed (R6.6).
+Input: the question type, the prompt, the correct answer, and the quiz word's synonyms and antonyms. Requirements: same language, format, and part of speech as the correct answer; plausible but definitely wrong; never a synonym, and for `word_to_antonym` and `cloze` never an antonym either. For `cloze`, the prompt is the sentence with the blank, and the options must not make sense in that sentence. The 3 returned options must be distinct, or the response counts as an invalid format. They are then merged with the candidates from the user's words and filtered by the R6.4 rules; if that still yields fewer than 3 distractors, generation counts as failed (R6.6).
 
 How the cache is used (`lib/review/distractors.ts`):
 - The AI always generates 3 and the cache stores 3. Questions use candidates from the user's words first and fill the rest, in order, from the cache (or the AI result).
@@ -400,7 +401,7 @@ The server keeps no session state. On each answer, it recomputes the correct opt
 - `word_to_zh`: equals `sense.def_zh`
 - `word_to_synonym`: is in `sense.synonyms` (case-insensitive)
 - `word_to_antonym`: is in `sense.antonyms` (case-insensitive)
-- `zh_to_word`: equals `word.text` (case-insensitive)
+- `zh_to_word` and `cloze`: equals `word.text` (case-insensitive)
 
 `isCorrect = selected === correctOption`.
 
@@ -466,9 +467,15 @@ It returns the full sequence rather than the first 8: `startReviewSession` build
 ### 7.5 questions.ts (R6)
 
 ```ts
-type QuestionType = 'word_to_zh' | 'word_to_synonym' | 'word_to_antonym' | 'zh_to_word';
+type QuestionType = 'word_to_zh' | 'word_to_synonym' | 'word_to_antonym' | 'zh_to_word' | 'cloze';
 
-availableTypes(sense): QuestionType[]     // no word_to_synonym without synonyms; no word_to_antonym without antonyms
+availableTypes(word, sense): QuestionType[]
+  // no word_to_synonym without synonyms; no word_to_antonym without antonyms;
+  // no cloze without an example where clozeSentence succeeds
+
+clozeSentence(example: string, text: string): string | null
+  // replaces every whole-word, case-insensitive occurrence of text with CLOZE_BLANK ('___');
+  // spaces inside a phrase match any run of whitespace; null when text does not occur (D27)
 
 buildQuestion(target, sense, type, pool, rng):
   { question: Question } | { needsAi: QuestionDraft }
@@ -489,8 +496,11 @@ Candidate sources and exclusion rules:
 | `word_to_synonym` | Each sense's `synonyms` | The quiz word itself and the synonyms of all its senses |
 | `word_to_antonym` | Each sense's `antonyms` | The quiz word itself and the synonyms and antonyms of all its senses |
 | `zh_to_word` | Each word's `text` | Words that are synonyms of the quiz word; words with any sense whose `def_zh` equals the prompt |
+| `cloze` | Each word's `text` | Words that are synonyms or antonyms of the quiz word |
 
 Shared rules: comparisons always trim and lowercase, duplicates are removed, and the correct answer is excluded. Ordering: candidates with the same part of speech come first, the rest in random order; take the first 3. If there are not enough, return `needsAi`; the action layer reads the `ai_distractors` cache and calls the AI only when there is no cache.
+
+For `cloze`, the example is picked at random from the sense's examples where `clozeSentence` succeeds, and the prompt is the blanked sentence. `QuestionSense` carries `examples` for this.
 
 All randomness goes through the injected `rng`, so unit tests get reproducible results with a fixed seed.
 
@@ -536,6 +546,8 @@ hasActiveFilters(params): boolean
 | `/words` | `AddWordForm`, `WordFilters`, `WordList`, `WordDialog` | `?word=<id>` controls the popup (R4.9); it opens with `router.push`, so the back button closes it (R4.8) |
 | `/review` | `ReviewIntro` → `QuestionCard` → `SessionSummary` | Questions live in client state; each answer calls `submitAnswer` immediately |
 | `/dashboard` | `StatTotal`, `StarDistributionChart`, `Heatmap` | Queried in a Server Component and passed down |
+
+Cloze questions (`QuestionCard`): the heading reads 「選出最適合填入空格的字」 (Pick the word that best fills the blank), followed by the sentence in regular weight; `___` is drawn as an underlined gap with the accessible name 「空格」 (blank). In the summary, a skipped cloze question shows the blanked sentence, as `zh_to_word` shows its prompt.
 
 State handling: a skeleton is shown while the AI is generating; every error is shown as a toast, with a retry button in place.
 
@@ -649,5 +661,7 @@ State handling: a skeleton is shown while the AI is generating; every error is s
 | D22 | Brand colors extend to primary buttons, the navigation bar's selected state, and focus rings; the background stays white | The user asked for the brand colors to be applied; cream was tried as the page background but found unsuitable, so it went back to white |
 | D23 | Dark mode uses a hand-written inline script and `localStorage`, without next-themes | The need is only a few options plus no flash; about 30 lines of custom code avoids a dependency and gives full control over when the script runs |
 | D24 | In dark mode the primary color becomes a brand-300 light blue background with dark text | brand-900 lacks contrast on a dark background (2.93:1) |
-| D26 | Search uses `ilike` substring matching on `text_key` without a new index | Each query is already limited to one user's words by RLS and `user_id`, at most a few thousand rows, so a scan stays within NFR4; a trigram index (`pg_trgm`) can be added if that changes. Substring matching finds phrases by any of their words (`up` → `give up`) |
 | D25 | Antonym question distractors come only from other words' antonyms, and all antonyms of the quiz word's senses are excluded | Mirrors the synonym questions; excluding the antonyms of every sense guarantees exactly one of the 4 options matches (§6 checking). Synonyms are still excluded per R6.4: they would be clearly wrong answers, but a single rule is simpler |
+| D26 | Search uses `ilike` substring matching on `text_key` without a new index | Each query is already limited to one user's words by RLS and `user_id`, at most a few thousand rows, so a scan stays within NFR4; a trigram index (`pg_trgm`) can be added if that changes. Substring matching finds phrases by any of their words (`up` → `give up`) |
+| D27 | Cloze questions use only examples that contain the word in exactly its stored form | An inflected form (ran, runs, gave up) would leave a blank the base-form options do not fit grammatically. AI examples usually contain the exact form, and senses without one simply skip this type. Matching inflections or asking the AI for the form used can come later |
+| D28 | Cloze questions show no Chinese hint, and their distractors also exclude the quiz word's antonyms | A Chinese hint would make the question the same as `zh_to_word`. Antonyms often fit the same sentence (I ___ in the park: run / walk), which would leave two defensible answers; other library words can still fit occasionally, which is accepted |
