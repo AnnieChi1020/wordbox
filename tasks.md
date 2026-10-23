@@ -303,6 +303,7 @@
   - 「清除篩選」 also clears the search; the popup keeps the search when opened and closed
   - Done when (E2E): the R3 search AC pass; typing does not add history entries; the clear button works from the keyboard; existing E2E pass
 
-- [ ] **T6.3 Deployment**
+- [x] **T6.3 Deployment**
   - Redeploy Vercel (no migration)
   - Done when: search works on the production URL
+  - Result (2026-10-23): confirmed on the production URL
