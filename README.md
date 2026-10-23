@@ -8,7 +8,7 @@ Live: https://wordbox-omega.vercel.app
 
 - **Add words**: enter an English word or phrase; AI generates the IPA, parts of speech, English and Traditional Chinese definitions, synonyms, antonyms, and example sentences. Misspellings get spelling suggestions.
 - **Word list**: filter by familiarity (0–5 stars) and the important flag, with six sort orders. Open a word to edit, regenerate, or delete it, and hear it pronounced with the browser's speech synthesis.
-- **Review**: rounds of up to 8 multiple-choice questions (word → Chinese, word → synonym, Chinese → word). The Leitner box schedules each word's next review; AI fills in distractors when your word list is too small.
+- **Review**: rounds of up to 8 multiple-choice questions (word → Chinese, word → synonym, word → antonym, Chinese → word). The Leitner box schedules each word's next review; AI fills in distractors when your word list is too small.
 - **Stats**: total words, familiarity distribution, and a 53-week heatmap of daily answers.
 - **PWA**: install to the home screen and open in a standalone window; shows an offline page without a connection.
 - **Dark mode**: defaults to the system setting and can be switched manually.
@@ -27,10 +27,10 @@ Live: https://wordbox-omega.vercel.app
 
 ## Documents
 
-Development is spec-driven. The specs are written in Traditional Chinese:
+Development is spec-driven. The specs are in English; the app's interface is in Traditional Chinese:
 
 - [`requirements.md`](requirements.md): requirements (EARS format) and acceptance criteria
-- [`design.md`](design.md): architecture, database, AI, UI design, and the design decision log (D1–D24)
+- [`design.md`](design.md): architecture, database, AI, UI design, and the design decision log (D1–D25)
 - [`tasks.md`](tasks.md): tasks derived from the requirements, with completion criteria
 
 ## Local development

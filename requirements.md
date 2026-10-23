@@ -1,239 +1,241 @@
-# 英文單字記憶 App — Requirements
+# Wordbox — Requirements
 
-> 版本：v0.5（2026-10-23）
-> v0.5 變更：新增 Phase 5 反義詞題型 `word_to_antonym`（R6.1、R6.4、R7 AC）。
-> v0.4 變更：新增 Phase 4 深色模式（R10）。
-> v0.3 變更：R7.4 答錯時 box 設為 0（原為 1），星數歸零（含 AC）。
-> v0.2 變更：R2.7 新增單字以字典標準寫法儲存（含 AC）；R4.5 註明單字本身不變。
-> 格式：需求採 EARS 語法（WHEN / IF / WHILE … THE SYSTEM SHALL …），每節附驗收條件（AC）。
-> 階段：Phase 1 單字管理 → Phase 2 複習 → Phase 3 Dashboard 與 PWA → Phase 4 深色模式 → Phase 5 反義詞題型。
+> Version: v0.6 (2026-10-23)
+> v0.6 changes: translated into English; content unchanged.
+> v0.5 changes: added Phase 5, the antonym question type `word_to_antonym` (R6.1, R6.4, R7 AC).
+> v0.4 changes: added Phase 4, dark mode (R10).
+> v0.3 changes: R7.4 sets box to 0 on a wrong answer (was 1), so the star count resets to zero (AC included).
+> v0.2 changes: R2.7 stores new words in their dictionary headword spelling (AC included); R4.5 notes that the word itself does not change.
+> Format: requirements use EARS syntax (WHEN / IF / WHILE … THE SYSTEM SHALL …); each section ends with acceptance criteria (AC).
+> Phases: Phase 1 word management → Phase 2 review → Phase 3 dashboard and PWA → Phase 4 dark mode → Phase 5 antonym questions.
+> UI text: the interface is in Traditional Chinese (NFR2). UI strings are quoted in Chinese, followed by an English gloss in parentheses.
 
 ---
 
-## 0. 概述
+## 0. Overview
 
-使用者輸入英文單字或片語，系統以 AI 生成英文解釋、中文解釋、同義詞、反義詞、例句與音標；使用者透過選擇題複習，系統以 Leitner 盒子演算法計算熟悉度並安排複習時間。
+The user enters an English word or phrase, and the system uses AI to generate English and Chinese definitions, synonyms, antonyms, example sentences, and the IPA. The user reviews words through multiple-choice questions, and the system uses the Leitner box algorithm to track familiarity and schedule reviews.
 
-### 0.1 名詞定義
+### 0.1 Glossary
 
-| 名詞 | 定義 |
+| Term | Definition |
 |---|---|
-| Word（單字） | 使用者新增的一個英文單字或片語，屬於單一使用者 |
-| Sense（義項） | 單字的一個意思，含詞性、英解、中解、同義詞、反義詞、例句；每個單字 1–3 個 |
-| Box | Leitner 盒子等級，整數 0–5；**熟悉度星數 = Box** |
-| 到期 (due) | `next_due_on` ≤ 使用者當地的今天 |
-| 複習輪 (session) | 一次複習，最多 8 題 |
-| 當地日期 (local date) | 依使用者 profile 時區、以午夜換日所得的日期 |
+| Word | An English word or phrase added by a user; belongs to exactly one user |
+| Sense | One meaning of a word: part of speech, English definition, Chinese definition, synonyms, antonyms, and examples; 1–3 per word |
+| Box | Leitner box level, an integer 0–5; **familiarity stars = box** |
+| Due | `next_due_on` ≤ the user's local today |
+| Session | One review round of at most 8 questions |
+| Local date | The date in the user's profile time zone, rolling over at midnight |
 
-### 0.2 不在範圍內（Out of scope）
+### 0.2 Out of scope
 
-離線使用、批次新增、Google 以外的登入方式、AI 使用量限制（僅預留紀錄）、克漏字題型、OpenAI TTS、分享與匯入匯出、時區設定頁。
-
----
-
-## Phase 1 — 帳號與單字管理
-
-### R1 帳號
-
-- **R1.1** WHEN 未登入的使用者造訪任何應用頁面，THE SYSTEM SHALL 導向登入頁。
-- **R1.2** THE SYSTEM SHALL 在登入頁提供「使用 Google 登入」，且只提供這種登入方式。
-- **R1.3** WHEN 使用者第一次登入，THE SYSTEM SHALL 建立 profile，並以瀏覽器回報的 IANA 時區作為 `timezone`。
-- **R1.4** THE SYSTEM SHALL 確保使用者只能讀取與修改自己的資料（資料庫層 Row Level Security）。
-- **R1.5** THE SYSTEM SHALL 提供登出功能；WHEN 登出完成，THE SYSTEM SHALL 導向登入頁。
-- **R1.6** WHEN 已登入使用者造訪登入頁或根路徑 `/`，THE SYSTEM SHALL 導向單字列表頁。
-
-**AC**
-- [ ] 未登入直接開 `/words`、`/review`、`/dashboard` 都會被導到 `/login`。
-- [ ] A 使用者無法以任何 API 或 Supabase client 查詢到 B 使用者的 words。
-- [ ] 首次登入後 `profiles.timezone` 等於瀏覽器時區（例：`America/Boise`）。
-
-### R2 新增單字
-
-- **R2.1** THE SYSTEM SHALL 在單字列表頁頂端提供輸入框，一次新增一個單字或片語。
-- **R2.2** THE SYSTEM SHALL 在送出前正規化輸入：去除前後空白、連續空白合併為一個。
-- **R2.3** IF 正規化後的輸入不符合「1–64 字元，以英文字母開頭，只包含英文字母、空白、連字號 `-`、撇號 `'`」，THE SYSTEM SHALL 不送出，並顯示格式錯誤訊息。
-- **R2.4** WHEN 使用者送出的字與自己已有的單字相同（不分大小寫），THE SYSTEM SHALL 不呼叫 AI，直接開啟該單字的 popup，並顯示「這個字已經在你的列表裡」。
-- **R2.5** WHEN 使用者送出新字，THE SYSTEM SHALL 呼叫 AI 驗證並生成內容。
-- **R2.6** IF AI 判定輸入不是有效的英文單字或片語，THE SYSTEM SHALL 不儲存，顯示「找不到這個字」，並列出最多 3 個拼字建議；WHEN 使用者點選建議，THE SYSTEM SHALL 以該建議重新送出（仍適用 R2.4）。
-- **R2.7** WHEN AI 判定有效，THE SYSTEM SHALL 儲存：
-  - 單字本身，以字典標準寫法（headword）儲存：一般為小寫；英文本身需要大寫的保留大寫（星期、月份、語言、國籍、代名詞 I、縮寫如 DNA）。IF AI 回傳的寫法與輸入不只是大小寫不同（例如改成原形），THE SYSTEM SHALL 改以輸入的全小寫儲存
-  - 音標 IPA（美式，可為空）
-  - 1–3 個義項，依常用程度排序，每個義項包含：
-    - 詞性（見 R2.11）
-    - 英文解釋（給學習者的簡明定義）
-    - 中文解釋（繁體中文、台灣用語）
-    - 同義詞 0–5 個、反義詞 0–5 個（皆對應該義項）
-    - 例句 1–2 句
-- **R2.8** WHEN 單字儲存成功，THE SYSTEM SHALL 設定 `box = 0`、`next_due_on = 當地今天`、`is_important = false`，並開啟該單字的 popup。
-- **R2.9** WHILE AI 生成中，THE SYSTEM SHALL 顯示載入狀態，並停用送出按鈕。
-- **R2.10** IF AI 呼叫失敗、逾時（20 秒）或回傳格式不符，THE SYSTEM SHALL 不儲存任何資料，顯示錯誤訊息，並提供「重試」。
-- **R2.11** 詞性 SHALL 為以下其中之一，並以縮寫顯示：
-  `noun (n.)`、`verb (v.)`、`adjective (adj.)`、`adverb (adv.)`、`pronoun (pron.)`、`preposition (prep.)`、`conjunction (conj.)`、`interjection (interj.)`、`determiner (det.)`、`phrase (phr.)`
-- **R2.12** THE SYSTEM SHOULD 記錄每次 AI 呼叫（使用者、類型、成功與否、時間），供日後實作用量限制。
-
-**AC**
-- [ ] 輸入 `  Give   up ` 會以 `Give up` 處理。
-- [ ] 已有 `apple` 時輸入 `Apple`：不呼叫 AI，直接開啟 `apple` 的 popup。
-- [ ] 輸入 `aple`：不儲存，顯示含 `apple` 的建議；點擊後成功新增 `apple`。
-- [ ] 輸入 `run`：儲存 1–3 個義項，詞性 tag 至少包含 `v.`。
-- [ ] 輸入 `Conventional` 存為 `conventional`、`GIVE UP` 存為 `give up`；輸入 `monday` 存為 `Monday`、`dna` 存為 `DNA`。
-- [ ] 模擬 AI 逾時：資料庫沒有新增任何 word 或 sense。
-
-### R3 單字列表頁
-
-- **R3.1** THE SYSTEM SHALL 列出使用者所有單字，每列顯示：單字、詞性 tag（各義項詞性去除重複，依義項順序）、熟悉度星數（5 顆星，實心數 = box，唯讀）、important 標記。
-- **R3.2** THE SYSTEM SHALL 提供篩選：
-  - 星數（可複選 0–5）
-  - 只看 important
-- **R3.3** THE SYSTEM SHALL 提供排序：
-  - 新增日期（新→舊，**預設**；舊→新）
-  - 字母（A→Z；Z→A，不分大小寫）
-  - 星數（低→高；高→低，同星數時依新增日期新→舊）
-- **R3.4** THE SYSTEM SHALL 將篩選與排序狀態反映在 URL query string，重新整理後保留。
-- **R3.5** WHEN 使用者點擊列表中的 important 標記，THE SYSTEM SHALL 切換該單字的 important 狀態，且不開啟 popup。
-- **R3.6** WHEN 使用者點擊單字列的其他區域，THE SYSTEM SHALL 開啟該單字的 popup。
-- **R3.7** IF 使用者還沒有任何單字，THE SYSTEM SHALL 顯示空狀態與新增引導。
-- **R3.8** IF 篩選後沒有結果，THE SYSTEM SHALL 顯示「沒有符合條件的單字」，並提供清除篩選。
-
-**AC**
-- [ ] box 為 3 的字顯示 3 顆實心星、2 顆空心星。
-- [ ] 篩選「0 星 + 1 星」與「只看 important」可同時生效。
-- [ ] 選擇「字母 A→Z」後重新整理，排序仍保留。
-
-### R4 單字 popup
-
-- **R4.1** THE SYSTEM SHALL 在 popup 中顯示：單字、IPA、發音按鈕、星數、important 切換，以及每個義項的詞性、英解、中解、同義詞、反義詞、例句。
-- **R4.2** WHEN 使用者點擊發音按鈕，THE SYSTEM SHALL 以瀏覽器語音合成（en-US）朗讀單字；IF 瀏覽器不支援語音合成，THE SYSTEM SHALL 隱藏發音按鈕。
-- **R4.3** THE SYSTEM SHALL 提供編輯模式，可修改 IPA 及各義項的所有欄位，並可新增或移除義項（維持 1–3 個）；單字本身不可修改。
-- **R4.4** IF 編輯內容不合規則（英解或中解為空、同義詞或反義詞超過 5 個、例句超過 2 句、義項數不在 1–3），THE SYSTEM SHALL 阻止儲存並標示錯誤欄位。
-- **R4.5** WHEN 使用者選擇「重新生成」並確認，THE SYSTEM SHALL 以 AI 重新生成 IPA 與所有義項並取代舊內容，同時保留 box、next_due_on、is_important 與複習紀錄；單字本身不變（R4.3）。
-- **R4.6** IF 重新生成失敗，THE SYSTEM SHALL 保留原內容並顯示錯誤。
-- **R4.7** WHEN 使用者選擇「刪除」並確認，THE SYSTEM SHALL 刪除該單字與其義項、關閉 popup，並從列表移除；複習紀錄保留，以維持 Dashboard 的歷史數據。
-- **R4.8** THE SYSTEM SHALL 允許以關閉按鈕、Esc 鍵、點擊背景、瀏覽器「上一頁」關閉 popup；手機寬度下 popup 以全螢幕顯示。
-- **R4.9** WHILE popup 開啟，THE SYSTEM SHALL 在 URL 中保留單字識別碼，使重新整理後 popup 仍開啟。
-
-**AC**
-- [ ] 編輯並儲存同義詞後重新開啟，顯示新內容。
-- [ ] 重新生成後 box 與 important 不變。
-- [ ] 刪除後列表立即移除該字，Dashboard 的歷史答題數不變。
-- [ ] 手機寬度（375px）下 popup 為全螢幕且可捲動。
+Offline use, bulk adding, sign-in methods other than Google, AI usage limits (only logging is in place), cloze questions, OpenAI TTS, sharing and import/export, and a time zone settings page.
 
 ---
 
-## Phase 2 — 複習
+## Phase 1 — Accounts and word management
 
-### R5 選字
+### R1 Accounts
 
-- **R5.1** WHEN 使用者開始一輪複習，THE SYSTEM SHALL 選出最多 8 個不重複的單字：
-  1. 先選到期的字，依 `next_due_on` 由舊到新排序，同日期隨機；
-  2. IF 到期的字不足 8 個，THE SYSTEM SHALL 以未到期的字補足，依 box 由低到高、再依 `next_due_on` 由近到遠排序；
-  3. IF 單字總數少於 8 個，THE SYSTEM SHALL 使用全部單字。
-- **R5.2** IF 使用者沒有任何單字，THE SYSTEM SHALL 顯示空狀態，並引導使用者去新增單字。
+- **R1.1** WHEN a signed-out user visits any app page, THE SYSTEM SHALL redirect to the login page.
+- **R1.2** THE SYSTEM SHALL offer 「使用 Google 登入」 (Sign in with Google) on the login page, and no other sign-in method.
+- **R1.3** WHEN a user signs in for the first time, THE SYSTEM SHALL create a profile and use the IANA time zone reported by the browser as `timezone`.
+- **R1.4** THE SYSTEM SHALL ensure that users can read and modify only their own data (database-level Row Level Security).
+- **R1.5** THE SYSTEM SHALL provide sign-out; WHEN sign-out completes, THE SYSTEM SHALL redirect to the login page.
+- **R1.6** WHEN a signed-in user visits the login page or the root path `/`, THE SYSTEM SHALL redirect to the word list.
 
-### R6 題目
+**AC**
+- [ ] Opening `/words`, `/review`, or `/dashboard` while signed out redirects to `/login`.
+- [ ] User A cannot query user B's words through any API or Supabase client.
+- [ ] After the first sign-in, `profiles.timezone` equals the browser's time zone (e.g. `America/Boise`).
 
-- **R6.1** THE SYSTEM SHALL 對每個選出的字隨機選一個義項，再從該義項可用的題型中隨機選一種：
+### R2 Adding words
 
-  | 題型 | 題目 | 正確選項 | 條件 |
+- **R2.1** THE SYSTEM SHALL provide an input at the top of the word list for adding one word or phrase at a time.
+- **R2.2** THE SYSTEM SHALL normalize the input before submitting: trim leading and trailing whitespace and collapse runs of whitespace into one space.
+- **R2.3** IF the normalized input does not match "1–64 characters, starting with an English letter, containing only English letters, spaces, hyphens `-`, and apostrophes `'`", THE SYSTEM SHALL not submit it and SHALL show a format error.
+- **R2.4** WHEN the user submits a word they already have (case-insensitive), THE SYSTEM SHALL not call the AI; it SHALL open that word's popup and show 「這個字已經在你的列表裡」 (This word is already in your list).
+- **R2.5** WHEN the user submits a new word, THE SYSTEM SHALL call the AI to validate it and generate its content.
+- **R2.6** IF the AI decides the input is not a valid English word or phrase, THE SYSTEM SHALL not save it, SHALL show 「找不到這個字」 (Word not found), and SHALL list up to 3 spelling suggestions; WHEN the user clicks a suggestion, THE SYSTEM SHALL resubmit with that suggestion (R2.4 still applies).
+- **R2.7** WHEN the AI decides the input is valid, THE SYSTEM SHALL save:
+  - The word itself, in its dictionary headword spelling: normally lowercase, keeping capitals where English requires them (days, months, languages, nationalities, the pronoun I, and abbreviations such as DNA). IF the spelling returned by the AI differs from the input by more than letter case (for example, changed to the base form), THE SYSTEM SHALL store the input in lowercase instead
+  - The IPA (American; may be empty)
+  - 1–3 senses, ordered from most to least common, each with:
+    - Part of speech (see R2.11)
+    - English definition (a concise, learner-friendly definition)
+    - Chinese definition (Traditional Chinese, Taiwan usage)
+    - 0–5 synonyms and 0–5 antonyms (both specific to that sense)
+    - 1–2 example sentences
+- **R2.8** WHEN a word is saved, THE SYSTEM SHALL set `box = 0`, `next_due_on = local today`, and `is_important = false`, and SHALL open the word's popup.
+- **R2.9** WHILE the AI is generating, THE SYSTEM SHALL show a loading state and disable the submit button.
+- **R2.10** IF the AI call fails, times out (20 seconds), or returns an invalid format, THE SYSTEM SHALL save nothing, SHALL show an error, and SHALL offer 「重試」 (Retry).
+- **R2.11** The part of speech SHALL be one of the following, displayed as its abbreviation:
+  `noun (n.)`, `verb (v.)`, `adjective (adj.)`, `adverb (adv.)`, `pronoun (pron.)`, `preposition (prep.)`, `conjunction (conj.)`, `interjection (interj.)`, `determiner (det.)`, `phrase (phr.)`
+- **R2.12** THE SYSTEM SHOULD log every AI call (user, kind, success, time) so that usage limits can be added later.
+
+**AC**
+- [ ] The input `  Give   up ` is handled as `Give up`.
+- [ ] With `apple` already saved, entering `Apple` does not call the AI and opens the popup for `apple`.
+- [ ] Entering `aple` saves nothing and shows suggestions including `apple`; clicking it adds `apple`.
+- [ ] Entering `run` saves 1–3 senses, with at least one `v.` part-of-speech tag.
+- [ ] `Conventional` is stored as `conventional` and `GIVE UP` as `give up`; `monday` is stored as `Monday` and `dna` as `DNA`.
+- [ ] With a simulated AI timeout, no word or sense is added to the database.
+
+### R3 Word list
+
+- **R3.1** THE SYSTEM SHALL list all of the user's words. Each row shows the word, part-of-speech tags (deduplicated across senses, in sense order), familiarity stars (5 stars, filled count = box, read-only), and the important flag.
+- **R3.2** THE SYSTEM SHALL provide filters:
+  - Stars (multi-select, 0–5)
+  - Important only
+- **R3.3** THE SYSTEM SHALL provide sort orders:
+  - Date added (newest first, **default**; oldest first)
+  - Alphabetical (A→Z; Z→A; case-insensitive)
+  - Stars (low→high; high→low; ties ordered by date added, newest first)
+- **R3.4** THE SYSTEM SHALL reflect the filter and sort state in the URL query string so that it survives a reload.
+- **R3.5** WHEN the user clicks the important flag in the list, THE SYSTEM SHALL toggle the word's important state without opening the popup.
+- **R3.6** WHEN the user clicks elsewhere on a word row, THE SYSTEM SHALL open that word's popup.
+- **R3.7** IF the user has no words yet, THE SYSTEM SHALL show an empty state that guides them to add one.
+- **R3.8** IF no words match the filters, THE SYSTEM SHALL show 「沒有符合條件的單字」 (No matching words) and offer a way to clear the filters.
+
+**AC**
+- [ ] A word in box 3 shows 3 filled stars and 2 empty stars.
+- [ ] The filters "0 stars + 1 star" and "important only" can apply at the same time.
+- [ ] After choosing "A→Z" and reloading, the sort order is kept.
+
+### R4 Word popup
+
+- **R4.1** THE SYSTEM SHALL show in the popup: the word, IPA, a pronunciation button, stars, the important toggle, and for each sense its part of speech, English definition, Chinese definition, synonyms, antonyms, and examples.
+- **R4.2** WHEN the user clicks the pronunciation button, THE SYSTEM SHALL read the word aloud with the browser's speech synthesis (en-US); IF the browser does not support speech synthesis, THE SYSTEM SHALL hide the button.
+- **R4.3** THE SYSTEM SHALL provide an edit mode for changing the IPA and every field of each sense, and for adding or removing senses (keeping 1–3); the word itself cannot be edited.
+- **R4.4** IF the edited content breaks the rules (empty English or Chinese definition, more than 5 synonyms or antonyms, more than 2 examples, or a sense count outside 1–3), THE SYSTEM SHALL block saving and mark the invalid fields.
+- **R4.5** WHEN the user chooses 「重新生成」 (Regenerate) and confirms, THE SYSTEM SHALL regenerate the IPA and all senses with the AI and replace the old content, keeping box, next_due_on, is_important, and the review history; the word itself does not change (R4.3).
+- **R4.6** IF regeneration fails, THE SYSTEM SHALL keep the original content and show an error.
+- **R4.7** WHEN the user chooses 「刪除」 (Delete) and confirms, THE SYSTEM SHALL delete the word and its senses, close the popup, and remove it from the list; review logs are kept so the dashboard history stays the same.
+- **R4.8** THE SYSTEM SHALL let the user close the popup with the close button, the Esc key, a click on the backdrop, or the browser's back button; at phone widths the popup is full screen.
+- **R4.9** WHILE the popup is open, THE SYSTEM SHALL keep the word's identifier in the URL so that the popup stays open after a reload.
+
+**AC**
+- [ ] After editing and saving synonyms, reopening the popup shows the new content.
+- [ ] After regenerating, box and important are unchanged.
+- [ ] After deleting, the word disappears from the list immediately and the dashboard's answer history is unchanged.
+- [ ] At phone width (375px) the popup is full screen and scrollable.
+
+---
+
+## Phase 2 — Review
+
+### R5 Word selection
+
+- **R5.1** WHEN the user starts a review session, THE SYSTEM SHALL select up to 8 distinct words:
+  1. Due words first, ordered by `next_due_on` from oldest to newest, with random order within the same date;
+  2. IF fewer than 8 words are due, THE SYSTEM SHALL fill the session with words that are not due, ordered by box from low to high, then by `next_due_on` from nearest to farthest;
+  3. IF the user has fewer than 8 words in total, THE SYSTEM SHALL use all of them.
+- **R5.2** IF the user has no words, THE SYSTEM SHALL show an empty state that guides them to add words.
+
+### R6 Questions
+
+- **R6.1** For each selected word, THE SYSTEM SHALL pick a random sense, then a random question type from the types available for that sense:
+
+  | Type | Prompt | Correct option | Available when |
   |---|---|---|---|
-  | `word_to_zh` | 單字（加詞性） | 該義項的中文解釋 | 永遠可用 |
-  | `word_to_synonym` | 單字（加詞性） | 該義項其中一個同義詞 | 該義項至少有 1 個同義詞 |
-  | `word_to_antonym` | 單字（加詞性） | 該義項其中一個反義詞 | 該義項至少有 1 個反義詞（Phase 5） |
-  | `zh_to_word` | 中文解釋（加詞性） | 單字 | 永遠可用 |
+  | `word_to_zh` | The word (with part of speech) | The sense's Chinese definition | Always |
+  | `word_to_synonym` | The word (with part of speech) | One of the sense's synonyms | The sense has at least 1 synonym |
+  | `word_to_antonym` | The word (with part of speech) | One of the sense's antonyms | The sense has at least 1 antonym (Phase 5) |
+  | `zh_to_word` | The Chinese definition (with part of speech) | The word | Always |
 
-- **R6.2** THE SYSTEM SHALL 為每題提供 4 個選項（1 個正確、3 個干擾），以隨機順序顯示。
-- **R6.3** THE SYSTEM SHALL 優先從使用者自己的字庫取干擾選項，且 SHOULD 優先選擇與題目同詞性的候選。
-- **R6.4** THE SYSTEM SHALL 確保干擾選項：彼此不重複、不等於正確選項（不分大小寫）、不是題目單字本身、不是題目單字任一義項的同義詞；`word_to_antonym` 的干擾選項也不得是題目單字任一義項的反義詞；`zh_to_word` 的干擾單字不得有與題目相同的中文解釋。
-- **R6.5** IF 字庫中符合 R6.4 的候選少於 3 個，THE SYSTEM SHALL 以 AI 生成不足的干擾選項並快取；之後同一義項、同一題型重複使用快取。WHEN 該義項被編輯或重新生成，THE SYSTEM SHALL 讓快取失效。
-- **R6.6** IF 某題的 AI 干擾選項生成失敗，THE SYSTEM SHALL 改用該字的其他題型；IF 所有題型都無法出題，THE SYSTEM SHALL 略過該字並依 R5.1 遞補。
+- **R6.2** THE SYSTEM SHALL give each question 4 options (1 correct, 3 distractors) in random order.
+- **R6.3** THE SYSTEM SHALL take distractors from the user's own words first, and SHOULD prefer candidates with the same part of speech as the question.
+- **R6.4** THE SYSTEM SHALL ensure that distractors are distinct from each other, are not equal to the correct option (case-insensitive), are not the quiz word itself, and are not a synonym of any of the quiz word's senses. Distractors for `word_to_antonym` also must not be an antonym of any of the quiz word's senses. Distractor words for `zh_to_word` must not have the same Chinese definition as the prompt.
+- **R6.5** IF the user's words yield fewer than 3 candidates that satisfy R6.4, THE SYSTEM SHALL generate the missing distractors with the AI and cache them; later questions for the same sense and question type reuse the cache. WHEN the sense is edited or regenerated, THE SYSTEM SHALL invalidate the cache.
+- **R6.6** IF generating AI distractors for a question fails, THE SYSTEM SHALL try another question type for that word; IF no question type works, THE SYSTEM SHALL skip the word and take the next one according to R5.1.
 
-### R7 作答與熟悉度
+### R7 Answering and familiarity
 
-- **R7.1** THE SYSTEM SHALL 一次顯示一題，並顯示進度（例：3 / 8）。
-- **R7.2** WHEN 使用者選擇一個選項，THE SYSTEM SHALL 鎖定該題、以綠色標示正確選項；IF 選錯，同時以紅色標示使用者的選項；接著顯示「下一題」按鈕。
-- **R7.3** WHEN 使用者作答，THE SYSTEM SHALL 立即在伺服器端判定對錯、儲存複習紀錄並更新熟悉度（中途離開也保留已作答的結果）；同一題重複送出 SHALL 只計一次。
-- **R7.4** 熟悉度更新規則（今天 = 當地今天）：
+- **R7.1** THE SYSTEM SHALL show one question at a time, with progress (e.g. 3 / 8).
+- **R7.2** WHEN the user picks an option, THE SYSTEM SHALL lock the question and mark the correct option in green; IF the answer is wrong, it SHALL also mark the user's option in red; it SHALL then show the 「下一題」 (Next question) button.
+- **R7.3** WHEN the user answers, THE SYSTEM SHALL immediately check the answer on the server, save a review log, and update familiarity (answers already given are kept if the user leaves mid-session); a repeated submission of the same question SHALL count only once.
+- **R7.4** Familiarity update rules (today = local today):
 
-  | 情況 | box | next_due_on |
+  | Case | box | next_due_on |
   |---|---|---|
-  | 答錯 | 設為 0 | 今天 + 1 天 |
-  | 答對且該字到期 | `min(box + 1, 5)` | 今天 + 間隔(新 box) |
-  | 答對但該字未到期（補位字） | 不變 | 不變 |
+  | Wrong | Set to 0 | Today + 1 day |
+  | Correct and the word is due | `min(box + 1, 5)` | Today + interval(new box) |
+  | Correct but the word is not due (a filler word) | Unchanged | Unchanged |
 
-  間隔（天）：
+  Intervals (days):
 
   | Box | 1 | 2 | 3 | 4 | 5 |
   |---|---|---|---|---|---|
-  | 一般 | 1 | 2 | 4 | 8 | 16 |
+  | Normal | 1 | 2 | 4 | 8 | 16 |
   | Important | 1 | 1 | 2 | 4 | 8 |
 
-  （Important 間隔 = `max(1, ceil(一般間隔 / 2))`；切換 important 不會改變已排定的 `next_due_on`，在下次答題時才套用新的間隔。）
+  (Important interval = `max(1, ceil(normal interval / 2))`. Toggling important does not change an already scheduled `next_due_on`; the new interval applies at the next answer.)
 
-  （星數 = box，答錯歸零：0 星代表新字或剛答錯，星數即為「從上次答錯後連續答對的次數」。）
+  (Stars = box and reset to zero on a wrong answer: 0 stars means a new word or one just answered wrong, so the star count is the number of correct answers in a row since the last wrong one.)
 
-- **R7.5** WHEN 一輪的所有題目作答完畢，THE SYSTEM SHALL 顯示結算：答對題數、每個字的對錯與星數變化，以及「再來一輪」和「回單字列表」按鈕；IF 已沒有到期的字，THE SYSTEM SHALL 顯示「今天到期的字都複習完了」。
+- **R7.5** WHEN every question in the session is answered, THE SYSTEM SHALL show a summary: the number of correct answers, each word's result and star change, and the 「再來一輪」 (Another round) and 「回單字列表」 (Back to word list) buttons; IF no words are due anymore, THE SYSTEM SHALL show 「今天到期的字都複習完了」 (All of today's due words are reviewed).
 
 **AC**
-- [ ] box 2、到期、一般字答對 → box 3，next_due_on = 今天 + 4。
-- [ ] box 2、到期、important 答對 → box 3，next_due_on = 今天 + 2。
-- [ ] box 5、到期答對 → box 5，next_due_on = 今天 + 16。
-- [ ] box 4 答錯 → box 0，next_due_on = 明天。
-- [ ] 未到期的補位字答對 → box 與 next_due_on 都不變。
-- [ ] 沒有同義詞的義項不會出現 `word_to_synonym` 題。
-- [ ] 沒有反義詞的義項不會出現 `word_to_antonym` 題；有反義詞時，正確選項是該義項的反義詞之一，其他 3 個選項都不是題目單字的反義詞。
-- [ ] 字庫只有 2 個字時仍可完成一輪（干擾選項由 AI 補足）。
-- [ ] 作答到第 4 題時關閉頁面，前 3 題已寫入紀錄。
+- [ ] Box 2, due, normal word, correct → box 3, next_due_on = today + 4.
+- [ ] Box 2, due, important word, correct → box 3, next_due_on = today + 2.
+- [ ] Box 5, due, correct → box 5, next_due_on = today + 16.
+- [ ] Box 4, wrong → box 0, next_due_on = tomorrow.
+- [ ] A filler word that is not due, answered correctly → box and next_due_on both unchanged.
+- [ ] A sense without synonyms never gets a `word_to_synonym` question.
+- [ ] A sense without antonyms never gets a `word_to_antonym` question; when it has antonyms, the correct option is one of the sense's antonyms and none of the other 3 options is an antonym of the quiz word.
+- [ ] A session can be completed with only 2 words saved (the AI fills in the distractors).
+- [ ] Closing the page at question 4 keeps the logs of the first 3 answers.
 
 ---
 
-## Phase 3 — Dashboard 與 PWA
+## Phase 3 — Dashboard and PWA
 
 ### R8 Dashboard
 
-- **R8.1** THE SYSTEM SHALL 顯示使用者的總單字數。
-- **R8.2** THE SYSTEM SHALL 以長條圖顯示 0–5 星各有幾個字。
-- **R8.3** THE SYSTEM SHALL 顯示 GitHub 風格的熱力圖，涵蓋最近 53 週（含本週），每欄一週、每列一天（週日在最上方），每格代表該當地日期的答題數。
-- **R8.4** THE SYSTEM SHALL 依答題數將熱力圖格子分成 5 種深淺：`0`、`1–8`、`9–16`、`17–32`、`33+`。
-- **R8.5** WHEN 使用者將游標移到格子上（或在手機上點擊格子），THE SYSTEM SHALL 顯示該日期與答題數。
-- **R8.6** THE SYSTEM SHALL 以作答當下的使用者時區計算每筆複習紀錄的當地日期，並以午夜換日。
+- **R8.1** THE SYSTEM SHALL show the user's total number of words.
+- **R8.2** THE SYSTEM SHALL show a bar chart of how many words have 0–5 stars.
+- **R8.3** THE SYSTEM SHALL show a GitHub-style heatmap covering the last 53 weeks (including this week), with one column per week and one row per day (Sunday on top); each cell is the number of answers on that local date.
+- **R8.4** THE SYSTEM SHALL shade heatmap cells in 5 levels by answer count: `0`, `1–8`, `9–16`, `17–32`, `33+`.
+- **R8.5** WHEN the user hovers over a cell (or taps it on a phone), THE SYSTEM SHALL show the date and the answer count.
+- **R8.6** THE SYSTEM SHALL compute each review log's local date in the user's time zone at the time of answering, rolling over at midnight.
 
 **AC**
-- [ ] 今天答 10 題，今天的格子為第 3 級（9–16）。
-- [ ] 刪除一個單字後，總單字數減 1，熱力圖不變。
+- [ ] After 10 answers today, today's cell is level 3 (9–16).
+- [ ] After deleting a word, the total drops by 1 and the heatmap is unchanged.
 
 ### R9 PWA
 
-- **R9.1** THE SYSTEM SHALL 提供 Web App Manifest（名稱、圖示、主題色、`display: standalone`），讓使用者可安裝到主畫面。
-- **R9.2** THE SYSTEM SHALL 只快取靜態資源；IF 裝置離線，THE SYSTEM SHALL 顯示「需要網路連線」頁面。
+- **R9.1** THE SYSTEM SHALL provide a Web App Manifest (name, icons, theme color, `display: standalone`) so users can install the app to the home screen.
+- **R9.2** THE SYSTEM SHALL cache static assets only; IF the device is offline, THE SYSTEM SHALL show a 「需要網路連線」 (Internet connection required) page.
 
 **AC**
-- [ ] Chrome（Android）與 Safari（iOS）可將 app 加入主畫面並以獨立視窗開啟。
-- [ ] 開啟飛航模式後重新整理，顯示離線提示頁面。
+- [ ] Chrome (Android) and Safari (iOS) can add the app to the home screen and open it in a standalone window.
+- [ ] Reloading in airplane mode shows the offline page.
 
 ---
 
-## Phase 4 — 深色模式
+## Phase 4 — Dark mode
 
-### R10 外觀
+### R10 Appearance
 
-- **R10.1** THE SYSTEM SHALL 提供淺色與深色兩種外觀；IF 使用者尚未手動切換，THE SYSTEM SHALL 依載入時裝置的系統設定（`prefers-color-scheme`）決定。
-- **R10.2** THE SYSTEM SHALL 提供深色模式開關（開 = 深色），選擇儲存在該裝置上（不同步到其他裝置或帳號）；手動切換後一律使用所選外觀，不再依系統設定。
-- **R10.3** WHEN 頁面載入，THE SYSTEM SHALL 在畫面顯示前套用外觀，不先閃現另一種外觀。
-- **R10.4** THE SYSTEM SHALL NOT 在使用中隨系統設定即時切換外觀（不提供「跟隨系統」模式）。
-- **R10.5** 深色外觀下，文字對比 SHALL 至少 4.5:1，圖示與圖表標記 SHALL 至少 3:1（熱力圖依 dataviz ordinal 檢查）。
+- **R10.1** THE SYSTEM SHALL provide light and dark appearances; IF the user has not switched manually, THE SYSTEM SHALL follow the device's system setting (`prefers-color-scheme`) at load time.
+- **R10.2** THE SYSTEM SHALL provide a dark mode switch (on = dark). The choice is stored on the device (not synced to other devices or the account); once the user switches manually, the chosen appearance always applies and the system setting is no longer followed.
+- **R10.3** WHEN a page loads, THE SYSTEM SHALL apply the appearance before the page is shown, without flashing the other appearance first.
+- **R10.4** THE SYSTEM SHALL NOT switch appearance live when the system setting changes during use (there is no "follow system" mode).
+- **R10.5** In the dark appearance, text contrast SHALL be at least 4.5:1, and icons and chart marks SHALL be at least 3:1 (the heatmap is checked as a dataviz ordinal scale).
 
 **AC**
-- [ ] 系統為深色、尚未切換過時，首次開啟即為深色。
-- [ ] 系統為深色時關閉開關（淺色）後重新整理，仍為淺色，且載入過程不閃現深色。
-- [ ] 登入頁與離線頁也套用相同外觀。
+- [ ] With the system in dark mode and no manual switch yet, the app opens in dark mode the first time.
+- [ ] With the system in dark mode, after turning the switch off (light) and reloading, the app stays light and does not flash dark while loading.
+- [ ] The login and offline pages use the same appearance.
 
 ---
 
-## 非功能需求
+## Non-functional requirements
 
-- **NFR1 響應式**：支援 360px–1440px 寬度，手機優先；手機以底部分頁列導覽（單字 / 複習 / 統計），桌面以頂部導覽。
-- **NFR2 語言**：介面使用繁體中文。
-- **NFR3 安全**：OpenAI API key 只存在伺服器端，不得出現在瀏覽器端程式碼中。
-- **NFR4 效能**：單字列表在 2,000 個字以內時，篩選與排序應在 300ms 內完成。
-- **NFR5 無障礙**：所有操作可用鍵盤完成；星數提供文字替代（例：「熟悉度 3 / 5」）；popup 開啟時鎖定焦點於其中。
-- **NFR6 可測試性**：AI 呼叫可透過環境變數切換成假資料模式，供自動化測試使用。
+- **NFR1 Responsive**: supports widths from 360px to 1440px, mobile first. On phones, navigation is a bottom tab bar (單字 Words / 複習 Review / 統計 Stats); on desktop, a top navigation bar.
+- **NFR2 Language**: the interface is in Traditional Chinese.
+- **NFR3 Security**: the OpenAI API key exists only on the server and must never appear in browser code.
+- **NFR4 Performance**: with up to 2,000 words, filtering and sorting the word list should finish within 300ms.
+- **NFR5 Accessibility**: every action can be done with the keyboard; stars have a text alternative (e.g. 「熟悉度 3 / 5」, Familiarity 3 / 5); focus is trapped inside the popup while it is open.
+- **NFR6 Testability**: AI calls can be switched to a mock mode with an environment variable for automated tests.
