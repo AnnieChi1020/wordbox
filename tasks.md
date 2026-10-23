@@ -258,7 +258,7 @@
 
 ## Phase 5 — 反義詞題型
 
-- [ ] **T5.1 資料庫：題型限制** — R6.1
+- [x] **T5.1 資料庫：題型限制** — R6.1
   - Migration：`review_logs`、`ai_distractors` 的 `question_type` check 加入 `word_to_antonym`（design §4.1）
   - 本地以 `supabase migration up` 套用，不 reset
   - 完成條件（`tests/db`）：`apply_review` 與 `ai_distractors` 可寫入 `word_to_antonym`；其他字串仍被拒絕

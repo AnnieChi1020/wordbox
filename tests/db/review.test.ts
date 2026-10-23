@@ -17,6 +17,7 @@ type ReviewArgs = {
   questionId?: string
   wordId: string
   senseId: string
+  questionType?: string
   isCorrect?: boolean
   boxBefore?: number
   dueBefore?: string
@@ -30,7 +31,7 @@ function applyReview(user: TestUser, args: ReviewArgs) {
     p_question_id: args.questionId ?? randomUUID(),
     p_word_id: args.wordId,
     p_sense_id: args.senseId,
-    p_question_type: "word_to_zh",
+    p_question_type: args.questionType ?? "word_to_zh",
     p_is_correct: args.isCorrect ?? true,
     p_was_due: true,
     p_box_before: args.boxBefore ?? 0,
@@ -206,6 +207,53 @@ describe("apply_review", () => {
     // 字已刪除後重送仍回傳第一次的結果
     const resend = await applyReview(u, { questionId, wordId: id, senseId })
     expect(resend.data).toMatchObject({ duplicate: true })
+  })
+})
+
+describe("question_type check (R6.1)", () => {
+  let u: TestUser
+  beforeAll(async () => {
+    u = await createTestUser()
+  })
+  afterAll(() => deleteTestUser(u))
+
+  it("accepts word_to_antonym in review_logs and ai_distractors", async () => {
+    const { id } = await createWord(u, "hot")
+    const [senseId] = await senseIds(u, id)
+
+    const { error } = await applyReview(u, {
+      wordId: id,
+      senseId,
+      questionType: "word_to_antonym",
+    })
+    expect(error).toBeNull()
+
+    const { error: cacheError } = await u.client.from("ai_distractors").insert({
+      sense_id: senseId,
+      question_type: "word_to_antonym",
+      options: ["decoy alpha", "decoy bravo", "decoy charlie"],
+    })
+    expect(cacheError).toBeNull()
+  })
+
+  it("rejects unknown question types", async () => {
+    const { id } = await createWord(u, "cold")
+    const [senseId] = await senseIds(u, id)
+
+    const { error } = await applyReview(u, {
+      wordId: id,
+      senseId,
+      questionType: "word_to_cloze",
+    })
+    expect(error?.code).toBe("23514")
+    expect(await wordState(u, id)).toEqual({ box: 0, next_due_on: TODAY })
+
+    const { error: cacheError } = await u.client.from("ai_distractors").insert({
+      sense_id: senseId,
+      question_type: "word_to_cloze",
+      options: ["a", "b", "c"],
+    })
+    expect(cacheError?.code).toBe("23514")
   })
 })
 
