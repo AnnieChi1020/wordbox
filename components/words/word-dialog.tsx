@@ -88,8 +88,9 @@ export function WordDialog({ word }: { word: WordDetail }) {
           "flex flex-col gap-0 overflow-hidden p-0 max-sm:inset-0 max-sm:h-dvh max-sm:max-w-none max-sm:translate-0 max-sm:rounded-none sm:max-h-[85dvh] sm:max-w-lg"
         }
       >
-        <DialogHeader className="gap-3 border-b p-4 pr-12">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <DialogHeader className="gap-3 border-b p-4">
+          {/* 右側留給關閉按鈕 */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pr-8">
             <DialogTitle className="text-2xl font-semibold">
               {word.text}
             </DialogTitle>
@@ -107,7 +108,8 @@ export function WordDialog({ word }: { word: WordDetail }) {
               wordId={word.id}
               important={important}
               onChange={setImportant}
-              className="ml-auto"
+              // 與上方的關閉按鈕靠右對齊
+              className="-mr-2 ml-auto"
             />
           </div>
           <DialogDescription className="sr-only">
