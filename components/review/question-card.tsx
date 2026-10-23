@@ -1,13 +1,13 @@
 "use client"
 
 import { Check, Loader2, RotateCw, X } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { submitAnswer } from "@/lib/actions/review"
 import { POS_ABBR } from "@/lib/domain/pos"
-import type { QuestionType } from "@/lib/domain/questions"
+import { CLOZE_BLANK, type QuestionType } from "@/lib/domain/questions"
 import type { ClientQuestion } from "@/lib/review/startSession"
 import type { AnswerResult } from "@/lib/review/submitAnswer"
 import { cn } from "@/lib/utils"
@@ -36,6 +36,28 @@ function questionText(type: QuestionType): [before: string, after: string] {
     case "cloze":
       return ["選出最適合填入空格的字", ""]
   }
+}
+
+/**
+ * Design §8: the cloze sentence with each blank drawn as an underlined gap.
+ * After answering, the blank shows the correct word.
+ */
+function ClozePrompt({ prompt, filled }: { prompt: string; filled?: string }) {
+  return prompt.split(CLOZE_BLANK).map((part, i) => (
+    <Fragment key={i}>
+      {i > 0 && (
+        <span
+          className={cn(
+            "inline-block min-w-16 border-b-2 border-current px-1 text-center font-semibold",
+            filled && "text-green-800 dark:text-green-400",
+          )}
+        >
+          {filled ?? <span className="sr-only">空格</span>}
+        </span>
+      )}
+      {part}
+    </Fragment>
+  ))
 }
 
 /**
@@ -131,16 +153,31 @@ export function QuestionCard({
         </div>
       </div>
 
-      <h2 id="question-prompt" className="text-lg leading-relaxed">
-        {before}
-        <span className={cn("mr-1 text-2xl font-semibold", before && "ml-1")}>
-          {question.prompt}
-        </span>
-        <span className="text-muted-foreground mr-1 text-sm">
-          {POS_ABBR[question.pos]}
-        </span>
-        {after}
-      </h2>
+      {question.type === "cloze" ? (
+        <h2 id="question-prompt" className="space-y-2">
+          <span className="text-muted-foreground block text-sm">
+            {before}
+            <span className="ml-2">{POS_ABBR[question.pos]}</span>
+          </span>
+          <span className="block text-xl leading-relaxed">
+            <ClozePrompt
+              prompt={question.prompt}
+              filled={answered?.result.correctOption}
+            />
+          </span>
+        </h2>
+      ) : (
+        <h2 id="question-prompt" className="text-lg leading-relaxed">
+          {before}
+          <span className={cn("mr-1 text-2xl font-semibold", before && "ml-1")}>
+            {question.prompt}
+          </span>
+          <span className="text-muted-foreground mr-1 text-sm">
+            {POS_ABBR[question.pos]}
+          </span>
+          {after}
+        </h2>
+      )}
 
       <ol className="grid gap-2" aria-label="選項">
         {question.options.map((option, i) => {

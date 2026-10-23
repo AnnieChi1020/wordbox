@@ -17,9 +17,11 @@ export type SessionOutcome = {
   result: AnsweredResult | null
 }
 
-/** The English word in the question: for zh_to_word the word is the correct answer, so a skipped question can only show the prompt. */
+/** The English word in the question: for zh_to_word and cloze the word is the correct answer, so a skipped question can only show the prompt. */
 function wordLabel({ question, result }: SessionOutcome): string {
-  if (question.type !== "zh_to_word") return question.prompt
+  if (question.type !== "zh_to_word" && question.type !== "cloze") {
+    return question.prompt
+  }
   return result?.correctOption ?? question.prompt
 }
 

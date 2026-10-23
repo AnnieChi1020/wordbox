@@ -3,8 +3,9 @@ import type { Page } from "@playwright/test"
 import { adminClient } from "../support/local-supabase"
 
 /**
- * seedWords gives each word the Chinese definition 「<word> 的解釋」 and no synonyms,
- * so only word_to_zh or zh_to_word questions appear, and the correct answer can be derived from the prompt.
+ * seedWords gives each word the Chinese definition 「<word> 的解釋」, no synonyms or antonyms,
+ * and an example without the word, so only word_to_zh or zh_to_word questions appear,
+ * and the correct answer can be derived from the prompt.
  */
 export async function correctAnswer(page: Page): Promise<string> {
   const heading = page.getByRole("heading", { level: 2 })

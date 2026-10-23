@@ -182,3 +182,58 @@ test.describe("反義詞題（R6.1、Phase 5）", () => {
     throw new Error("no antonym question in 20 rounds")
   })
 })
+
+test.describe("填空題（R6.1、Phase 7）", () => {
+  test("例句含有單字時會出填空題，作答後空格顯示正確答案", async ({
+    page,
+    signedIn,
+  }) => {
+    const sentences: Record<string, string> = {
+      "I eat an ___ every day.": "apple",
+      "This ___ is sweet.": "pear",
+    }
+    await seedWords(signedIn.id, [
+      { text: "apple", examples: ["I eat an apple every day."] },
+      { text: "pear", examples: ["This pear is sweet."] },
+    ])
+    await page.goto("/review")
+    await page.getByRole("button", { name: "開始複習" }).click()
+
+    // Question types are random (1/3 per question), so keep answering until a cloze question appears
+    const heading = page.getByRole("heading", { level: 2 })
+    for (let round = 0; round < 20; round++) {
+      for (const n of [1, 2]) {
+        await expect(page.getByText(`${n} / 2`)).toBeVisible()
+        if ((await heading.textContent())!.includes("填入空格")) {
+          // The blank is announced to screen readers, and the word itself is not shown
+          const text = (await heading.textContent())!
+          const [sentence, answer] = Object.entries(sentences).find(([s]) =>
+            text.includes(s.replace("___", "空格")),
+          )!
+          expect(text).not.toContain(answer)
+          await option(page, answer).click()
+          await expect(page.getByText("答對了！")).toBeVisible()
+          // The blank now shows the correct word
+          await expect(heading).toContainText(sentence.replace("___", answer))
+          await expect
+            .poll(async () => {
+              const { data } = await adminClient()
+                .from("review_logs")
+                .select("question_type, is_correct")
+                .eq("user_id", signedIn.id)
+                .eq("question_type", "cloze")
+              return data
+            })
+            .toEqual([{ question_type: "cloze", is_correct: true }])
+          return
+        }
+        await page.keyboard.press("1")
+        await page
+          .getByRole("button", { name: n === 2 ? "看結果" : "下一題" })
+          .click()
+      }
+      await page.getByRole("button", { name: "再來一輪" }).click()
+    }
+    throw new Error("no cloze question in 20 rounds")
+  })
+})

@@ -330,7 +330,7 @@
   - Prompt describes `cloze` (design §5.3); `quizWord` uses the answer for `cloze`; the mock adds `distractors_cloze`
   - Done when (unit): the request name is `distractors_cloze` and the log input is the word, not the sentence
 
-- [ ] **T7.4 Review UI and E2E** — R6.1, R7 AC
+- [x] **T7.4 Review UI and E2E** — R6.1, R7 AC
   - `QuestionCard` cloze layout; summary label for skipped cloze questions (design §8)
   - Done when: an E2E test (`AI_MOCK=1`) answers a cloze question; existing E2E pass
 

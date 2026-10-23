@@ -101,6 +101,8 @@ export type SeedWord = {
   pos?: string[]
   /** Antonyms for each sense; none by default */
   antonyms?: string[]
+  /** Examples for each sense; by default one that does not contain the word, so no cloze questions */
+  examples?: string[]
 }
 
 /** Creates words by writing to the database directly (without the AI); returns ids in input order. */
@@ -132,7 +134,7 @@ export async function seedWords(userId: string, words: SeedWord[]) {
       def_en: `definition of ${w.text}`,
       def_zh: `${w.text} 的解釋`,
       antonyms: w.antonyms ?? [],
-      examples: [`An example with ${w.text}.`],
+      examples: w.examples ?? ["An example sentence."],
     })),
   )
   for (let i = 0; i < senses.length; i += 1000) {
