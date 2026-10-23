@@ -59,18 +59,27 @@ describe(`listWords with ${WORD_COUNT} words (NFR4)`, () => {
   const cases: [string, ListParams][] = [
     ...SORT_OPTIONS.map((o): [string, ListParams] => [
       `sort ${o.value}`,
-      { stars: [], importantOnly: false, sort: o.value },
+      { q: "", stars: [], importantOnly: false, sort: o.value },
     ]),
     [
       "stars 0,1 + important",
-      { stars: [0, 1], importantOnly: true, sort: "alpha_asc" },
+      { q: "", stars: [0, 1], importantOnly: true, sort: "alpha_asc" },
     ],
-    ["stars 5", { stars: [5], importantOnly: false, sort: "stars_desc" }],
+    [
+      "stars 5",
+      { q: "", stars: [5], importantOnly: false, sort: "stars_desc" },
+    ],
+    // R3.9: a substring search scans the user's words (D26)
+    [
+      "search",
+      { q: "xxx", stars: [], importantOnly: false, sort: "alpha_asc" },
+    ],
   ]
 
   it("pages through all words in order with an exact total", async () => {
     const db = u.client as Db
     const params: ListParams = {
+      q: "",
       stars: [],
       importantOnly: false,
       sort: "alpha_asc",
@@ -90,6 +99,7 @@ describe(`listWords with ${WORD_COUNT} words (NFR4)`, () => {
 
   it("counts filtered totals", async () => {
     const { total } = await listWords(u.client as Db, {
+      q: "",
       stars: [0, 1],
       importantOnly: true,
       sort: "created_desc",

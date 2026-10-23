@@ -2,7 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import type { Sense } from "@/lib/ai/schemas"
 import type { PartOfSpeech } from "@/lib/domain/pos"
-import type { ListParams, SortKey } from "@/lib/words/listParams"
+import {
+  likePattern,
+  type ListParams,
+  type SortKey,
+} from "@/lib/words/listParams"
 
 import type { Database } from "./types"
 
@@ -90,6 +94,7 @@ export async function listWords(
     .select("id, text, box, is_important, senses(pos)", { count: "exact" })
     .order("position", { referencedTable: "senses" })
 
+  if (params.q) query = query.ilike("text_key", likePattern(params.q))
   if (params.stars.length > 0) query = query.in("box", params.stars)
   if (params.importantOnly) query = query.eq("is_important", true)
   for (const [column, ascending] of SORT_COLUMNS[params.sort]) {

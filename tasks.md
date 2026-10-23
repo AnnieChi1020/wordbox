@@ -291,7 +291,7 @@
 
 ## Phase 6 — Word list search
 
-- [ ] **T6.1 Search query** — R3.4, R3.9
+- [x] **T6.1 Search query** — R3.4, R3.9
   - `listParams.ts`: `q` in `ListParams`, `normalizeSearch`, `likePattern`; `hasActiveFilters` includes `q` (design §7.7)
   - `listWords` filters with `text_key ilike` (design §6, D26)
   - Done when:

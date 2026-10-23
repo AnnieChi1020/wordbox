@@ -1,4 +1,6 @@
-/** R3.2–R3.4: word list filters and sort order, represented as URL search params. */
+import { dedupeKey } from "@/lib/domain/normalize"
+
+/** R3.2–R3.4, R3.9: word list search, filters, and sort order, represented as URL search params. */
 
 export const SORT_OPTIONS = [
   { value: "created_desc", label: "新增日期（新→舊）" },
@@ -13,7 +15,12 @@ export type SortKey = (typeof SORT_OPTIONS)[number]["value"]
 
 export const DEFAULT_SORT: SortKey = "created_desc"
 
+/** R3.9: maximum search length, matching the longest word (R2.3). */
+export const SEARCH_MAX_LENGTH = 64
+
 export type ListParams = {
+  /** Normalized, lowercased search text; '' = no search */
+  q: string
   /** Sorted, distinct values 0–5; an empty array = no filter */
   stars: number[]
   importantOnly: boolean
@@ -21,6 +28,7 @@ export type ListParams = {
 }
 
 export const DEFAULT_LIST_PARAMS: ListParams = {
+  q: "",
   stars: [],
   importantOnly: false,
   sort: DEFAULT_SORT,
@@ -32,6 +40,16 @@ function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
+/** R3.9: normalized as in R2.2, lowercased to match text_key, at most 64 characters. */
+export function normalizeSearch(raw: string): string {
+  return dedupeKey(raw).slice(0, SEARCH_MAX_LENGTH).trimEnd()
+}
+
+/** R3.9: a substring pattern for ilike, with every character matched literally (design §7.7). */
+export function likePattern(q: string): string {
+  return `%${q.replace(/[\\%_]/g, "\\$&")}%`
+}
+
 /** Parses the URL; invalid values are ignored without raising errors. */
 export function parseListParams(raw: RawParams): ListParams {
   const stars = (first(raw.stars) ?? "")
@@ -40,6 +58,7 @@ export function parseListParams(raw: RawParams): ListParams {
     .map(Number)
   const sort = first(raw.sort)
   return {
+    q: normalizeSearch(first(raw.q) ?? ""),
     stars: [...new Set(stars)].sort((a, b) => a - b),
     importantOnly: first(raw.important) === "1",
     sort: SORT_OPTIONS.some((o) => o.value === sort)
@@ -51,6 +70,7 @@ export function parseListParams(raw: RawParams): ListParams {
 /** Converts to a query string; defaults are omitted to keep the URL short. */
 export function serializeListParams(params: ListParams): string {
   const search = new URLSearchParams()
+  if (params.q) search.set("q", params.q)
   if (params.stars.length > 0) search.set("stars", params.stars.join(","))
   if (params.importantOnly) search.set("important", "1")
   if (params.sort !== DEFAULT_SORT) search.set("sort", params.sort)
@@ -58,7 +78,7 @@ export function serializeListParams(params: ListParams): string {
 }
 
 export function hasActiveFilters(params: ListParams): boolean {
-  return params.stars.length > 0 || params.importantOnly
+  return params.q !== "" || params.stars.length > 0 || params.importantOnly
 }
 
 export function toggleStar(stars: number[], star: number): number[] {
